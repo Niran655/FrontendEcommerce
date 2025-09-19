@@ -1,0 +1,27 @@
+.box-content-Admin{
+  background: linear-gradient(to right, #fde68a, #f59e0b);
+  border-radius: 10px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+}
+.box-content-Manager{
+  background: linear-gradient(to right, #fda4af, #f43f5e);
+  border-radius: 10px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+}
+.box-content-Cashier
+{
+  background: linear-gradient(to right, #a4fde8, #3ff4ee);
+  border-radius: 10px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+}
+.box-content-StockKeeper{
+background: linear-gradient(to right, #a7f3d0, #34d399);
+  border-radius: 10px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+}
+.box-content-User{
+background: linear-gradient(to right, #38bdf8, #0ea5e9);
+  border-radius: 10px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+}
+

@@ -1,0 +1,11 @@
+.box-card{
+    background-color: rgb(255, 159, 239);
+    height: 100% ;
+    padding: 10px;
+    border-radius: 10px;
+    background-image: url("https://t2.tudocdn.net/510452?w=1920");
+}
+.text-container{
+    font-size: 30px;
+    font-weight: bold;
+}

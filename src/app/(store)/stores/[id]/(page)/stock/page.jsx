@@ -44,8 +44,8 @@ import {
   Search,
   FileText
 } from 'lucide-react';
-import { GET_STOCK_MOVEMENTS, GET_LOW_STOCK_PRODUCTS, GET_PRODUCTS } from '../../../../graphql/queries';
-import { ADJUST_STOCK } from '../../../../graphql/mutation';
+import { GET_STOCK_MOVEMENTS, GET_LOW_STOCK_PRODUCTS, GET_PRODUCTS } from '../../../../../../../graphql/queries';
+import { ADJUST_STOCK } from '../../../../../../../graphql/mutation';
 
 // Validation Schema using Yup :cite[5]:cite[10]
 const adjustmentSchema = Yup.object().shape({
@@ -71,7 +71,7 @@ const StockManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: stockData, loading: stockLoading, refetch: refetchStock } = useQuery(GET_STOCK_MOVEMENTS);
-
+  console.log("stock data",stockData)
   const { data: lowStockData, loading: lowStockLoading, refetch: refetchLowStock } = useQuery(GET_LOW_STOCK_PRODUCTS);
   const { data: productsData, loading: productsLoading } = useQuery(GET_PRODUCTS);
 
@@ -126,9 +126,8 @@ const StockManagement = () => {
   };
 
   const filteredProducts = productsData?.products?.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) 
-    // ||product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-    
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const lowStockProducts = lowStockData?.lowStockProducts || [];

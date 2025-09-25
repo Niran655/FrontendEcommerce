@@ -45,20 +45,21 @@ import * as Yup from "yup";
 
 import {
   CREATE_BANNER,
-  CREATE_PRODUCT,
+  CREATE_PRODUCT_FOR_SHOP,
   DELETE_BANNER,
-  DELETE_PRODUCT,
+  DELETE_PRODUCT_FOR_SHOP,
   UPDATE_BANNER,
-  UPDATE_PRODUCT,
-} from "../../../../graphql/mutation";
+  UPDATE_PRODUCT_FOR_SHOP,
+} from "../../../../../../../graphql/mutation";
 import {
   GET_BANNERS,
   GET_CATEGORYS,
-  GET_PRODUCTS,
-} from "../../../../graphql/queries";
+  GET_PRODUCT_BY_OWNER,
+  GET_PRODUCT_FOR_SHOP,
+} from "../../../../../../../graphql/queries";
 import { useAuth } from "@/app/context/AuthContext";
+import { useParams } from "next/navigation";
 const categories = ["Laptop", "Desktop", "Phone"];
-
 // Validation schema
 const productSchema = Yup.object().shape({
   name: Yup.string().required("Product name is required"),
@@ -135,15 +136,20 @@ const initialBannerData = {
 };
 
 const Products = () => {
+  const { id } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const { setAlert, user } = useAuth();
+  const { setAlert } = useAuth();
   const [editBanner, setEditBanner] = useState(null);
   const [viewMode, setViewMode] = useState("grid");
   const [openAddBanner, setOpenAddBanner] = useState(false);
-  const { data, loading, error, refetch } = useQuery(GET_PRODUCTS);
+  const { data, loading, error, refetch } = useQuery(GET_PRODUCT_FOR_SHOP, {
+    variables: {
+      shopId: id,
+    },
+  });
   const { data: categoryData } = useQuery(GET_CATEGORYS);
   const {
     data: bannerData,
@@ -155,43 +161,43 @@ const Products = () => {
   const categoryNames = categorys.map((cat) => cat.name);
   const banners = bannerData?.banners || [];
 
-  const [createProduct] = useMutation(CREATE_PRODUCT, {
-    onCompleted: ({ createProduct }) => {
-      if (createProduct.isSuccess) {
-        setAlert(true, "success", createProduct.message);
+  const [createProduct] = useMutation(CREATE_PRODUCT_FOR_SHOP, {
+    onCompleted: ({ createProductForShop }) => {
+      if (createProductForShop.isSuccess) {
+        setAlert(true, "success", createProductForShop.message);
         setDialogOpen(false);
         formik.resetForm();
         setEditingProduct(null);
         refetch();
       } else {
-        setAlert(true, "error", createProduct.message);
+        setAlert(true, "error", createProductForShop.message);
       }
     },
     onError: (error) => alert(`Error: ${error.message}`),
   });
 
-  const [updateProduct] = useMutation(UPDATE_PRODUCT, {
-    onCompleted: ({ updateProduct }) => {
-      if (updateProduct.isSuccess) {
-        setAlert(true, "success", updateProduct.message);
+  const [updateProductForShop] = useMutation(UPDATE_PRODUCT_FOR_SHOP, {
+    onCompleted: ({ updateProductForShop }) => {
+      if (updateProductForShop.isSuccess) {
+        setAlert(true, "success", updateProductForShop.message);
         setDialogOpen(false);
         formik.resetForm();
         setEditingProduct(null);
         refetch();
       } else {
-        setAlert(true, "error", createProduct.message);
+        setAlert(true, "error", updateProductForShop.message); // Fixed this line
       }
     },
     onError: (error) => alert(`Error: ${error.message}`),
   });
 
-  const [deleteProduct] = useMutation(DELETE_PRODUCT, {
-    onCompleted: ({ deleteProduct }) => {
-      if (deleteProduct.isSuccess) {
-        setAlert(true, "success", deleteProduct.message);
+  const [deleteProductForShop] = useMutation(DELETE_PRODUCT_FOR_SHOP, {
+    onCompleted: ({ deleteProductForShop }) => {
+      if (deleteProductForShop.isSuccess) {
+        setAlert(true, "success", deleteProductForShop.message);
         refetch();
       } else {
-        setAlert(true, "error", deleteProduct.message);
+        setAlert(true, "error", deleteProductForShop.message);
       }
     },
     onError: (error) => alert(`Error: ${error.message}`),
@@ -222,17 +228,30 @@ const Products = () => {
     onError: (error) => alert(`Error: ${error.message}`),
   });
 
-  const products = data?.products || [];
+  const products = data?.getProductsForShop || [];
 
   // Filter products
+  // const filteredProducts = products.filter((product) => {
+  //   const matchesSearch =
+  //     product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  //     ||
+  //     product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+  //   const matchesCategory =
+  //     selectedCategory === "All" || product.category === selectedCategory;
+  //   return matchesSearch && matchesCategory;
+  // });
   const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    // ||product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const name = product.name?.toLowerCase() || "";
+    const sku = product.sku?.toLowerCase() || "";
+    const category = product.category || "";
+
+    const matchesSearch =
+      name.includes(searchTerm.toLowerCase()) ||
+      sku.includes(searchTerm.toLowerCase());
 
     const matchesCategory =
-      selectedCategory === "All" || product.category === selectedCategory;
+      selectedCategory === "All" || category === selectedCategory;
+
     return matchesSearch && matchesCategory;
   });
 
@@ -297,7 +316,7 @@ const Products = () => {
 
   const handleDeleteProduct = async (productId) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
-      await deleteProduct({ variables: { deleteProductId: productId } });
+      await deleteProductForShop({ variables: { productId: productId } });
     }
   };
 
@@ -311,7 +330,7 @@ const Products = () => {
     initialValues: initialFormData,
     validationSchema: productSchema,
     onSubmit: async (values) => {
-      const input = {
+      const productData = {
         name: values.name,
         description: values.description,
         category: values.category,
@@ -329,15 +348,25 @@ const Products = () => {
         })),
         isCombo: values.isCombo,
         comboItems: values.comboItems,
-        owner: user?.id,
+      };
+
+      // Use the same input structure for both create and update
+      const input = {
+        shopId: id,
+        productData: productData,
       };
 
       if (editingProduct) {
-        await updateProduct({
-          variables: { updateProductId: editingProduct.id, input },
+        await updateProductForShop({
+          variables: {
+            productId: editingProduct.id,
+            input: input, // Pass the same input structure
+          },
         });
       } else {
-        await createProduct({ variables: { input } });
+        await createProduct({
+          variables: { input },
+        });
       }
     },
   });
@@ -807,7 +836,7 @@ const Products = () => {
                         color="primary"
                         fontWeight="bold"
                       >
-                        ${product.price.toFixed(2)}
+                        ${product.price.toFixed(2) || "0.00"}
                       </Typography>
                     )}
 

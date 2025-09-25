@@ -34,8 +34,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { GET_DASHBOARD_STATS } from "../../../../graphql/queries";
-import "../../../../style/Dashboard.css"
+import { useParams, useRouter } from "next/navigation";
+import { GET_DASHBOARD_STATS } from "../../../../../../../graphql/queries";
 const StatCard = ({
   title,
   value,
@@ -44,9 +44,9 @@ const StatCard = ({
   subtitle,
 }) => (
   <Card sx={{ height: "100%" }}>
-    <CardContent className="dashboard-box"  >
-      <Box borderRadius={"10px"} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between"}}>
-        <Box >
+    <CardContent>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Box>
           <Typography color="text.secondary" gutterBottom variant="h6">
             {title}
           </Typography>
@@ -68,6 +68,8 @@ const StatCard = ({
 );
 
 const Dashboard = () => {
+    const { id } = useParams();
+    const router = useRouter();
   const { data, loading, error } = useQuery(GET_DASHBOARD_STATS, {
     pollInterval: 30000, // refresh every 30s
   });

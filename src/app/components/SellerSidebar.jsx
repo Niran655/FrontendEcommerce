@@ -1,5 +1,5 @@
 "use client";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import {
   Box,
   Drawer,
@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import {
   BarChart3,
-  Laptop,
   LayoutDashboard,
   Package,
   Settings,
@@ -23,9 +22,7 @@ import {
   Users,
   Warehouse,
   PackageSearch,
-  Smartphone,
   ChartNoAxesGantt,
-  ChartBarStacked,
 } from "lucide-react";
 import React from "react";
 import { useAuth } from "../context/AuthContext";
@@ -34,6 +31,7 @@ import { GET_CATEGORYS } from "../../../graphql/queries";
 
 const drawerWidth = 240;
 
+// Base static menu
 const staticMenu = [
   {
     label: "Dashboard",
@@ -98,9 +96,10 @@ const staticMenu = [
   },
 ];
 
-const Sidebar = ({ open, onClose }) => {
+const SellerSidebar = ({ open, onClose }) => {
   const router = useRouter();
   const pathname = usePathname();
+  const { id: storeId } = useParams(); // <-- get storeId from URL
   const { hasPermission } = useAuth();
 
   // Get categories dynamically
@@ -111,10 +110,13 @@ const Sidebar = ({ open, onClose }) => {
     onClose && onClose();
   };
 
-  // Filter static menus by role
-  const visibleMenuItems = staticMenu.filter((item) =>
-    hasPermission(item.roles)
-  );
+  // Filter static menus by role and inject storeId into path
+  const visibleMenuItems = staticMenu
+    .filter((item) => hasPermission(item.roles))
+    .map((item) => ({
+      ...item,
+      path: `/stores/${storeId}${item.path}`,
+    }));
 
   const DrawerContent = () => (
     <>
@@ -168,13 +170,14 @@ const Sidebar = ({ open, onClose }) => {
             </Typography>
           ) : (
             data?.categorys.map((cat) => {
-              const isActive = pathname === `/product/category/${cat.name}`;
+              // Correct: category is a filter under the current store
+              const categoryPath = `/stores/${storeId}/products?category=${cat.id}`;
+              const isActive = pathname === categoryPath;
+
               return (
                 <ListItem key={cat.id} disablePadding>
                   <ListItemButton
-                    onClick={() =>
-                      handleNavigation(`/product/category/${cat.name}`)
-                    }
+                    onClick={() => handleNavigation(categoryPath)}
                     selected={isActive}
                     sx={{
                       mx: 1,
@@ -242,4 +245,4 @@ const Sidebar = ({ open, onClose }) => {
   );
 };
 
-export default Sidebar;
+export default SellerSidebar;

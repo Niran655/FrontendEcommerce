@@ -57,51 +57,110 @@ export const GET_PRODUCTS = gql`
       updatedAt
     }
   }
-#   query ProductsByOwner($owner: ID!) {
-#   productsByOwner(owner: $owner) {
-#     id
-#     name
-#     active
-#     addSlide {
-#       id
-#       title
-#       header
-#       description
-#       image
-#     }
-#     category
-#     comboItems {
-#       product {
-#         id
-#       }
-#       quantity
-#     }
-#     cost
-#     createdAt
-#     description
-#     discount {
-#       id
-#       defaultPrice
-#       description
-#       discountPrice
-#     }
-#     image
-#     isCombo
-#     lowStock
-#     minStock
-#     price
-#     sku
-#     stock
-#     subImage {
-#       id
-#       url
-#       altText
-#       caption
-#     }
-#     updatedAt
-#   }
-# }
 `;
+
+export const GET_PRODUCT_BY_OWNER= gql`
+  query ProductsByOwner($owner: ID!) {
+  productsByOwner(owner: $owner) {
+    id
+    name
+    active
+    addSlide {
+      id
+      title
+      header
+      description
+      image
+    }
+    category
+    comboItems {
+      product {
+        id
+      }
+      quantity
+    }
+    cost
+    createdAt
+    description
+    discount {
+      id
+      defaultPrice
+      description
+      discountPrice
+    }
+    image
+    isCombo
+    lowStock
+    minStock
+    price
+    sku
+    stock
+    subImage {
+      id
+      url
+      altText
+      caption
+    }
+    owner {
+      id
+      name
+    }
+    shops {
+      shop
+      isVisible
+      customPrice
+      createdAt
+    }
+    updatedAt
+  }
+}
+`
+export const GET_PRODUCT_FOR_SHOP = gql`
+query GetProductsForShop($shopId: ID!) {
+  getProductsForShop(shopId: $shopId) {
+    id
+    active
+    addSlide {
+      id
+      title
+      header
+      description
+      image
+    }
+    category
+    comboItems {
+      quantity
+    }
+    cost
+    description
+    discount {
+      id
+      defaultPrice
+      description
+      discountPrice
+    }
+    image
+    isCombo
+    lowStock
+    mainStock {
+      quantity
+      minStock
+      lowStock
+    }
+    minStock
+    name
+    price
+    sku
+    stock
+    subImage {
+      id
+      url
+      altText
+      caption
+    }
+  }
+}
+`
 
 
 export const GET_BANNERS = gql`

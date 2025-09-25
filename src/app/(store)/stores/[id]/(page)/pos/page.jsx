@@ -43,8 +43,8 @@ import {
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
-import { CREATE_SALE } from "../../../../graphql/mutation";
-import { GET_PRODUCTS } from "../../../../graphql/queries";
+import { CREATE_SALE } from "../../../../../../../graphql/mutation";
+import { GET_PRODUCTS } from "../../../../../../../graphql/queries";
 
 const POS = () => {
   const [cart, setCart] = useState([]);
@@ -471,7 +471,7 @@ const POS = () => {
                         <ListItemText
                           primary={item.name}
                           secondary={`$${
-                            item.discount?.discountPrice || ""
+                            item.discount[0]?.discountPrice || ""
                           } $${item.price.toFixed(2)} each `}
                         />
                         <Box

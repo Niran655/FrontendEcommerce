@@ -27,7 +27,7 @@ import {
   ChartNoAxesGantt,
   ChartBarStacked,
 } from "lucide-react";
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useQuery } from "@apollo/client/react";
 import { GET_CATEGORYS } from "../../../graphql/queries";
@@ -102,14 +102,32 @@ const Sidebar = ({ open, onClose }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { hasPermission } = useAuth();
+  const drawerRef = useRef(null);
 
   // Get categories dynamically
   const { data, loading } = useQuery(GET_CATEGORYS);
 
+  // Store scroll position before navigation
   const handleNavigation = (path) => {
+    // Save current scroll position
+    if (drawerRef.current) {
+      sessionStorage.setItem('sidebarScroll', drawerRef.current.scrollTop.toString());
+    }
+    
     router.push(path);
     onClose && onClose();
   };
+
+  // Restore scroll position after route change
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem('sidebarScroll');
+    if (savedScroll && drawerRef.current) {
+      const scrollPosition = parseInt(savedScroll);
+      drawerRef.current.scrollTop = scrollPosition;
+      // Clear the stored position after restoring
+      sessionStorage.removeItem('sidebarScroll');
+    }
+  }, [pathname]);
 
   // Filter static menus by role
   const visibleMenuItems = staticMenu.filter((item) =>
@@ -119,7 +137,15 @@ const Sidebar = ({ open, onClose }) => {
   const DrawerContent = () => (
     <>
       <Toolbar />
-      <Box sx={{ overflow: "auto", mt: 1 }}>
+      <Box 
+        ref={drawerRef}
+        sx={{ 
+          overflow: "auto", 
+          mt: 1, 
+          height: 'calc(100vh - 64px)',
+          overscrollBehavior: 'contain'
+        }}
+      >
         <List>
           {visibleMenuItems.map((item) => {
             const IconComponent = item.icon;
@@ -135,10 +161,10 @@ const Sidebar = ({ open, onClose }) => {
                     mb: 0.5,
                     borderRadius: 1,
                     "&.Mui-selected": {
-                      backgroundColor: "primary.light",
+                      backgroundColor: "#1D293D",
                       color: "primary.contrastText",
                       "&:hover": {
-                        backgroundColor: "primary.main",
+                        backgroundColor: "#1E2939",
                       },
                     },
                   }}
@@ -148,7 +174,12 @@ const Sidebar = ({ open, onClose }) => {
                   >
                     <IconComponent size={20} />
                   </ListItemIcon>
-                  <ListItemText primary={item.label} />
+                  <ListItemText 
+                    primary={item.label}  
+                    primaryTypographyProps={{
+                      variant: 'body2',
+                    }}
+                  />
                 </ListItemButton>
               </ListItem>
             );
@@ -194,7 +225,12 @@ const Sidebar = ({ open, onClose }) => {
                     >
                       <PackageSearch size={20} />
                     </ListItemIcon>
-                    <ListItemText primary={cat.name} />
+                    <ListItemText 
+                      primary={cat.name}  
+                      primaryTypographyProps={{
+                        variant: 'body2',
+                      }} 
+                    />
                   </ListItemButton>
                 </ListItem>
               );

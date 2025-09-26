@@ -1,28 +1,79 @@
-"use client"
+"use client";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { Alert, Avatar, Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, Grid, IconButton, InputLabel, MenuItem, Paper, Select, Stack, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography } from '@mui/material';
-import { Edit, Key, Plus, Search, Shield, Trash2, UserCheck, Users, UserX,User } from 'lucide-react';
-import React, { useState } from 'react';
-import "../../../../style/User.css"
-import { CREATE_USER, DELETE_USER, UPDATE_USER } from '../../../../graphql/mutation';
-import { GET_USERS } from '../../../../graphql/queries';
+import {
+  Alert,
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  FormControlLabel,
+  Grid,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import {
+  Edit,
+  Key,
+  Plus,
+  Search,
+  Shield,
+  Trash2,
+  UserCheck,
+  Users,
+  UserRoundPen,
+  Store,
+  UserX,
+  User,
+  UserCog,
+  UserStar,
+} from "lucide-react";
+import React, { useState } from "react";
+import "../../../../style/User.css";
+import {
+  CREATE_USER,
+  DELETE_USER,
+  UPDATE_USER,
+} from "../../../../graphql/mutation";
+import { GET_USERS } from "../../../../graphql/queries";
+import CircularIndeterminate from "@/app/components/loading/Loading";
 
-const roles = ['Admin', 'Manager', 'Cashier', 'StockKeeper','User'];
+const roles = ["Admin", "Manager", "Cashier", "StockKeeper", "User", "Shop"];
 
 const initialUserForm = {
-  name: '',
-  email: '',
-  password: '',
-  role: 'Cashier',
-  active: true
+  name: "",
+  email: "",
+  password: "",
+  role: "Cashier",
+  active: true,
 };
 
 const UserManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [userForm, setUserForm] = useState(initialUserForm);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('All');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("All");
 
   const { data, loading, error, refetch } = useQuery(GET_USERS);
 
@@ -33,7 +84,7 @@ const UserManagement = () => {
       setEditingUser(null);
       refetch();
     },
-    onError: (error) => alert(`Error: ${error.message}`)
+    onError: (error) => alert(`Error: ${error.message}`),
   });
 
   const [updateUser] = useMutation(UPDATE_USER, {
@@ -43,21 +94,22 @@ const UserManagement = () => {
       setEditingUser(null);
       refetch();
     },
-    onError: (error) => alert(`Error: ${error.message}`)
+    onError: (error) => alert(`Error: ${error.message}`),
   });
 
   const [deleteUser] = useMutation(DELETE_USER, {
     onCompleted: () => refetch(),
-    onError: (error) => alert(`Error: ${error.message}`)
+    onError: (error) => alert(`Error: ${error.message}`),
   });
 
   const users = data?.users || [];
 
   // Filter users
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'All' || user.role === roleFilter;
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === "All" || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
 
@@ -72,35 +124,39 @@ const UserManagement = () => {
     setUserForm({
       name: user.name,
       email: user.email,
-      password: '', // Don't pre-fill password for security
+      password: "", // Don't pre-fill password for security
       role: user.role,
-      active: user.active
+      active: user.active,
     });
     setDialogOpen(true);
   };
 
   const handleDeleteUser = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this user? This action cannot be undone."
+      )
+    ) {
       await deleteUser({ variables: { id: userId } });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const input = {
       name: userForm.name,
       email: userForm.email,
       role: userForm.role,
       active: userForm.active,
-      ...(userForm.password && { password: userForm.password })
+      ...(userForm.password && { password: userForm.password }),
     };
 
     if (editingUser) {
       await updateUser({ variables: { id: editingUser.id, input } });
     } else {
       if (!userForm.password) {
-        alert('Password is required for new users');
+        alert("Password is required for new users");
         return;
       }
       input.password = userForm.password;
@@ -109,37 +165,54 @@ const UserManagement = () => {
   };
 
   const handleInputChange = (field, value) => {
-    setUserForm(prev => ({ ...prev, [field]: value }));
+    setUserForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const getRoleColor = (role) => {
     const colors = {
-      Admin: 'error',
-      Manager: 'warning',
-      Cashier: 'info',
-      StockKeeper: 'success',
-      User : 'blue'
+      Admin: "error",
+      Manager: "warning",
+      Cashier: "info",
+      StockKeeper: "success",
+      User: "blue",
+      Shop: "red",
     };
-    return colors[role] || 'default';
+    return colors[role] || "default";
   };
 
   const getRoleIcon = (role) => {
     switch (role) {
-      case 'Admin': return <Shield size={16} />;
-      case 'Manager': return <UserCheck size={16} />;
-      case 'Cashier': return <Users size={16} />;
-      case 'StockKeeper': return <Users size={16} />;
-      case 'User' : return <User size={16} /> 
-      default: return <Users size={16} />;
+      case "Admin":
+        return <Shield size={36} color="white" />;
+      case "Manager":
+        return <UserCog size={36} color="white" />;
+      case "Cashier":
+        return <UserStar size={36} color="white" />;
+      case "StockKeeper":
+        return <UserRoundPen size={36} color="white" />;
+      case "User":
+        return <User size={36} color="white" />;
+      case "Shop":
+        return <Store size={36} color="white" />;
+      default:
+        return <Users size={36} color="white" />;
     }
   };
 
-  if (loading) return <Typography>Loading users...</Typography>;
-  if (error) return <Alert severity="error">Error loading users: {error.message}</Alert>;
+  // if (loading) return <Typography>Loading users...</Typography>;
+  if (error)
+    return <Alert severity="error">Error loading users: {error.message}</Alert>;
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+      {/* <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
         <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
           User Management
         </Typography>
@@ -150,28 +223,39 @@ const UserManagement = () => {
         >
           Add User
         </Button>
-      </Box>
+      </Box> */}
 
       {/* User Statistics */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {roles.map(role => {
-          const count = users.filter(user => user.role === role).length;
+        {roles.map((role) => {
+          const count = users.filter((user) => user.role === role).length;
           return (
-            <Grid size={{xs:6,md:3}} key={role}>
+            <Grid size={{ xs: 6, md: 3 }} key={role}>
               <Card class={`box-content-${role}`}>
-                <CardContent >
-                  <Box   sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <CardContent>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
                     <Box>
-                      <Typography color="text.secondary" gutterBottom>
+                      <Typography
+                        class={`text-dashboard-card-${role}`}
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         {role}
                       </Typography>
-                      <Typography variant="h4" color={`${getRoleColor(role)}.main`}>
+                      <Typography
+                        variant="h4"
+                        color={`${getRoleColor(role)}.main`}
+                      >
                         {count}
                       </Typography>
                     </Box>
-                    <Avatar sx={{ bgcolor: `${getRoleColor(role)}.main` }}>
-                      {getRoleIcon(role)}
-                    </Avatar>
+                    <Box class={`box-icon-${role}`}>{getRoleIcon(role)}</Box>
                   </Box>
                 </CardContent>
               </Card>
@@ -183,29 +267,34 @@ const UserManagement = () => {
       {/* Search and Filter */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid size={{xs:12,md:6}}>
+          {/* Search */}
+          <Grid xs={12} md={3}>
             <TextField
               fullWidth
               placeholder="Search users..."
               value={searchTerm}
-              size='small'
+              size="small"
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
-                startAdornment: <Search size={20} style={{ marginRight: 8, color: '#666' }} />
+                startAdornment: (
+                  <Search size={20} style={{ marginRight: 8, color: "#666" }} />
+                ),
               }}
             />
           </Grid>
-          <Grid  size={{xs:12,md:4}}>
+
+          {/* Filter */}
+          <Grid xs={12} md={2}>
             <FormControl fullWidth>
               <InputLabel>Filter by Role</InputLabel>
               <Select
                 value={roleFilter}
-                size='small'
+                size="small"
                 label="Filter by Role"
                 onChange={(e) => setRoleFilter(e.target.value)}
               >
                 <MenuItem value="All">All Roles</MenuItem>
-                {roles.map(role => (
+                {roles.map((role) => (
                   <MenuItem key={role} value={role}>
                     {role}
                   </MenuItem>
@@ -213,12 +302,21 @@ const UserManagement = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{xs:12}} md={2}>
-            <Chip 
-              label={`${filteredUsers.length} users`} 
-              color="primary" 
+
+          {/* Spacer pushes next items right */}
+          <Grid item sx={{ ml: "auto", display: "flex", gap: 2 }}>
+            <Chip
+              label={`${filteredUsers.length} users`}
+              color="primary"
               variant="outlined"
             />
+            <Button
+              variant="contained"
+              startIcon={<Plus size={20} />}
+              onClick={handleCreateUser}
+            >
+              Add User
+            </Button>
           </Grid>
         </Grid>
       </Paper>
@@ -239,12 +337,21 @@ const UserManagement = () => {
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>
+              {
+                loading?(
+                  <CircularIndeterminate/>
+                ):(
+ <TableBody>
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar sx={{ mr: 2, bgcolor: `${getRoleColor(user.role)}.main` }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Avatar
+                          sx={{
+                            mr: 2,
+                            bgcolor: `${getRoleColor(user.role)}.main`,
+                          }}
+                        >
                           {user.name[0]}
                         </Avatar>
                         <Box>
@@ -257,7 +364,7 @@ const UserManagement = () => {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Chip
-                        icon={getRoleIcon(user.role)}
+                        // icon={getRoleIcon(user.role)}
                         label={user.role}
                         color={getRoleColor(user.role)}
                         variant="outlined"
@@ -266,15 +373,23 @@ const UserManagement = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        icon={user.active ? <UserCheck size={16} /> : <UserX size={16} />}
-                        label={user.active ? 'Active' : 'Inactive'}
-                        color={user.active ? 'success' : 'error'}
+                        icon={
+                          user.active ? (
+                            <UserCheck size={16} />
+                          ) : (
+                            <UserX size={16} />
+                          )
+                        }
+                        label={user.active ? "Active" : "Inactive"}
+                        color={user.active ? "success" : "error"}
                         variant="outlined"
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
-                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                      {user.lastLogin
+                        ? new Date(user.lastLogin).toLocaleDateString()
+                        : "Never"}
                     </TableCell>
                     <TableCell>
                       {new Date(user.createdAt).toLocaleDateString()}
@@ -304,64 +419,81 @@ const UserManagement = () => {
                   </TableRow>
                 ))}
               </TableBody>
+                )
+              }
+             
             </Table>
           </TableContainer>
         </CardContent>
       </Card>
 
       {/* User Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <form onSubmit={handleSubmit}>
           <DialogTitle>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
               <Users size={24} style={{ marginRight: 8 }} />
-              {editingUser ? 'Edit User' : 'Create New User'}
+              {editingUser ? "Edit User" : "Create New User"}
             </Box>
           </DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid size={{xs:12}} >
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Full Name"
                   value={userForm.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                   required
                 />
               </Grid>
-              <Grid size={{xs:12}}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Email"
                   type="email"
-                  
                   value={userForm.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                   required
                 />
               </Grid>
-              <Grid size={{xs:12}}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label={editingUser ? 'New Password (leave blank to keep current)' : 'Password'}
+                  label={
+                    editingUser
+                      ? "New Password (leave blank to keep current)"
+                      : "Password"
+                  }
                   type="password"
                   value={userForm.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("password", e.target.value)
+                  }
                   required={!editingUser}
-                  helperText={editingUser ? 'Only enter if you want to change the password' : ''}
+                  helperText={
+                    editingUser
+                      ? "Only enter if you want to change the password"
+                      : ""
+                  }
                 />
               </Grid>
-              <Grid size={{xs:12,md:6}}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth required>
                   <InputLabel>Role</InputLabel>
                   <Select
                     value={userForm.role}
                     label="Role"
-                    onChange={(e) => handleInputChange('role', e.target.value)}
+                    onChange={(e) => handleInputChange("role", e.target.value)}
                   >
-                    {roles.map(role => (
+                    {roles.map((role) => (
                       <MenuItem key={role} value={role}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
                           {getRoleIcon(role)}
                           <Typography sx={{ ml: 1 }}>{role}</Typography>
                         </Box>
@@ -370,12 +502,14 @@ const UserManagement = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid size={{xs:12,md:6}}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <FormControlLabel
                   control={
                     <Switch
                       checked={userForm.active}
-                      onChange={(e) => handleInputChange('active', e.target.checked)}
+                      onChange={(e) =>
+                        handleInputChange("active", e.target.checked)
+                      }
                       color="primary"
                     />
                   }
@@ -385,24 +519,26 @@ const UserManagement = () => {
             </Grid>
 
             {/* Role Permissions Info */}
-            <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+            <Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
               <Typography variant="subtitle2" gutterBottom>
                 Role Permissions:
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Admin:</strong> Full system access including user management<br/>
-                <strong>Manager:</strong> All operations except user management<br/>
-                <strong>Cashier:</strong> POS operations and basic reporting<br/>
+                <strong>Admin:</strong> Full system access including user
+                management
+                <br />
+                <strong>Manager:</strong> All operations except user management
+                <br />
+                <strong>Cashier:</strong> POS operations and basic reporting
+                <br />
                 <strong>StockKeeper:</strong> Inventory and supplier management
               </Typography>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
-            <Button onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
+            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button type="submit" variant="contained">
-              {editingUser ? 'Update User' : 'Create User'}
+              {editingUser ? "Update User" : "Create User"}
             </Button>
           </DialogActions>
         </form>

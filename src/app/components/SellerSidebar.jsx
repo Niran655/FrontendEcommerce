@@ -27,7 +27,7 @@ import {
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { useQuery } from "@apollo/client/react";
-import { GET_CATEGORYS } from "../../../graphql/queries";
+import { GET_CATEGORY_FOR_SHOP } from "../../../graphql/queries";
 
 const drawerWidth = 240;
 
@@ -99,18 +99,21 @@ const staticMenu = [
 const SellerSidebar = ({ open, onClose }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { id: storeId } = useParams(); // <-- get storeId from URL
+  const { id } = useParams();
+  const { id: storeId } = useParams();
   const { hasPermission } = useAuth();
 
-  // Get categories dynamically
-  const { data, loading } = useQuery(GET_CATEGORYS);
+  const { data, loading } = useQuery(GET_CATEGORY_FOR_SHOP, {
+    variables: {
+      shopId: id,
+    },
+  });
 
   const handleNavigation = (path) => {
     router.push(path);
     onClose && onClose();
   };
 
-  // Filter static menus by role and inject storeId into path
   const visibleMenuItems = staticMenu
     .filter((item) => hasPermission(item.roles))
     .map((item) => ({
@@ -169,11 +172,9 @@ const SellerSidebar = ({ open, onClose }) => {
               Loading...
             </Typography>
           ) : (
-            data?.categorys.map((cat) => {
-              // Correct: category is a filter under the current store
-              const categoryPath = `/stores/${storeId}/products?category=${cat.id}`;
+            data?.getCategoriesForShop.map((cat) => {
+              const categoryPath = `/stores/${storeId}/product/category/${cat.id}`;
               const isActive = pathname === categoryPath;
-
               return (
                 <ListItem key={cat.id} disablePadding>
                   <ListItemButton

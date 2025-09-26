@@ -15,12 +15,21 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { Coffee, LogOut, Settings, User, Store,ShoppingCart,Bell } from "lucide-react";
+import {
+  Coffee,
+  LogOut,
+  Settings,
+  User,
+  Store,
+  ShoppingCart,
+  Bell,
+} from "lucide-react";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import MenuIcon from "@mui/icons-material/Menu";
-const Header = ({ onSidebarToggle,onStoreOpen }) => {
+import { Warehouse } from "lucide-react";
+const Header = ({ onSidebarToggle, onStoreOpen }) => {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -58,7 +67,8 @@ const Header = ({ onSidebarToggle,onStoreOpen }) => {
   return (
     <AppBar
       position="fixed"
-      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, bgcolor: "#1D293D", }}
+      
     >
       <Toolbar>
         {/* <Coffee size={28} style={{ marginRight: 12 }} /> */}
@@ -67,24 +77,27 @@ const Header = ({ onSidebarToggle,onStoreOpen }) => {
           color="inherit"
           aria-label="open sidebar"
           onClick={onSidebarToggle}
-          sx={{ mr: 2, display: { xs: "block", md: "none" } }}
+          sx={{ mr: 2, display: { xs: "block", md: "none" }}}
         >
           <MenuIcon />
         </IconButton>
 
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Ecomerce
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1, }}>
+           GLOBAL ECOMMERCE
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton href="pos" color="white">
             <ShoppingCart color="white" />
           </IconButton>
-          <IconButton color="white" onClick={handleOpenNotification}>
-            <Bell  />
+          <IconButton  onClick={handleOpenNotification}>
+            <Bell color="white"/>
           </IconButton>
-          <IconButton onClick={onStoreOpen}>
+          {/* <IconButton onClick={onStoreOpen}>
             <Store color="white" />
+          </IconButton> */}
+          <IconButton href="/storeLogin">
+            <Warehouse color="white" />
           </IconButton>
           <Chip
             label={user?.role}

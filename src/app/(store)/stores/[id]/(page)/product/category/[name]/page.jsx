@@ -2,9 +2,9 @@
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@apollo/client/react";
 import {
-  GET_PROUCT_BY_CATEGORY,
+  GET_PRODUCT_BY_SHOP_CATEGORY_ID,
   GET_BANNER_BY_CATEGORY,
-} from "../../../../../../graphql/queries";
+} from "../../../../../../../../../graphql/queries";
 import {
   Box,
   Button,
@@ -17,22 +17,22 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
-import ProductView from "../../../../components/ProductView/ProductView";
+import ProductView from "../../../../../../../components/ProductView/ProductView";
 import Image from "next/image";
 
 export default function ProductByCategoryPage() {
   const { name } = useParams();
-  
+  console.log("first", name);
   const router = useRouter();
-  const { data, loading, error } = useQuery(GET_PROUCT_BY_CATEGORY, {
-    variables: { category: name },
+  const { data, loading, error } = useQuery(GET_PRODUCT_BY_SHOP_CATEGORY_ID, {
+    variables: { shopCategoryId: name },
   });
 
   const { data: BannerData } = useQuery(GET_BANNER_BY_CATEGORY, {
     variables: { category: name },
   });
 
-  const products = data?.productsByCategory || [];
+  const products = data?.getProductByShopCategoryId || [];
   const banners = BannerData?.bannerByCategory || [];
 
   const [selectedProductId, setSelectedProductId] = useState(null);
@@ -103,9 +103,9 @@ export default function ProductByCategoryPage() {
               ? Number(product.discount[0].discountPrice)
               : null;
           const discountPercent =
-  discount && price
-    ? (((price - discount) / price) * 100).toFixed(0)
-    : null;
+            discount && price
+              ? (((price - discount) / price) * 100).toFixed(0)
+              : null;
 
           const isLowStock = Number(product.stock) < Number(product.minStock);
           const image =
@@ -125,29 +125,32 @@ export default function ProductByCategoryPage() {
                 elevation={0}
               >
                 <Box sx={{ position: "relative" }}>
-              <CardMedia
-                component="img"
-                height="200"
-                image={image}
-                alt={product.name}
-              />
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={image}
+                    alt={product.name}
+                  />
 
-              {discount && price && (
-                <Chip
-                  label={`-${(((price - discount) / price) * 100).toFixed(0)}%`}
-                  color="error"
-                  size="small"
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    left: 8,
-                    fontWeight: "bold",
-                    backgroundColor: "#f44336",
-                    color: "#fff",
-                  }}
-                />
-              )}
-            </Box>
+                  {discount && price && (
+                    <Chip
+                      label={`-${(((price - discount) / price) * 100).toFixed(
+                        0
+                      )}%`}
+                      color="error"
+                      size="small"
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        fontWeight: "bold",
+                        backgroundColor: "#f44336",
+                        color: "#fff",
+                      }}
+                    />
+                  )}
+                </Box>
+
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Typography gutterBottom variant="h6" noWrap>
                     {product.name}
@@ -186,7 +189,7 @@ export default function ProductByCategoryPage() {
                       </Box>
                     ) : (
                       <Typography variant="body1">
-                        💲 ${price.toFixed(2)} 
+                        💲 ${price.toFixed(2)}
                       </Typography>
                     )}
                     <Typography

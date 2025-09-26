@@ -10,11 +10,14 @@ import {
   Card,
   CardContent,
   Chip,
+  IconButton,
+  InputAdornment,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import { LogIn } from "lucide-react";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 import { LOGIN_MUTATION } from "../../../../graphql/mutation";
 import { useAuth } from "../../context/AuthContext";
@@ -40,6 +43,7 @@ const getRoleColor = (role) => {
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const router = useRouter();
@@ -53,7 +57,6 @@ const Login = () => {
       try {
         if (token) {
           localStorage.setItem("token", token);
-
           await fetch("/api/auth/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -65,14 +68,9 @@ const Login = () => {
       }
 
       login(data.login.user, token);
-      if (checkUser !== "Seller") {
-        router.push("/dashboard");
-        return;
-      }
-      router.push("/storeLogin");
+      router.push(checkUser !== "Seller" ? "/dashboard" : "/storeLogin");
     },
     onError: (err) => {
-      console.error(err);
       const gqlMessage =
         err?.graphQLErrors?.[0]?.message ||
         err?.message ||
@@ -84,21 +82,17 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     if (!email || !password) {
       setError("Please fill in all fields");
       return;
     }
-
     await loginMutation({ variables: { email, password } });
   };
 
   const handleQuickLogin = (account) => {
     setEmail(account.email);
     setPassword(account.password);
-    loginMutation({
-      variables: { email: account.email, password: account.password },
-    });
+    loginMutation({ variables: { email: account.email, password: account.password } });
   };
 
   return (
@@ -123,9 +117,7 @@ const Login = () => {
                 width: 64,
                 height: 64,
               }}
-            >
-              {/* <Coffee size={32} /> */}
-            </Avatar>
+            />
             <Typography variant="h4" component="h1" gutterBottom>
               Ecomerce
             </Typography>
@@ -154,11 +146,24 @@ const Login = () => {
             <TextField
               fullWidth
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               margin="normal"
               required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      edge="end"
+                      aria-label="toggle password visibility"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             <Button
               type="submit"
@@ -171,30 +176,30 @@ const Login = () => {
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-
-          {/* <Typography variant="body2" color="text.secondary" sx={{ mt: 3, mb: 1 }}>
-              Quick Login (Demo)
-            </Typography>
-            <Stack spacing={1}>
-              {testAccounts.map((account) => (
-                <Button
-                  key={account.role}
-                  variant="outlined"
-                  onClick={() => handleQuickLogin(account)}
-                  disabled={loading}
-                  startIcon={
-                    <Chip label={account.role} color={getRoleColor(account.role)} size="small" />
-                  }
-                  sx={{
-                    justifyContent: "flex-start",
-                    textTransform: "none",
-                    py: 1,
-                  }}
-                >
-                  {account.email}
-                </Button>
-              ))}
-            </Stack> */}
+{/* 
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 3, mb: 1 }}>
+            Quick Login (Demo)
+          </Typography>
+          <Stack spacing={1}>
+            {testAccounts.map((account) => (
+              <Button
+                key={account.role}
+                variant="outlined"
+                onClick={() => handleQuickLogin(account)}
+                disabled={loading}
+                startIcon={
+                  <Chip label={account.role} color={getRoleColor(account.role)} size="small" />
+                }
+                sx={{
+                  justifyContent: "flex-start",
+                  textTransform: "none",
+                  py: 1,
+                }}
+              >
+                {account.email}
+              </Button>
+            ))}
+          </Stack> */}
         </CardContent>
       </Card>
     </Box>

@@ -1,5 +1,6 @@
 "use client";
 import { useQuery } from "@apollo/client/react";
+
 import {
   Box,
   Button,
@@ -13,14 +14,17 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import { GET_MY_SHOPS } from "../../../../graphql/queries";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 export default function StorePage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const { data, loading } = useQuery(GET_MY_SHOPS, {
+  const { data, loading, refetch } = useQuery(GET_MY_SHOPS, {
     variables: {
       getShopsByOwnerIdId: "",
     },
   });
+  useEffect(() => {
+    refetch();
+  }, []);
   return (
     <Box sx={{ padding: 4 }} mt={7}>
       <Stack

@@ -15,7 +15,7 @@ export const GET_ME = gql`
   }
 `;
 
-
+// =============================START PRODUCT QUERY==============================
 
 export const GET_PRODUCTS = gql`
   query GetProducts {
@@ -59,109 +59,191 @@ export const GET_PRODUCTS = gql`
   }
 `;
 
-export const GET_PRODUCT_BY_OWNER= gql`
+export const GET_PRODUCT_BY_OWNER = gql`
   query ProductsByOwner($owner: ID!) {
-  productsByOwner(owner: $owner) {
+    productsByOwner(owner: $owner) {
+      id
+      name
+      active
+      addSlide {
+        id
+        title
+        header
+        description
+        image
+      }
+      category
+      comboItems {
+        product {
+          id
+        }
+        quantity
+      }
+      cost
+      createdAt
+      description
+      discount {
+        id
+        defaultPrice
+        description
+        discountPrice
+      }
+      image
+      isCombo
+      lowStock
+      minStock
+      price
+      sku
+      stock
+      subImage {
+        id
+        url
+        altText
+        caption
+      }
+      owner {
+        id
+        name
+      }
+      shops {
+        shop
+        isVisible
+        customPrice
+        createdAt
+      }
+      updatedAt
+    }
+  }
+`;
+export const GET_PROUCT_BY_CATEGORY = gql`
+  query ProductsByCategory($category: String!) {
+    productsByCategory(category: $category) {
+      id
+      name
+      description
+      category
+      price
+      cost
+      sku
+      stock
+      minStock
+      isCombo
+      comboItems {
+        quantity
+      }
+      discount {
+        id
+        defaultPrice
+        description
+        discountPrice
+      }
+      image
+      active
+      lowStock
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const GET_PRODUCT_BY_SHOP_CATEGORY_ID = gql`
+query GetProductByShopCategoryId($shopCategoryId: String) {
+  getProductByShopCategoryId(shopCategoryId: $shopCategoryId) {
     id
     name
-    active
-    addSlide {
-      id
-      title
-      header
-      description
-      image
-    }
-    category
-    comboItems {
-      product {
-        id
-      }
-      quantity
-    }
-    cost
-    createdAt
-    description
-    discount {
-      id
-      defaultPrice
-      description
-      discountPrice
-    }
-    image
-    isCombo
-    lowStock
-    minStock
-    price
-    sku
-    stock
+    updatedAt
     subImage {
       id
       url
       altText
       caption
     }
-    owner {
-      id
-      name
-    }
-    shops {
-      shop
-      isVisible
-      customPrice
-      createdAt
-    }
-    updatedAt
-  }
-}
-`
-export const GET_PRODUCT_FOR_SHOP = gql`
-query GetProductsForShop($shopId: ID!) {
-  getProductsForShop(shopId: $shopId) {
-    id
-    active
-    addSlide {
-      id
-      title
-      header
-      description
-      image
-    }
-    category
-    comboItems {
-      quantity
-    }
-    cost
-    description
-    discount {
-      id
-      defaultPrice
-      description
-      discountPrice
-    }
-    image
-    isCombo
-    lowStock
+    stock
+    sku
+    price
+    minStock
     mainStock {
       quantity
       minStock
       lowStock
     }
-    minStock
-    name
-    price
-    sku
-    stock
-    subImage {
+    image
+    lowStock
+    isCombo
+    discount {
       id
-      url
-      altText
-      caption
+      defaultPrice
+      description
+      discountPrice
     }
+    active
+    addSlide {
+      id
+      title
+      header
+      description
+      image
+    }
+    category
+    comboItems {
+      quantity
+    }
+    shopCategory {
+      id
+      name
+    }
+    description
+    cost
+    createdAt
   }
 }
-`
-
+`;
+export const GET_PRODUCT_FOR_SHOP = gql`
+  query GetProductsForShop($shopId: ID!) {
+    getProductsForShop(shopId: $shopId) {
+      id
+      active
+      addSlide {
+        id
+        title
+        header
+        description
+        image
+      }
+      category
+      comboItems {
+        quantity
+      }
+      cost
+      description
+      discount {
+        id
+        defaultPrice
+        description
+        discountPrice
+      }
+      image
+      isCombo
+      lowStock
+      mainStock {
+        quantity
+        minStock
+        lowStock
+      }
+      minStock
+      name
+      price
+      sku
+      stock
+      subImage {
+        id
+        url
+        altText
+        caption
+      }
+    }
+  }
+`;
+// ================================END PRODUCT QUERY===================================
 
 export const GET_BANNERS = gql`
   query Banners {
@@ -249,12 +331,44 @@ export const GET_PRODUCT = gql`
     }
   }
 `;
+// ==================================START CATEGORY QUERY================================
 export const GET_CATEGORYS = gql`
   query Categorys {
     categorys {
       id
       name
       slug
+      description
+      image
+      active
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const GET_CATEGORY_FOR_SHOP = gql`
+  query GetCategoriesForShop($shopId: ID!) {
+    getCategoriesForShop(shopId: $shopId) {
+      id
+      name
+      updatedAt
+      slug
+      image
+      description
+      createdAt
+      active
+      parent {
+        id
+        name
+      }
+    }
+  }
+`;
+export const GET_ADMIN_CATEGORY = gql`
+  query GetParentCategoryForAdmin {
+    getParentCategoryForAdmin {
+      id
+      name
       description
       image
       active
@@ -271,28 +385,28 @@ export const GET_CATEGORY = gql`
     }
   }
 `;
-
-export const GET_MY_SHOPS=  gql`
-query GetShopsByOwnerId($getShopsByOwnerIdId: ID!) {
-  getShopsByOwnerId(id: $getShopsByOwnerIdId) {
-    id
-    owner {
+// ==================================END CATEGORY QUERY================================
+export const GET_MY_SHOPS = gql`
+  query GetShopsByOwnerId($getShopsByOwnerIdId: ID!) {
+    getShopsByOwnerId(id: $getShopsByOwnerIdId) {
       id
-      name
-      email
-      role
-      active
-      lastLogin
+      owner {
+        id
+        name
+        email
+        role
+        active
+        lastLogin
+        createdAt
+        updatedAt
+      }
+      shopName
+      description
       createdAt
       updatedAt
     }
-    shopName
-    description
-    createdAt
-    updatedAt
   }
-}
-`
+`;
 
 export const GET_LOW_STOCK_PRODUCTS = gql`
   query GetLowStockProducts {
@@ -303,36 +417,6 @@ export const GET_LOW_STOCK_PRODUCTS = gql`
       stock
       minStock
       lowStock
-    }
-  }
-`;
-export const GET_PROUCT_BY_CATEGORY = gql`
-  query ProductsByCategory($category: String!) {
-    productsByCategory(category: $category) {
-      id
-      name
-      description
-      category
-      price
-      cost
-      sku
-      stock
-      minStock
-      isCombo
-      comboItems {
-        quantity
-      }
-       discount {
-        id
-        defaultPrice
-        description
-        discountPrice
-      }
-      image
-      active
-      lowStock
-      createdAt
-      updatedAt
     }
   }
 `;

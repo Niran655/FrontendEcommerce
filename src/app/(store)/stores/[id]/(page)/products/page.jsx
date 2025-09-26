@@ -43,6 +43,8 @@ import {
 import { useCallback, useState } from "react";
 import * as Yup from "yup";
 
+import { useAuth } from "@/app/context/AuthContext";
+import { useParams } from "next/navigation";
 import {
   CREATE_BANNER,
   CREATE_PRODUCT_FOR_SHOP,
@@ -52,34 +54,29 @@ import {
   UPDATE_PRODUCT_FOR_SHOP,
 } from "../../../../../../../graphql/mutation";
 import {
+  GET_ADMIN_CATEGORY,
   GET_BANNERS,
-  GET_CATEGORYS,
-  GET_PRODUCT_BY_OWNER,
+  GET_CATEGORY_FOR_SHOP,
   GET_PRODUCT_FOR_SHOP,
 } from "../../../../../../../graphql/queries";
-import { useAuth } from "@/app/context/AuthContext";
-import { useParams } from "next/navigation";
-const categories = ["Laptop", "Desktop", "Phone"];
+
 // Validation schema
 const productSchema = Yup.object().shape({
-  name: Yup.string().required("Product name is required"),
+  name: Yup.string().required("required"),
   description: Yup.string(),
-  category: Yup.string().required("Category is required"),
-  price: Yup.number()
-    .min(0, "Price must be positive")
-    .required("Price is required"),
-  cost: Yup.number()
-    .min(0, "Cost must be positive")
-    .required("Cost is required"),
-  sku: Yup.string().required("SKU is required"),
+  category: Yup.string().required("required"),
+  shopCategoryId: Yup.string().required("required"),
+  price: Yup.number().min(0, "Price must be positive").required("required"),
+  cost: Yup.number().min(0, "Cost must be positive").required("required"),
+  sku: Yup.string().required("required"),
   stock: Yup.number()
     .integer("Stock must be an integer")
     .min(0, "Stock must be positive")
-    .required("Stock is required"),
+    .required("required"),
   minStock: Yup.number()
     .integer("Minimum stock must be an integer")
     .min(0, "Minimum stock must be positive")
-    .required("Minimum stock is required"),
+    .required("required"),
   image: Yup.string().url("Must be a valid URL"),
   subImage: Yup.array().of(
     Yup.object().shape({
@@ -114,6 +111,7 @@ const initialFormData = {
   name: "",
   description: "",
   category: "",
+  shopCategoryId: "",
   price: "",
   cost: "",
   sku: "",
@@ -139,6 +137,7 @@ const Products = () => {
   const { id } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategoryForShop, setSelectCategoryForShop] = useState("All");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const { setAlert } = useAuth();
@@ -150,18 +149,27 @@ const Products = () => {
       shopId: id,
     },
   });
-  const { data: categoryData } = useQuery(GET_CATEGORYS);
+  const { data: categoryData } = useQuery(GET_ADMIN_CATEGORY);
+  const { data: categoryForShop } = useQuery(GET_CATEGORY_FOR_SHOP, {
+    variables: {
+      shopId: id,
+    },
+  });
   const {
     data: bannerData,
     loading: bannerLoading,
     refetch: refetchBanners,
   } = useQuery(GET_BANNERS);
 
-  const categorys = categoryData?.categorys || [];
+  const categorys = categoryData?.getParentCategoryForAdmin || [];
+  const categorysForShop = categoryForShop?.getCategoriesForShop || [];
+
   const categoryNames = categorys.map((cat) => cat.name);
+  const categoryNamesForShop = categorysForShop.map((cat) => cat.name);
+
   const banners = bannerData?.banners || [];
 
-  const [createProduct] = useMutation(CREATE_PRODUCT_FOR_SHOP, {
+  const [createProductForShop] = useMutation(CREATE_PRODUCT_FOR_SHOP, {
     onCompleted: ({ createProductForShop }) => {
       if (createProductForShop.isSuccess) {
         setAlert(true, "success", createProductForShop.message);
@@ -185,7 +193,7 @@ const Products = () => {
         setEditingProduct(null);
         refetch();
       } else {
-        setAlert(true, "error", updateProductForShop.message); // Fixed this line
+        setAlert(true, "error", updateProductForShop.message);
       }
     },
     onError: (error) => alert(`Error: ${error.message}`),
@@ -230,29 +238,21 @@ const Products = () => {
 
   const products = data?.getProductsForShop || [];
 
-  // Filter products
-  // const filteredProducts = products.filter((product) => {
-  //   const matchesSearch =
-  //     product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  //     ||
-  //     product.sku.toLowerCase().includes(searchTerm.toLowerCase());
-  //   const matchesCategory =
-  //     selectedCategory === "All" || product.category === selectedCategory;
-  //   return matchesSearch && matchesCategory;
-  // });
   const filteredProducts = products.filter((product) => {
     const name = product.name?.toLowerCase() || "";
     const sku = product.sku?.toLowerCase() || "";
     const category = product.category || "";
-
+    const shopCategory = product.shopCategoryId || "";
     const matchesSearch =
       name.includes(searchTerm.toLowerCase()) ||
       sku.includes(searchTerm.toLowerCase());
 
     const matchesCategory =
       selectedCategory === "All" || category === selectedCategory;
-
-    return matchesSearch && matchesCategory;
+    const matchesShopCategory =
+      selectedCategoryForShop == "All" ||
+      shopCategory == selectedCategoryForShop;
+    return matchesSearch && matchesCategory && matchesShopCategory;
   });
 
   const handleCreateProduct = () => {
@@ -269,10 +269,14 @@ const Products = () => {
 
   const handleEditProduct = (product) => {
     setEditingProduct(product);
+    console.log("product category shop", product);
     formik.setValues({
       name: product.name,
       description: product.description || "",
       category: product.category,
+      // shopCategoryId: product.shopCategoryId ,
+      shopCategoryId:
+        product.shopCategoryId?.id || product.shopCategoryId || "",
       price: product.price.toString(),
       cost: product.cost.toString(),
       sku: product.sku,
@@ -334,6 +338,7 @@ const Products = () => {
         name: values.name,
         description: values.description,
         category: values.category,
+        shopCategoryId: values.shopCategoryId,
         price: parseFloat(values.price),
         cost: parseFloat(values.cost),
         sku: values.sku,
@@ -350,7 +355,6 @@ const Products = () => {
         comboItems: values.comboItems,
       };
 
-      // Use the same input structure for both create and update
       const input = {
         shopId: id,
         productData: productData,
@@ -360,11 +364,11 @@ const Products = () => {
         await updateProductForShop({
           variables: {
             productId: editingProduct.id,
-            input: input, // Pass the same input structure
+            input: input,
           },
         });
       } else {
-        await createProduct({
+        await createProductForShop({
           variables: { input },
         });
       }
@@ -375,7 +379,6 @@ const Products = () => {
     initialValues: initialBannerData,
     validationSchema: bannerSchema,
     onSubmit: async (values) => {
-      // Check if category already has a banner (only when creating new banner)
       if (!editBanner) {
         const existingBanner = banners.find(
           (banner) => banner.category === values.category
@@ -638,7 +641,7 @@ const Products = () => {
       {/* Search and Filter */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <TextField
               fullWidth
               size="small"
@@ -652,7 +655,7 @@ const Products = () => {
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
+          <Grid size={{ xs: 12, md: 2 }}>
             <FormControl fullWidth>
               <InputLabel>Category</InputLabel>
               <Select
@@ -662,7 +665,25 @@ const Products = () => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <MenuItem value="All">All Categories</MenuItem>
-                {categories.map((category) => (
+                {categoryNames.map((category) => (
+                  <MenuItem key={category} value={category}>
+                    {category}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, md: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={selectedCategoryForShop}
+                label="Shop Category"
+                size="small"
+                onChange={(e) => setSelectCategoryForShop(e.target.value)}
+              >
+                <MenuItem value="All">All Categories</MenuItem>
+                {categoryNamesForShop.map((category) => (
                   <MenuItem key={category} value={category}>
                     {category}
                   </MenuItem>
@@ -975,23 +996,11 @@ const Products = () => {
                   required
                 />
               </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Description"
-                  name="description"
-                  multiline
-                  rows={2}
-                  value={values.description}
-                  onChange={handleChange}
-                  error={touched.description && Boolean(errors.description)}
-                  helperText={touched.description && errors.description}
-                />
-              </Grid>
+
               <Grid size={{ xs: 12, md: 4 }}>
                 <Autocomplete
                   fullWidth
-                  options={categorys.map((cat) => cat.name)} // use name instead of id
+                  options={categorys.map((cat) => cat.name)}
                   value={values.category}
                   onChange={(event, newValue) => {
                     handleChange({
@@ -1012,6 +1021,32 @@ const Products = () => {
                     />
                   )}
                 />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Shop Category *</InputLabel>
+                  <Select
+                    name="shopCategoryId"
+                    value={values.shopCategoryId}
+                    label="Shop Category *"
+                    onChange={handleChange}
+                    error={
+                      touched.shopCategoryId && Boolean(errors.shopCategoryId)
+                    }
+                  >
+                    <MenuItem value="">Select a category</MenuItem>
+                    {categorysForShop.map((category) => (
+                      <MenuItem key={category.id} value={category.id}>
+                        {category.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {touched.shopCategoryId && errors.shopCategoryId && (
+                    <Typography variant="caption" color="error">
+                      {errors.shopCategoryId}
+                    </Typography>
+                  )}
+                </FormControl>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
@@ -1041,7 +1076,7 @@ const Products = () => {
                   required
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
                   fullWidth
                   label="Stock Quantity"
@@ -1055,7 +1090,7 @@ const Products = () => {
                   required
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
                   fullWidth
                   label="Minimum Stock"
@@ -1069,7 +1104,19 @@ const Products = () => {
                   required
                 />
               </Grid>
-
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label="Description"
+                  name="description"
+                  multiline
+                  rows={2}
+                  value={values.description}
+                  onChange={handleChange}
+                  error={touched.description && Boolean(errors.description)}
+                  helperText={touched.description && errors.description}
+                />
+              </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
@@ -1235,13 +1282,12 @@ const Products = () => {
                     value={bannerValues.category}
                     label="Category *"
                     onChange={handleBannerChange}
-                    disabled={!!editBanner} // Disable category selection when editing
+                    disabled={!!editBanner}
                     error={
                       bannerTouched.category && Boolean(bannerErrors.category)
                     }
                   >
                     {categoryNames.map((category) => {
-                      // Check if category already has a banner (only show available categories for new banners)
                       const hasBanner = banners.some(
                         (b) =>
                           b.category === category &&

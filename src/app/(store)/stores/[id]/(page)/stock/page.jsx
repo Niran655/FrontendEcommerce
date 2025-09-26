@@ -44,8 +44,9 @@ import {
   Search,
   FileText
 } from 'lucide-react';
-import { GET_STOCK_MOVEMENTS, GET_LOW_STOCK_PRODUCTS, GET_PRODUCTS } from '../../../../../../../graphql/queries';
+import { GET_STOCK_MOVEMENTS, GET_LOW_STOCK_PRODUCTS, GET_PRODUCT_FOR_SHOP } from '../../../../../../../graphql/queries';
 import { ADJUST_STOCK } from '../../../../../../../graphql/mutation';
+import { useParams } from 'next/navigation';
 
 // Validation Schema using Yup :cite[5]:cite[10]
 const adjustmentSchema = Yup.object().shape({
@@ -69,11 +70,15 @@ const StockManagement = () => {
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const {id} = useParams()
   const { data: stockData, loading: stockLoading, refetch: refetchStock } = useQuery(GET_STOCK_MOVEMENTS);
   console.log("stock data",stockData)
   const { data: lowStockData, loading: lowStockLoading, refetch: refetchLowStock } = useQuery(GET_LOW_STOCK_PRODUCTS);
-  const { data: productsData, loading: productsLoading } = useQuery(GET_PRODUCTS);
+  const { data: productsData, loading: productsLoading } = useQuery(GET_PRODUCT_FOR_SHOP,{
+    variables:{
+      shopId:id
+    }
+  });
 
   const [adjustStock] = useMutation(ADJUST_STOCK, {
     onCompleted: () => {
@@ -125,7 +130,7 @@ const StockManagement = () => {
     }
   };
 
-  const filteredProducts = productsData?.products?.filter(product =>
+  const filteredProducts = productsData?.getProductsForShop?.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -296,10 +301,13 @@ const StockManagement = () => {
               <Settings size={24} style={{ marginRight: 8 }} />
               Stock Adjustment
             </Typography>
-
+          <Stack direction={"row"} >
+            <Box>
+            <Typography>Search</Typography>
             <TextField
-              fullWidth
               placeholder="Search products..."
+              size='small'
+              
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -307,7 +315,10 @@ const StockManagement = () => {
               }}
               sx={{ mb: 3 }}
             />
-
+            </Box>
+            <Box>
+            </Box>
+          </Stack>
             <TableContainer>
               <Table>
                 <TableHead>

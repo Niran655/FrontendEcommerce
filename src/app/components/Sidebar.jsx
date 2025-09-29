@@ -31,67 +31,67 @@ import React, { useRef, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useQuery } from "@apollo/client/react";
 import { GET_CATEGORYS } from "../../../graphql/queries";
-
+import { translateLauguage } from "../function/translate";
 const drawerWidth = 240;
 
 const staticMenu = [
   {
-    label: "Dashboard",
+    label: "dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
     roles: ["Admin", "Manager", "Cashier", "StockKeeper", "Seller"],
   },
   {
-    label: "POS System",
+    label: "pos_system",
     icon: ShoppingCart,
     path: "/pos",
     roles: ["Admin", "Manager", "Cashier", "Seller"],
   },
   {
-    label: "Categorys",
+    label: "categorys",
     icon: ChartNoAxesGantt,
     path: "/categorys",
     roles: ["Admin", "Manager", "StockKeeper", "Seller"],
   },
   {
-    label: "Products",
+    label: "products",
     icon: Package,
     path: "/products",
     roles: ["Admin", "Manager", "StockKeeper", "Seller"],
   },
   {
-    label: "Stock Mg",
+    label: "stock_mg",
     icon: Warehouse,
     path: "/stock",
     roles: ["Admin", "Manager", "StockKeeper", "Seller"],
   },
   {
-    label: "Suppliers & PO",
+    label: "suppliers_po",
     icon: Truck,
     path: "/suppliers",
     roles: ["Admin", "Manager", "StockKeeper", "Seller"],
   },
   {
-    label: "Reports",
+    label: "reports",
     icon: BarChart3,
     path: "/reports",
     roles: ["Admin", "Manager", "Seller"],
   },
   {
-    label: "User Management",
+    label: "user_management",
     icon: Users,
     path: "/users",
     roles: ["Admin", "Manager", "Seller"],
   },
   {
-    label: "Settings",
+    label: "settings",
     icon: Settings,
     path: "/settings",
     roles: ["Admin", "Manager", "Seller"],
   },
   //===============USER ROLE=====================
   {
-    label: "Home",
+    label: "home",
     icon: Warehouse,
     path: "/home",
     roles: ["Manager", "User"],
@@ -104,7 +104,9 @@ const Sidebar = ({ open, onClose }) => {
   const { hasPermission } = useAuth();
   const drawerRef = useRef(null);
 
-  // Get categories dynamically
+  const { language } = useAuth();
+  const { t } = translateLauguage(language);
+
   const { data, loading } = useQuery(GET_CATEGORYS);
 
   // Store scroll position before navigation
@@ -161,7 +163,7 @@ const Sidebar = ({ open, onClose }) => {
                     mb: 0.5,
                     borderRadius: 1,
                     "&.Mui-selected": {
-                      backgroundColor: "#1D293D",
+                      backgroundColor: "#000000ff",
                       color: "primary.contrastText",
                       "&:hover": {
                         backgroundColor: "#1E2939",
@@ -175,7 +177,7 @@ const Sidebar = ({ open, onClose }) => {
                     <IconComponent size={20} />
                   </ListItemIcon>
                   <ListItemText 
-                    primary={item.label}  
+                    primary={t(item.label)}  
                     primaryTypographyProps={{
                       variant: 'body2',
                     }}

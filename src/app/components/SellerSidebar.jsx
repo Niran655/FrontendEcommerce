@@ -28,73 +28,74 @@ import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { useQuery } from "@apollo/client/react";
 import { GET_CATEGORY_FOR_SHOP } from "../../../graphql/queries";
-
+import { translateLauguage } from "../function/translate";
 const drawerWidth = 240;
 
 // Base static menu
 const staticMenu = [
   {
-    label: "Dashboard",
+    label: "dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
     roles: ["Admin", "Manager", "Cashier", "StockKeeper", "Seller"],
   },
   {
-    label: "POS System",
+    label: "pos_system",
     icon: ShoppingCart,
     path: "/pos",
     roles: ["Admin", "Manager", "Cashier", "Seller"],
   },
   {
-    label: "Categorys",
+    label: "categorys",
     icon: ChartNoAxesGantt,
     path: "/categorys",
     roles: ["Admin", "Manager", "StockKeeper", "Seller"],
   },
   {
-    label: "Products",
+    label: "products",
     icon: Package,
     path: "/products",
     roles: ["Admin", "Manager", "StockKeeper", "Seller"],
   },
   {
-    label: "Stock Mg",
+    label: "stock_mg",
     icon: Warehouse,
     path: "/stock",
     roles: ["Admin", "Manager", "StockKeeper", "Seller"],
   },
   {
-    label: "Suppliers & PO",
+    label: "suppliers_po",
     icon: Truck,
     path: "/suppliers",
     roles: ["Admin", "Manager", "StockKeeper", "Seller"],
   },
   {
-    label: "Reports",
+    label: "reports",
     icon: BarChart3,
     path: "/reports",
     roles: ["Admin", "Manager", "Seller"],
   },
   {
-    label: "User Management",
+    label: "user_management",
     icon: Users,
     path: "/users",
     roles: ["Admin", "Manager", "Seller"],
   },
   {
-    label: "Settings",
+    label: "settings",
     icon: Settings,
     path: "/settings",
     roles: ["Admin", "Manager", "Seller"],
   },
   //===============USER ROLE=====================
   {
-    label: "Home",
+    label: "home",
     icon: Warehouse,
     path: "/home",
-    roles: ["Manager", "User"],
+    roles: ["Manager", "User",],
   },
 ];
+
 
 const SellerSidebar = ({ open, onClose }) => {
   const router = useRouter();
@@ -102,7 +103,8 @@ const SellerSidebar = ({ open, onClose }) => {
   const { id } = useParams();
   const { id: storeId } = useParams();
   const { hasPermission } = useAuth();
-
+  const { language } = useAuth();
+  const { t } = translateLauguage(language);
   const { data, loading } = useQuery(GET_CATEGORY_FOR_SHOP, {
     variables: {
       shopId: id,
@@ -140,10 +142,10 @@ const SellerSidebar = ({ open, onClose }) => {
                     mb: 0.5,
                     borderRadius: 1,
                     "&.Mui-selected": {
-                      backgroundColor: "primary.light",
+                      backgroundColor: "#1D293D",
                       color: "primary.contrastText",
                       "&:hover": {
-                        backgroundColor: "primary.main",
+                        backgroundColor: "#1E2939",
                       },
                     },
                   }}
@@ -153,7 +155,12 @@ const SellerSidebar = ({ open, onClose }) => {
                   >
                     <IconComponent size={20} />
                   </ListItemIcon>
-                  <ListItemText primary={item.label} />
+                  <ListItemText
+                    primary={t(item.label)}
+                    primaryTypographyProps={{
+                      variant: "body2",
+                    }}
+                  />
                 </ListItemButton>
               </ListItem>
             );
@@ -198,7 +205,12 @@ const SellerSidebar = ({ open, onClose }) => {
                     >
                       <PackageSearch size={20} />
                     </ListItemIcon>
-                    <ListItemText primary={cat.name} />
+                    <ListItemText
+                      primary={cat.name}
+                      primaryTypographyProps={{
+                        variant: "body2",
+                      }}
+                    />
                   </ListItemButton>
                 </ListItem>
               );

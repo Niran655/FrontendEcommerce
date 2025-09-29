@@ -1,8 +1,8 @@
 import { Box, Button, Card, Grid, Stack, Typography } from "@mui/material";
 
-import ProductCard from "../../components/Home/ProductCard";
+import ProductCard from "../../../../../components/Home/ProductCard";
+import "../../../../../../../style/Home.css";
 import HeroSlider from "@/app/components/Home/HeroSlider";
-import "../../../../style/Home.css";
 
 const Home = () => {
   return (

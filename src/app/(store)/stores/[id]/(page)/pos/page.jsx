@@ -28,6 +28,7 @@ import {
   Select,
   TextField,
   Typography,
+  Autocomplete,
 } from "@mui/material";
 import {
   CreditCard,
@@ -40,27 +41,42 @@ import {
   ShoppingCart,
   Trash2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
 import { CREATE_SALE } from "../../../../../../../graphql/mutation";
-import { GET_PRODUCTS } from "../../../../../../../graphql/queries";
-
+import { GET_PRODUCT_FOR_SHOP } from "../../../../../../../graphql/queries";
+import { GET_CATEGORY_FOR_SHOP } from "../../../../../../../graphql/queries";
+import { translateLauguage } from "@/app/function/translate";
+import { useAuth } from "@/app/context/AuthContext";
 const POS = () => {
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const { language } = useAuth();
+  const { t } = translateLauguage(language);
+  const [selectedChildCategory, setSelectedChildCategory] = useState("All");
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [amountPaid, setAmountPaid] = useState("");
   const [discount, setDiscount] = useState(0);
-  console.log("card", cart);
+  const { id } = useParams();
   // Product details dialog state
   const [openProductView, setOpenProductView] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const router = useRouter();
-  const { data, loading, error } = useQuery(GET_PRODUCTS);
+  const { data, loading, error } = useQuery(GET_PRODUCT_FOR_SHOP, {
+    variables: {
+      shopId: id,
+    },
+  });
+
+  const { data: categoriesData } = useQuery(GET_CATEGORY_FOR_SHOP, {
+    variables: {
+      shopId: id,
+    },
+  });
 
   const [createSale] = useMutation(CREATE_SALE, {
     onCompleted: (data) => {
@@ -89,18 +105,31 @@ const POS = () => {
     }
   }, []);
 
-  const products = data?.products || [];
+  const products = data?.getProductsForShop || [];
   const categories = ["All", ...new Set(products.map((p) => p.category))];
+  const childCategoryNames = [
+    "All",
+    ...new Set(
+      products.map((p) => p.shopCategory?.name).filter((name) => !!name) // បំបាត់ null/undefined
+    ),
+  ];
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
+
     const matchesCategory =
       selectedCategory === "All" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory && product.active;
-  });
 
+    const matchesChildCategory =
+      selectedChildCategory === "All" ||
+      product.shopCategory?.name === selectedChildCategory;
+
+    return (
+      matchesSearch && matchesCategory && matchesChildCategory && product.active
+    );
+  });
   const subtotal = cart.reduce((sum, item) => {
     const hasDiscount =
       item.discount?.length > 0 && item.discount[0]?.discountPrice;
@@ -186,22 +215,23 @@ const POS = () => {
       return;
     }
 
-    const saleInput = {
-      items: cart.map((item) => ({
-        product: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        total: item.price * item.quantity,
-      })),
-      subtotal,
-      tax,
-      discount: discountAmount,
-      total,
-      paymentMethod,
-      amountPaid: paymentMethod === "cash" ? paidAmount : total,
-      change: paymentMethod === "cash" ? Math.max(0, paidAmount - total) : 0,
-    };
+  const saleInput = {
+    items: cart.map((item) => ({
+      product: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      total: item.price * item.quantity,
+    })),
+    subtotal,
+    tax,
+    discount: discountAmount,
+    total,
+    paymentMethod,
+    amountPaid: paymentMethod === "cash" ? paidAmount : total,
+    change: paymentMethod === "cash" ? Math.max(0, paidAmount - total) : 0,
+    shopId: id || null,
+  };
 
     createSale({ variables: { input: saleInput } });
   };
@@ -244,7 +274,7 @@ const POS = () => {
         gutterBottom
         sx={{ mb: 4, fontWeight: 600 }}
       >
-        Point of Sale System
+        {t(`pos_system`)}
       </Typography>
 
       <Grid container spacing={3}>
@@ -253,11 +283,12 @@ const POS = () => {
           {/* Search and Filter */}
           <Paper sx={{ p: 2, mb: 3 }}>
             <Grid container spacing={2} alignItems="center">
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <label>{t(`search`)}</label>
                 <TextField
                   fullWidth
                   size="small"
-                  placeholder="Search products..."
+                  placeholder={t(`search`)}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
@@ -270,12 +301,13 @@ const POS = () => {
                   }}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <label>{t(`shop_category`)}</label>
                 <FormControl fullWidth>
-                  <InputLabel>Category</InputLabel>
+                 
                   <Select
                     value={selectedCategory}
-                    label="Category"
+        
                     size="small"
                     onChange={(e) => setSelectedCategory(e.target.value)}
                   >
@@ -287,7 +319,25 @@ const POS = () => {
                   </Select>
                 </FormControl>
               </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                   <label>{t(`main_category`)}</label>
+                <Autocomplete
+                  options={childCategoryNames}
+                  value={selectedChildCategory}
+                  onChange={(event, newValue) =>
+                    setSelectedChildCategory(newValue)
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
+                />
+              </Grid>
               <Grid size={{ xs: 12, md: 2 }}>
+                <label>{t(`product_count`)}</label>
                 <Chip
                   label={`${filteredProducts.length} items`}
                   color="primary"
@@ -442,7 +492,7 @@ const POS = () => {
                   <ShoppingCart size={24} />
                 </Badge>
                 <Typography variant="h6" sx={{ ml: 2, flexGrow: 1 }}>
-                  Current Order
+                  {t(`current_order`)}
                 </Typography>
                 {cart.length > 0 && (
                   <IconButton onClick={clearCart} color="error">

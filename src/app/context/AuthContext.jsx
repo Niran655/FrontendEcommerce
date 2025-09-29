@@ -15,7 +15,7 @@ const AuthContext = createContext(null);
 
 const STORAGE_KEY = "auth.user";
 
-// Resolve a role from various user shapes
+
 function resolveRole(user) {
   if (!user) return null;
   if (typeof user.role === "string" && user.role.trim())
@@ -24,7 +24,7 @@ function resolveRole(user) {
     const first = user.roles.find((r) => typeof r === "string" && r.trim());
     if (first) return first.trim();
   }
-  // Default role if your app expects one even when absent
+
   return "User";
 }
 
@@ -60,7 +60,7 @@ export function AuthProvider({ children, autoCloseAlertMs = 3000 }) {
     showAlert({
       status,
       messageEn,
-      messageKh: messageKh || messageEn, // fallback to English if Khmer not provided
+      messageKh: messageKh || messageEn, 
     });
   };
 
@@ -119,6 +119,15 @@ export function AuthProvider({ children, autoCloseAlertMs = 3000 }) {
       clearAnyExistingTimer();
     };
   }, []);
+
+  //====================LANGUAGE===================================
+   const handleGetLanguage = () => {
+    return window.localStorage.getItem("language") || "en"
+  }
+    const [language, setLanguage] = useState(handleGetLanguage());
+  const changeLanguage = (lang) => {
+    setLanguage(lang);
+  };
 
   // =============== AUTH PERSISTENCE ================================
   useEffect(() => {
@@ -200,6 +209,10 @@ export function AuthProvider({ children, autoCloseAlertMs = 3000 }) {
       setOpen,
       setAlertStatus,
       setMessageAlert,
+
+      //LANGUAGE
+      changeLanguage,
+      language
     }),
     [
       user,
@@ -214,6 +227,10 @@ export function AuthProvider({ children, autoCloseAlertMs = 3000 }) {
       showAlert,
       closeAlert,
       clearAlert,
+
+
+      changeLanguage,
+      language
     ]
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

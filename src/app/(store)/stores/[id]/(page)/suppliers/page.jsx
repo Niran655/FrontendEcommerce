@@ -50,17 +50,20 @@ import { useFormik } from "formik";
 import * as yup from "yup";
 
 import {
-  CREATE_PURCHASE_ORDER,
-  CREATE_SUPPLIER,
+  CREATE_PURCHASE_ORDER_FOR_SHOP,
+  CREATE_SUPPLIER_FOR_SHOP,
   RECEIVE_PURCHASE_ORDER,
   UPDATE_PURCHASE_ORDER_STATUS,
-  UPDATE_SUPPLIER,
+  UPDATE_SUPPLIER_FOR_SHOP,
+  DELETE_SUPPLIER_FOR_SHOP,
 } from "../../../../../../../graphql/mutation";
 import {
   GET_PRODUCTS,
   GET_PURCHASE_ORDERS,
-  GET_SUPPLIERS,
+  GET_SUPPLIERS_FOR_SHOP,
 } from "../../../../../../../graphql/queries";
+import { useParams } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 
 // Validation schemas
 const supplierValidationSchema = yup.object({
@@ -111,50 +114,93 @@ const Suppliers = () => {
   const [supplierDialogOpen, setSupplierDialogOpen] = useState(false);
   const [poDialogOpen, setPODialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
+  const { setAlert } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-
+  const { id } = useParams();
   const {
     data: suppliersData,
     loading: suppliersLoading,
     refetch: refetchSuppliers,
-  } = useQuery(GET_SUPPLIERS);
+  } = useQuery(GET_SUPPLIERS_FOR_SHOP, {
+    variables: {
+      shopId: id,
+    },
+  });
   const {
     data: poData,
     loading: poLoading,
     refetch: refetchPOs,
   } = useQuery(GET_PURCHASE_ORDERS);
-  
+
   const { data: productsData, loading: productsLoading } =
     useQuery(GET_PRODUCTS);
 
-  const [createSupplier] = useMutation(CREATE_SUPPLIER, {
-    onCompleted: () => {
-      setSupplierDialogOpen(false);
-      supplierFormik.resetForm();
-      setEditingSupplier(null);
-      refetchSuppliers();
+  const [createSupplierForShop] = useMutation(CREATE_SUPPLIER_FOR_SHOP, {
+    variables: {
+      shopId: id,
+    },
+    onCompleted: ({ createSupplierForShop }) => {
+      if (createSupplierForShop.isSuccess) {
+        setSupplierDialogOpen(false);
+        setAlert(true, "success", createSupplierForShop?.message);
+        supplierFormik.resetForm();
+        setEditingSupplier(null);
+        refetchSuppliers();
+      } else {
+        setAlert(true, "error", createSupplierForShop?.message);
+      }
     },
     onError: (error) => alert(`Error: ${error.message}`),
   });
 
-  const [updateSupplier] = useMutation(UPDATE_SUPPLIER, {
-    onCompleted: () => {
-      setSupplierDialogOpen(false);
-      supplierFormik.resetForm();
-      setEditingSupplier(null);
-      refetchSuppliers();
+  const [updateSupplierForShop] = useMutation(UPDATE_SUPPLIER_FOR_SHOP, {
+    variables: {
+      shopId: id,
     },
-    onError: (error) => alert(`Error: ${error.message}`),
+    onCompleted: ({ updateSupplierForShop }) => {
+      if (updateSupplierForShop?.isSuccess) {
+        setSupplierDialogOpen(false);
+        setAlert(true, "success", updateSupplierForShop?.message);
+        supplierFormik.resetForm();
+        setEditingSupplier(null);
+        refetchSuppliers();
+      } else {
+        setAlert(true, "error", updateSupplierForShop?.message);
+      }
+    },
+    onError: (err) => {
+      console.log("error", err);
+    },
   });
 
-  const [createPurchaseOrder] = useMutation(CREATE_PURCHASE_ORDER, {
-    onCompleted: () => {
-      setPODialogOpen(false);
-      poFormik.resetForm();
-      refetchPOs();
+  const [deleteSupplierForShop] = useMutation(DELETE_SUPPLIER_FOR_SHOP, {
+    onCompleted: ({ deleteSupplierForShop }) => {
+      if (deleteSupplierForShop?.isSuccess) {
+        setAlert(true, "success", deleteSupplierForShop?.message);
+        refetchSuppliers();
+      } else {
+        setAlert(true, "error", deleteSupplierForShop?.message);
+      }
     },
-    onError: (error) => alert(`Error: ${error.message}`),
+    onError: (err) => {
+      console.log("error", err);
+    },
   });
+
+  const [createPurchaseOrderForShop] = useMutation(
+    CREATE_PURCHASE_ORDER_FOR_SHOP,
+    {
+      variables: {
+        shopId: id,
+      },
+      onCompleted: () => {
+        setPODialogOpen(false);
+        poFormik.resetForm();
+        refetchPOs();
+      },
+      onError: (error) => alert(`Error: ${error.message}`),
+    }
+  );
 
   const [receivePurchaseOrder] = useMutation(RECEIVE_PURCHASE_ORDER, {
     onCompleted: () => {
@@ -163,7 +209,7 @@ const Suppliers = () => {
     },
     onError: (error) => alert(`Error: ${error.message}`),
   });
-  
+
   const [updatePurchaseOrderStatus] = useMutation(UPDATE_PURCHASE_ORDER_STATUS);
 
   const handleStatusUpdate = async (id, status) => {
@@ -182,7 +228,7 @@ const Suppliers = () => {
     }
   };
 
-  const suppliers = suppliersData?.suppliers || [];
+  const suppliers = suppliersData?.getSuppliersForShop || [];
   const purchaseOrders = poData?.purchaseOrders || [];
   const products = productsData?.products || [];
 
@@ -192,14 +238,14 @@ const Suppliers = () => {
     validationSchema: supplierValidationSchema,
     onSubmit: (values) => {
       if (editingSupplier) {
-        updateSupplier({
+        updateSupplierForShop({
           variables: {
-            id: editingSupplier.id,
+            supplierId: editingSupplier.id,
             input: values,
           },
         });
       } else {
-        createSupplier({
+        createSupplierForShop({
           variables: {
             input: values,
           },
@@ -208,12 +254,14 @@ const Suppliers = () => {
     },
   });
 
-  // Formik for purchase order form
   const poFormik = useFormik({
     initialValues: initialPOForm,
     validationSchema: poValidationSchema,
     onSubmit: (values) => {
-      const subtotal = values.items.reduce((sum, item) => sum + (item.total || 0), 0);
+      const subtotal = values.items.reduce(
+        (sum, item) => sum + (item.total || 0),
+        0
+      );
       const tax = subtotal * 0.1; // 10% tax
       const total = subtotal + tax;
 
@@ -232,7 +280,7 @@ const Suppliers = () => {
         notes: values.notes,
       };
 
-      createPurchaseOrder({ variables: { input } });
+      createPurchaseOrderForShop({ variables: { input } });
     },
   });
 
@@ -254,6 +302,17 @@ const Suppliers = () => {
     setSupplierDialogOpen(true);
   };
 
+    const handleDeleteSupplier = async (id) => {
+    if (confirm("Are you sure you want to delete this supplier?")) {
+      try {
+        await deleteSupplierForShop({ variables: { deleteSupplierForShopId: id } });
+        refetch();
+      } catch (err) {
+        console.error("Delete error:", err);
+      }
+    }
+  };
+
   const handleCreatePO = () => {
     poFormik.resetForm();
     setPODialogOpen(true);
@@ -272,24 +331,25 @@ const Suppliers = () => {
 
   const handlePOItemChange = (index, field, value) => {
     const items = [...poFormik.values.items];
-    
+
     if (field === "product") {
       const product = products.find((p) => p.id === value);
       if (product) {
         items[index].name = product.name;
         items[index].unitCost = product.cost;
-        items[index].total = (parseFloat(items[index].quantity) || 0) * product.cost;
+        items[index].total =
+          (parseFloat(items[index].quantity) || 0) * product.cost;
       }
     } else {
       items[index][field] = value;
-      
+
       if (field === "quantity" || field === "unitCost") {
         items[index].total =
           (parseFloat(items[index].quantity) || 0) *
           (parseFloat(items[index].unitCost) || 0);
       }
     }
-    
+
     poFormik.setFieldValue("items", items);
   };
 
@@ -386,7 +446,7 @@ const Suppliers = () => {
       {activeTab === 0 && (
         <Grid container spacing={3}>
           {suppliers.map((supplier) => (
-            <Grid size={{xs:12}} md={6} lg={4} key={supplier.id}>
+            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={supplier.id}>
               <Card>
                 <CardContent>
                   <Box
@@ -407,6 +467,13 @@ const Suppliers = () => {
                         color="primary"
                       >
                         <Edit size={16} />
+                      </IconButton>
+                      <IconButton
+                      size="small"
+                    
+                      onClick={()=>handleDeleteSupplier(supplier.id)}
+                      >
+                        <Trash2   color="red" size={17}/>
                       </IconButton>
                     </Box>
                   </Box>
@@ -521,7 +588,7 @@ const Suppliers = () => {
                             </Button>
                           )}
                           {po.status !== "ordered" && (
-                             <Button
+                            <Button
                               size="small"
                               variant="contained"
                               color="success"
@@ -537,7 +604,9 @@ const Suppliers = () => {
                               {po.name}
                             </Typography>
                             <FormControl size="small" fullWidth>
-                              <InputLabel id={`status-label-${po.id}`}>Status</InputLabel>
+                              <InputLabel id={`status-label-${po.id}`}>
+                                Status
+                              </InputLabel>
                               <Select
                                 value={po.status}
                                 label="Status"
@@ -580,7 +649,7 @@ const Suppliers = () => {
           </DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid size={{xs:12}}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Supplier Name"
@@ -588,12 +657,17 @@ const Suppliers = () => {
                   value={supplierFormik.values.name}
                   onChange={supplierFormik.handleChange}
                   onBlur={supplierFormik.handleBlur}
-                  error={supplierFormik.touched.name && Boolean(supplierFormik.errors.name)}
-                  helperText={supplierFormik.touched.name && supplierFormik.errors.name}
+                  error={
+                    supplierFormik.touched.name &&
+                    Boolean(supplierFormik.errors.name)
+                  }
+                  helperText={
+                    supplierFormik.touched.name && supplierFormik.errors.name
+                  }
                   required
                 />
               </Grid>
-              <Grid size={{xs:12}}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Contact Person"
@@ -601,12 +675,18 @@ const Suppliers = () => {
                   value={supplierFormik.values.contactPerson}
                   onChange={supplierFormik.handleChange}
                   onBlur={supplierFormik.handleBlur}
-                  error={supplierFormik.touched.contactPerson && Boolean(supplierFormik.errors.contactPerson)}
-                  helperText={supplierFormik.touched.contactPerson && supplierFormik.errors.contactPerson}
+                  error={
+                    supplierFormik.touched.contactPerson &&
+                    Boolean(supplierFormik.errors.contactPerson)
+                  }
+                  helperText={
+                    supplierFormik.touched.contactPerson &&
+                    supplierFormik.errors.contactPerson
+                  }
                   required
                 />
               </Grid>
-              <Grid size={{xs:12}} md={6}>
+              <Grid size={{ xs: 12 }} md={6}>
                 <TextField
                   fullWidth
                   label="Email"
@@ -615,12 +695,17 @@ const Suppliers = () => {
                   value={supplierFormik.values.email}
                   onChange={supplierFormik.handleChange}
                   onBlur={supplierFormik.handleBlur}
-                  error={supplierFormik.touched.email && Boolean(supplierFormik.errors.email)}
-                  helperText={supplierFormik.touched.email && supplierFormik.errors.email}
+                  error={
+                    supplierFormik.touched.email &&
+                    Boolean(supplierFormik.errors.email)
+                  }
+                  helperText={
+                    supplierFormik.touched.email && supplierFormik.errors.email
+                  }
                   required
                 />
               </Grid>
-              <Grid size={{xs:12}} md={6}>
+              <Grid size={{ xs: 12 }} md={6}>
                 <TextField
                   fullWidth
                   label="Phone"
@@ -628,12 +713,17 @@ const Suppliers = () => {
                   value={supplierFormik.values.phone}
                   onChange={supplierFormik.handleChange}
                   onBlur={supplierFormik.handleBlur}
-                  error={supplierFormik.touched.phone && Boolean(supplierFormik.errors.phone)}
-                  helperText={supplierFormik.touched.phone && supplierFormik.errors.phone}
+                  error={
+                    supplierFormik.touched.phone &&
+                    Boolean(supplierFormik.errors.phone)
+                  }
+                  helperText={
+                    supplierFormik.touched.phone && supplierFormik.errors.phone
+                  }
                   required
                 />
               </Grid>
-              <Grid size={{xs:12}}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Address"
@@ -643,8 +733,14 @@ const Suppliers = () => {
                   value={supplierFormik.values.address}
                   onChange={supplierFormik.handleChange}
                   onBlur={supplierFormik.handleBlur}
-                  error={supplierFormik.touched.address && Boolean(supplierFormik.errors.address)}
-                  helperText={supplierFormik.touched.address && supplierFormik.errors.address}
+                  error={
+                    supplierFormik.touched.address &&
+                    Boolean(supplierFormik.errors.address)
+                  }
+                  helperText={
+                    supplierFormik.touched.address &&
+                    supplierFormik.errors.address
+                  }
                   required
                 />
               </Grid>
@@ -675,8 +771,15 @@ const Suppliers = () => {
           </DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid size={{xs:12}} >
-                <FormControl fullWidth required error={poFormik.touched.supplier && Boolean(poFormik.errors.supplier)}>
+              <Grid size={{ xs: 12 }}>
+                <FormControl
+                  fullWidth
+                  required
+                  error={
+                    poFormik.touched.supplier &&
+                    Boolean(poFormik.errors.supplier)
+                  }
+                >
                   <InputLabel>Supplier</InputLabel>
                   <Select
                     name="supplier"
@@ -699,7 +802,7 @@ const Suppliers = () => {
                 </FormControl>
               </Grid>
 
-              <Grid size={{xs:12}}>
+              <Grid size={{ xs: 12 }}>
                 <Box
                   sx={{
                     display: "flex",
@@ -723,7 +826,7 @@ const Suppliers = () => {
                   <Card key={index} variant="outlined" sx={{ mb: 2 }}>
                     <CardContent sx={{ pb: 2 }}>
                       <Grid container spacing={2} alignItems="center">
-                        <Grid size={{xs:12,md:4}} >
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <Autocomplete
                             fullWidth
                             options={products}
@@ -749,17 +852,23 @@ const Suppliers = () => {
                                 {...params}
                                 label="Product"
                                 variant="outlined"
-                                error={poFormik.touched.items && 
-                                  poFormik.touched.items[index]?.product && 
-                                  Boolean(poFormik.errors.items?.[index]?.product)}
-                                helperText={poFormik.touched.items && 
-                                  poFormik.touched.items[index]?.product && 
-                                  poFormik.errors.items?.[index]?.product}
+                                error={
+                                  poFormik.touched.items &&
+                                  poFormik.touched.items[index]?.product &&
+                                  Boolean(
+                                    poFormik.errors.items?.[index]?.product
+                                  )
+                                }
+                                helperText={
+                                  poFormik.touched.items &&
+                                  poFormik.touched.items[index]?.product &&
+                                  poFormik.errors.items?.[index]?.product
+                                }
                               />
                             )}
                           />
                         </Grid>
-                        <Grid size={{xs:6,md:2}} >
+                        <Grid size={{ xs: 6, md: 2 }}>
                           <TextField
                             fullWidth
                             label="Quantity"
@@ -773,15 +882,19 @@ const Suppliers = () => {
                               )
                             }
                             inputProps={{ min: 1 }}
-                            error={poFormik.touched.items && 
-                              poFormik.touched.items[index]?.quantity && 
-                              Boolean(poFormik.errors.items?.[index]?.quantity)}
-                            helperText={poFormik.touched.items && 
-                              poFormik.touched.items[index]?.quantity && 
-                              poFormik.errors.items?.[index]?.quantity}
+                            error={
+                              poFormik.touched.items &&
+                              poFormik.touched.items[index]?.quantity &&
+                              Boolean(poFormik.errors.items?.[index]?.quantity)
+                            }
+                            helperText={
+                              poFormik.touched.items &&
+                              poFormik.touched.items[index]?.quantity &&
+                              poFormik.errors.items?.[index]?.quantity
+                            }
                           />
                         </Grid>
-                        <Grid size={{xs:6,md:2}} >
+                        <Grid size={{ xs: 6, md: 2 }}>
                           <TextField
                             fullWidth
                             label="Unit Cost"
@@ -795,15 +908,19 @@ const Suppliers = () => {
                               )
                             }
                             inputProps={{ min: 0, step: 0.01 }}
-                            error={poFormik.touched.items && 
-                              poFormik.touched.items[index]?.unitCost && 
-                              Boolean(poFormik.errors.items?.[index]?.unitCost)}
-                            helperText={poFormik.touched.items && 
-                              poFormik.touched.items[index]?.unitCost && 
-                              poFormik.errors.items?.[index]?.unitCost}
+                            error={
+                              poFormik.touched.items &&
+                              poFormik.touched.items[index]?.unitCost &&
+                              Boolean(poFormik.errors.items?.[index]?.unitCost)
+                            }
+                            helperText={
+                              poFormik.touched.items &&
+                              poFormik.touched.items[index]?.unitCost &&
+                              poFormik.errors.items?.[index]?.unitCost
+                            }
                           />
                         </Grid>
-                        <Grid size={{xs:6,md:2}}>
+                        <Grid size={{ xs: 6, md: 2 }}>
                           <TextField
                             fullWidth
                             label="Total"
@@ -811,7 +928,7 @@ const Suppliers = () => {
                             InputProps={{ readOnly: true }}
                           />
                         </Grid>
-                        <Grid size={{xs:6,md:2}}>
+                        <Grid size={{ xs: 6, md: 2 }}>
                           <IconButton
                             color="error"
                             onClick={() => handleRemovePOItem(index)}
@@ -823,15 +940,17 @@ const Suppliers = () => {
                     </CardContent>
                   </Card>
                 ))}
-                {poFormik.touched.items && poFormik.errors.items && typeof poFormik.errors.items === 'string' && (
-                  <Typography variant="caption" color="error">
-                    {poFormik.errors.items}
-                  </Typography>
-                )}
+                {poFormik.touched.items &&
+                  poFormik.errors.items &&
+                  typeof poFormik.errors.items === "string" && (
+                    <Typography variant="caption" color="error">
+                      {poFormik.errors.items}
+                    </Typography>
+                  )}
               </Grid>
 
               {poFormik.values.items.length > 0 && (
-                <Grid size={{xs:12}}>
+                <Grid size={{ xs: 12 }}>
                   <Paper sx={{ p: 2, bgcolor: "grey.50" }}>
                     <Typography variant="h6" gutterBottom>
                       Order Summary
@@ -845,7 +964,10 @@ const Suppliers = () => {
                     >
                       <Typography>Subtotal:</Typography>
                       <Typography>
-                        ${poFormik.values.items.reduce((sum, item) => sum + (item.total || 0), 0).toFixed(2)}
+                        $
+                        {poFormik.values.items
+                          .reduce((sum, item) => sum + (item.total || 0), 0)
+                          .toFixed(2)}
                       </Typography>
                     </Box>
                     <Box
@@ -857,7 +979,13 @@ const Suppliers = () => {
                     >
                       <Typography>Tax (10%):</Typography>
                       <Typography>
-                        ${(poFormik.values.items.reduce((sum, item) => sum + (item.total || 0), 0) * 0.1).toFixed(2)}
+                        $
+                        {(
+                          poFormik.values.items.reduce(
+                            (sum, item) => sum + (item.total || 0),
+                            0
+                          ) * 0.1
+                        ).toFixed(2)}
                       </Typography>
                     </Box>
                     <Divider sx={{ my: 1 }} />
@@ -866,14 +994,20 @@ const Suppliers = () => {
                     >
                       <Typography variant="h6">Total:</Typography>
                       <Typography variant="h6" color="primary">
-                        ${(poFormik.values.items.reduce((sum, item) => sum + (item.total || 0), 0) * 1.1).toFixed(2)}
+                        $
+                        {(
+                          poFormik.values.items.reduce(
+                            (sum, item) => sum + (item.total || 0),
+                            0
+                          ) * 1.1
+                        ).toFixed(2)}
                       </Typography>
                     </Box>
                   </Paper>
                 </Grid>
               )}
 
-              <Grid size={{xs:12}}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Notes"
@@ -893,7 +1027,9 @@ const Suppliers = () => {
             <Button
               type="submit"
               variant="contained"
-              disabled={!poFormik.values.supplier || poFormik.values.items.length === 0}
+              disabled={
+                !poFormik.values.supplier || poFormik.values.items.length === 0
+              }
             >
               Create Purchase Order
             </Button>

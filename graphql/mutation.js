@@ -219,7 +219,17 @@ export const CREATE_SUPPLIER = gql`
     }
   }
 `;
-
+export const CREATE_SUPPLIER_FOR_SHOP = gql`
+mutation CreateSupplierForShop($input: SupplierInput, $shopId: ID) {
+  createSupplierForShop(input: $input, shopId: $shopId) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`
 export const UPDATE_SUPPLIER = gql`
   mutation UpdateSupplier($id: ID!, $input: SupplierUpdateInput!) {
     updateSupplier(id: $id, input: $input) {
@@ -235,9 +245,33 @@ export const UPDATE_SUPPLIER = gql`
     }
   }
 `;
+export const UPDATE_SUPPLIER_FOR_SHOP = gql`
+mutation UpdateSupplierForShop($input: SupplierUpdateInput, $supplierId: ID, $shopId: ID) {
+  updateSupplierForShop(input: $input, supplierId: $supplierId, shopId: $shopId) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`
+export const DELETE_SUPPLIER_FOR_SHOP = gql`
+mutation DeleteSupplierForShop($deleteSupplierForShopId: ID) {
+  deleteSupplierForShop(id: $deleteSupplierForShopId) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`
 
 //=========================================END SUPPLIER MUTATION====================================================
 
+
+// =======================================START PURCHASE MUTATION===================================================
 export const CREATE_PURCHASE_ORDER = gql`
   mutation CreatePurchaseOrder($input: PurchaseOrderInput!) {
     createPurchaseOrder(input: $input) {
@@ -273,6 +307,21 @@ export const CREATE_PURCHASE_ORDER = gql`
     }
   }
 `;
+
+
+export const CREATE_PURCHASE_ORDER_FOR_SHOP =gql`
+mutation CreateProductForShop($input: ProductForShopInput!) {
+  createProductForShop(input: $input) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`
+
+// =======================================START PURCHASE MUTATION===================================================
 
 export const RECEIVE_PURCHASE_ORDER = gql`
   mutation ReceivePurchaseOrder($id: ID!) {

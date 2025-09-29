@@ -133,7 +133,7 @@ const Reports = () => {
                     ${report.totalSales.toFixed(2)}
                   </Typography>
                 </Box>
-                <Avatar sx={{ bgcolor: "success.main" }}>
+                <Avatar sx={{ bgcolor: "success.main" }}> 
                   <DollarSign size={24} />
                 </Avatar>
               </Box>
@@ -529,7 +529,7 @@ const Reports = () => {
         <Paper sx={{ p: 3, mb: 3 }}>
           <Grid container spacing={3} alignItems="center">
             <Grid size={{xs:12,md:3}} >
-              <FormControl fullWidth>
+              <FormControl fullWidth  >
                 <InputLabel>Report Type</InputLabel>
                 <Select value={reportType} label="Report Type" onChange={(e) => setReportType(e.target.value)}>
                   <MenuItem value="sales">Sales Report</MenuItem>
@@ -544,6 +544,7 @@ const Reports = () => {
                 <Grid size={{xs:12,md:3}} >
                   <DatePicker
                     label="Start Date"
+    
                     value={startDate}
                     onChange={(newValue) => setStartDate(newValue)}
                     slotProps={{ textField: { fullWidth: true } }}
@@ -552,7 +553,7 @@ const Reports = () => {
                 <Grid size={{xs:12,md:3}} >
                   <DatePicker
                     label="End Date"
-                  
+                    
                     value={endDate}
                     onChange={(newValue) => setEndDate(newValue)}
                     slotProps={{ textField: { fullWidth: true } }}

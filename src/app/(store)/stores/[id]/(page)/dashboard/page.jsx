@@ -34,8 +34,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Trophy } from 'lucide-react';
 import { useParams, useRouter } from "next/navigation";
-import { GET_DASHBOARD_STATS } from "../../../../../../../graphql/queries";
+import { GET_DASHBOARD_STATS_FOR_SHOP } from "../../../../../../../graphql/queries";
+import { useAuth } from "@/app/context/AuthContext";
+import { translateLauguage } from "@/app/function/translate";
+import "../../../../../../../style/Dashboard.css"
 const StatCard = ({
   title,
   value,
@@ -43,14 +47,20 @@ const StatCard = ({
   color = "primary",
   subtitle,
 }) => (
-  <Card sx={{ height: "100%" }}>
+  <Card class={`box-content-${color}`} sx={{ height: "100%" }}>
     <CardContent>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <Box>
-          <Typography color="text.secondary" gutterBottom variant="h6">
+          <Typography   class="text-title" gutterBottom variant="h6">
             {title}
           </Typography>
-          <Typography variant="h4" component="div" color={`${color}.main`}>
+          <Typography variant="h4"  component="div" color="#FAFAF9">
             {value}
           </Typography>
           {subtitle && (
@@ -59,34 +69,48 @@ const StatCard = ({
             </Typography>
           )}
         </Box>
-        <Avatar sx={{ bgcolor: `${color}.main`, width: 56, height: 56 }}>
-          <Icon size={24} />
-        </Avatar>
+        <Box class='icon-style' sx={{ width: 56, height: 56 }}>
+          <Icon size={30} class="icon" />
+        </Box>
       </Box>
     </CardContent>
   </Card>
 );
 
 const Dashboard = () => {
-    const { id } = useParams();
-    const router = useRouter();
-  const { data, loading, error } = useQuery(GET_DASHBOARD_STATS, {
+  const { id } = useParams();
+
+  const { language } = useAuth();
+  const { t } = translateLauguage(language);
+  const { data, loading, error } = useQuery(GET_DASHBOARD_STATS_FOR_SHOP, {
+    variables: {
+      shopId: id,
+    },
     pollInterval: 30000, // refresh every 30s
   });
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: 400,
+        }}
+      >
         <CircularProgress />
       </Box>
     );
   }
 
   if (error) {
-    return <Alert severity="error">Error loading dashboard: {error.message}</Alert>;
+    return (
+      <Alert severity="error">Error loading dashboard: {error.message}</Alert>
+    );
   }
 
-  const stats = data?.dashboardStats || {};
+  const stats = data?.dashboardStatsForShop || {};
 
   // Format hourly sales data
   const hourlySalesData = Array.from({ length: 24 }, (_, i) => {
@@ -100,44 +124,49 @@ const Dashboard = () => {
   });
 
   const validTopProducts = (stats?.topProducts || []).filter(
-    (item) => item?.product?.id != null
+    (item) => item?.product != null
   );
-
+  console.log("validTopProducts",validTopProducts)
   return (
     <Box>
-      <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4, fontWeight: 600 }}>
-        Dashboard
+      <Typography
+        variant="h4"
+        component="h1"
+        gutterBottom
+        sx={{ mb: 4, fontWeight: 600 }}
+      >
+        {t(`dashboard`)}
       </Typography>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{xs:12,sm:6,md:3}} >
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
-            title="Today's Sales"
+            title={t(`today's_sales`)}
             value={`$${(stats?.todaySales || 0).toFixed(2)}`}
             icon={DollarSign}
             color="success"
           />
         </Grid>
-        <Grid size={{xs:12,sm:6,md:3}}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
-            title="Transactions"
+            title={t(`transactions`)}
             value={stats?.totalTransactions || 0}
             icon={ShoppingCart}
             color="info"
           />
         </Grid>
-        <Grid size={{xs:12,sm:6,md:3}}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
-            title="Average Order"
+            title={t(`average_order`)}
             value={`$${(stats?.averageOrderValue || 0).toFixed(2)}`}
             icon={TrendingUp}
             color="primary"
           />
         </Grid>
-        <Grid size={{xs:12,sm:6,md:3}}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
-            title="Low Stock Items"
+            title={t(`low_stock_items`)}
             value={stats?.lowStockItems?.length || 0}
             icon={AlertTriangle}
             color="warning"
@@ -147,13 +176,13 @@ const Dashboard = () => {
 
       <Grid container spacing={3}>
         {/* Hourly Sales Chart */}
-        <Grid   size={{xs:12,lg:8}}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
                 <Clock size={24} style={{ marginRight: 8 }} />
                 <Typography variant="h6" component="h2">
-                  Today's Hourly Sales
+                  {t(`today's_hourly_sales`)}
                 </Typography>
               </Box>
               <Box sx={{ height: 300 }}>
@@ -164,7 +193,9 @@ const Dashboard = () => {
                     <YAxis />
                     <Tooltip
                       formatter={(value, name) => [
-                        name === "sales" ? `$${Number(value).toFixed(2)}` : value,
+                        name === "sales"
+                          ? `$${Number(value).toFixed(2)}`
+                          : value,
                         name === "sales" ? "Sales" : "Transactions",
                       ]}
                     />
@@ -183,13 +214,13 @@ const Dashboard = () => {
         </Grid>
 
         {/* Low Stock Alert */}
-        <Grid  size={{xs:12,lg:4}}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Card sx={{ height: "100%" }}>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <AlertTriangle size={24} style={{ marginRight: 8 }} />
                 <Typography variant="h6" component="h2">
-                  Low Stock Alert
+                  {t(`low_stock_alert`)}
                 </Typography>
               </Box>
               {stats?.lowStockItems?.length > 0 ? (
@@ -204,8 +235,16 @@ const Dashboard = () => {
                       <ListItemText
                         primary={item.name}
                         secondary={
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <Typography variant="body2">{item.category}</Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Typography variant="body2">
+                              {item.category}
+                            </Typography>
                             <Chip
                               label={`${item.stock}/${item.minStock}`}
                               size="small"
@@ -224,7 +263,7 @@ const Dashboard = () => {
                   color="text.secondary"
                   sx={{ textAlign: "center", py: 2 }}
                 >
-                  All products are in stock! 🎉
+                  {t(`all_products_are_adequately_stocked`)}
                 </Typography>
               )}
             </CardContent>
@@ -232,21 +271,31 @@ const Dashboard = () => {
         </Grid>
 
         {/* Top Products */}
-        <Grid  size={{xs:12}}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
                 <TrendingUp size={24} style={{ marginRight: 8 }} />
                 <Typography variant="h6" component="h2">
-                  Top Selling Products
+                  {t(`top_selling_products`)}
                 </Typography>
               </Box>
               <Grid container spacing={2}>
                 {validTopProducts.length > 0 ? (
                   validTopProducts.slice(0, 6).map((item, index) => (
-                    <Grid size={{xs:12,sm:6,md:4}}  key={item.product.id}>
-                      <Paper sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-                        <Avatar src={item.product.image} sx={{ width: 48, height: 48 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.product.id}>
+                      <Paper
+                        sx={{
+                          p: 2,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                        }}
+                      >
+                        <Avatar
+                          src={item.product.image}
+                          sx={{ width: 48, height: 48 }}
+                        >
                           <Package size={24} />
                         </Avatar>
                         <Box sx={{ flexGrow: 1 }}>
@@ -257,7 +306,11 @@ const Dashboard = () => {
                             {item.product.category}
                           </Typography>
                           <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                            <Chip label={`${item.quantitySold} sold`} size="small" variant="outlined" />
+                            <Chip
+                              label={`${item.quantitySold} sold`}
+                              size="small"
+                              variant="outlined"
+                            />
                             <Chip
                               label={`$${(item.revenue || 0).toFixed(2)}`}
                               size="small"
@@ -266,8 +319,12 @@ const Dashboard = () => {
                             />
                           </Box>
                         </Box>
-                        <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                          #{index + 1}
+                        <Typography
+                          variant="h6"
+                          color="primary"
+                          sx={{ fontWeight: "bold" }}
+                        >
+                          <Trophy size={15}/> {index + 1}
                         </Typography>
                       </Paper>
                     </Grid>

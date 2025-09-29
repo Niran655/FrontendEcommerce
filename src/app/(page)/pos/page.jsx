@@ -40,7 +40,7 @@ import {
   ShoppingCart,
   Trash2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
 import { CREATE_SALE } from "../../../../graphql/mutation";
@@ -54,7 +54,7 @@ const POS = () => {
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [amountPaid, setAmountPaid] = useState("");
   const [discount, setDiscount] = useState(0);
-  console.log("card", cart);
+  const {id} = useParams()
   // Product details dialog state
   const [openProductView, setOpenProductView] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -203,7 +203,7 @@ const POS = () => {
       change: paymentMethod === "cash" ? Math.max(0, paidAmount - total) : 0,
     };
 
-    createSale({ variables: { input: saleInput } });
+    createSale({ variables: { input:{ ...saleInput,shopId:id} } });
   };
 
   // Product details dialog handlers

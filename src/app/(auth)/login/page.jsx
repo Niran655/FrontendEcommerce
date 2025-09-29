@@ -102,11 +102,11 @@ const Login = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        background: "white",
         p: 2,
       }}
     >
-      <Card sx={{ maxWidth: 500, width: "100%", boxShadow: 24 }}>
+      <Card sx={{ maxWidth: 500, width: "100%", boxShadow: 2 }}>
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ textAlign: "center", mb: 4 }}>
             <Avatar

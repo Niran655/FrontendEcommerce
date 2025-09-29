@@ -34,7 +34,9 @@ import {
   GET_CATEGORY_FOR_SHOP,
   GET_CATEGORYS,
 } from "../../../../../../../graphql/queries";
-
+import ImageUploadWithCropModal from "@/app/components/ImageUploadWithCropModal";
+import CloseIcon from "@mui/icons-material/Close";
+import { translateLauguage } from "@/app/function/translate";
 const Category = () => {
   const { id } = useParams();
   const { data: MainCategory, loading: mainCategoryLoading } =
@@ -50,8 +52,21 @@ const Category = () => {
   const { setAlert } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedParentCategory, setSelectedParentCategory] = useState(null);
+  const { language } = useAuth();
+  const { t } = translateLauguage(language);
+  const handleImageUploadSuccess = (imageData) => {
+    const imageUrl = imageData.imageUrl;
+    setUploadedImageUrl(imageUrl);
+    setFieldValue("image", imageUrl);
+    setAlert(true, "success", "successfully!");
+  };
+
+  const handleImageUploadError = (error) => {
+    setAlert(true, "error", `Image upload failed: ${error}`);
+  };
 
   const [createCategory] = useMutation(CREATE_CATEGORY, {
     onCompleted: ({ createCategory }) => {
@@ -111,16 +126,16 @@ const Category = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
+      const finalImageUrl = uploadedImageUrl || values.image;
       const input = {
         name: values.name,
         slug: values.slug,
         description: values.description,
-        image: values.image,
+        image: finalImageUrl,
         active: values.active === "true",
         shopId: values.shopId || null,
         parent: values.parent || null,
       };
-
       try {
         if (selectedCategory) {
           await updateCategory({
@@ -151,7 +166,6 @@ const Category = () => {
     values,
   } = formik;
 
-  // Reset selected parent when dialog closes or main categories load
   useEffect(() => {
     if (dialogOpen && selectedCategory && mainCategories.length > 0) {
       if (
@@ -180,15 +194,12 @@ const Category = () => {
   const handleEditCategory = (category) => {
     setSelectedCategory(category);
     setDialogOpen(true);
-
     // Set basic field values
     setFieldValue("name", category.name);
     setFieldValue("slug", category.slug);
     setFieldValue("description", category.description);
     setFieldValue("image", category.image || "");
     setFieldValue("active", category.active ? "true" : "false");
-
-    // Set parent category - will be handled by useEffect above
     if (category.parent && typeof category.parent === "object") {
       const parentCat = mainCategories.find(
         (cat) => cat.id === category.parent.id
@@ -198,6 +209,9 @@ const Category = () => {
     } else {
       setSelectedParentCategory(null);
       setFieldValue("parent", "");
+    }
+    if (category.image) {
+      setUploadedImageUrl(category.image);
     }
   };
 
@@ -215,6 +229,13 @@ const Category = () => {
   const handleParentChange = (event, newValue) => {
     setSelectedParentCategory(newValue);
     setFieldValue("parent", newValue?.id || "");
+  };
+  const handleClose = () => {
+    resetForm();
+    setDialogOpen(false);
+    setSelectedCategory(null);
+    setSelectedParentCategory(null);
+    setUploadedImageUrl("");
   };
 
   const filteredCategories = categorys.filter((category) =>
@@ -294,14 +315,14 @@ const Category = () => {
         }}
       >
         <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-          Category Management
+          {t(`category_management`)}
         </Typography>
         <Button
           variant="contained"
           onClick={handleCreateCategory}
           startIcon={<Plus size={20} />}
         >
-          Add Category
+          {t("add_new_category")}
         </Button>
       </Box>
 
@@ -350,25 +371,25 @@ const Category = () => {
         />
       </Box>
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => {
-          setDialogOpen(false);
-          setSelectedCategory(null);
-          setSelectedParentCategory(null);
-        }}
-        maxWidth="md"
-        fullWidth
-      >
+      <Dialog open={dialogOpen} maxWidth="md" fullWidth>
         <Paper sx={{ p: 3 }}>
           <FormikProvider value={formik}>
             <Form onSubmit={handleSubmit}>
-              <DialogTitle>
+              <Box
+                style={{ display: "flex", justifyContent: "space-between" }}
+                mb={2}
+              >
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <Package size={24} style={{ marginRight: 8 }} />
-                  {selectedCategory ? "Edit Category" : "Create New Category"}
+                  {selectedCategory
+                    ? t("update_category")
+                    : t("add_new_category")}
                 </Box>
-              </DialogTitle>
+
+                <IconButton onClick={handleClose}>
+                  <CloseIcon />
+                </IconButton>
+              </Box>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
@@ -406,6 +427,18 @@ const Category = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
+                  <FormControl fullWidth>
+                    <Select
+                      {...getFieldProps("active")}
+                      error={touched.active && Boolean(errors.active)}
+                    >
+                      <MenuItem value="">Select status</MenuItem>
+                      <MenuItem value="true">Active</MenuItem>
+                      <MenuItem value="false">Inactive</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     label="Slug"
                     fullWidth
@@ -426,27 +459,38 @@ const Category = () => {
                     helperText={touched.description && errors.description}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{ xs: 12 }}>
+                  {/* Manual URL Input (optional) */}
                   <TextField
-                    label="Image URL"
+                    label="Image URL (Optional)"
                     fullWidth
                     {...getFieldProps("image")}
                     error={touched.image && Boolean(errors.image)}
-                    helperText={touched.image && errors.image}
+                    helperText="Or use the upload option below"
+                    sx={{ mb: 2 }}
                   />
+                  <Stack direction={"row"} spacing={2}>
+                    <ImageUploadWithCropModal
+                      onUploadSuccess={handleImageUploadSuccess}
+                      onUploadError={handleImageUploadError}
+                      aspectRatio={4 / 3}
+                      existingImageUrl={uploadedImageUrl}
+                    />
+                    {/* {uploadedImageUrl && (
+                      <Box sx={{ mt: 2, textAlign: "center" }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Preview:
+                        </Typography>
+                        <Avatar
+                          src={uploadedImageUrl}
+                          sx={{ width: 100, height: 100, mx: "auto" }}
+                          variant="rounded"
+                        />
+                      </Box>
+                    )} */}
+                  </Stack>
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <FormControl fullWidth>
-                    <Select
-                      {...getFieldProps("active")}
-                      error={touched.active && Boolean(errors.active)}
-                    >
-                      <MenuItem value="">Select status</MenuItem>
-                      <MenuItem value="true">Active</MenuItem>
-                      <MenuItem value="false">Inactive</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
+
                 <Grid size={{ xs: 12 }}>
                   <Stack direction="row" spacing={2} justifyContent={"end"}>
                     <Button

@@ -229,6 +229,10 @@ export const GET_PRODUCT_FOR_SHOP = gql`
         minStock
         lowStock
       }
+          shopCategory {
+      id
+      name
+    }
       minStock
       name
       price
@@ -407,7 +411,7 @@ export const GET_MY_SHOPS = gql`
     }
   }
 `;
-
+// ================================START LOW STOCK PRODUCT===================================
 export const GET_LOW_STOCK_PRODUCTS = gql`
   query GetLowStockProducts {
     lowStockProducts {
@@ -421,6 +425,19 @@ export const GET_LOW_STOCK_PRODUCTS = gql`
   }
 `;
 
+export const GET_LOW_STOCK_PRODUCTS_FOR_SHOP = gql`
+query GetLowStockProductByShop($shopId: ID) {
+  getLowStockProductByShop(shopId: $shopId) {
+      id
+      name
+      category
+      stock
+      minStock
+      lowStock
+  }
+}
+`
+// ===============================END LOW STOCK PRODUCT======================================
 export const GET_SALES = gql`
   query GetSales($limit: Int, $offset: Int) {
     sales(limit: $limit, offset: $offset) {
@@ -452,7 +469,7 @@ export const GET_SALES = gql`
     }
   }
 `;
-
+// ===============================START SUPPLERY QUERY=================================
 export const GET_SUPPLIERS = gql`
   query GetSuppliers {
     suppliers {
@@ -468,6 +485,22 @@ export const GET_SUPPLIERS = gql`
     }
   }
 `;
+export const GET_SUPPLIERS_FOR_SHOP=gql`
+query GetSuppliersForShop($shopId: ID) {
+  getSuppliersForShop(shopId: $shopId) {
+      id
+      name
+      contactPerson
+      email
+      phone
+      address
+      active
+      createdAt
+      updatedAt
+  }
+}
+`
+// ===============================END SUPPLIER QUERY================================
 
 export const GET_PURCHASE_ORDERS = gql`
   query PurchaseOrders {
@@ -570,6 +603,44 @@ export const GET_DASHBOARD_STATS = gql`
   }
 `;
 
+export const GET_DASHBOARD_STATS_FOR_SHOP = gql`
+query DashboardStatsForShop($shopId: ID) {
+  dashboardStatsForShop(shopId: $shopId) {
+      totalTransactions
+      averageOrderValue
+      lowStockItems {
+        id
+        name
+        category
+        stock
+        minStock
+      }
+      hourlySales {
+        hour
+        sales
+        transactions
+      }
+    todaySales
+    topProducts {
+      quantitySold
+      revenue
+      product {
+        name
+        category
+        cost
+        minStock
+        price
+        sku
+        stock
+        image
+        description
+        active
+      }
+    }
+  }
+}
+`
+
 export const GET_SALES_REPORT = gql`
   query GetSalesReport($startDate: Date!, $endDate: Date!) {
     salesReport(startDate: $startDate, endDate: $endDate) {
@@ -590,6 +661,26 @@ export const GET_SALES_REPORT = gql`
   }
 `;
 
+export const GET_SALES_REPORT_FOR_SHOP = gql`
+query SalesReportForShop($startDate: Date!, $endDate: Date!, $shopId: ID) {
+  salesReportForShop(startDate: $startDate, endDate: $endDate, shopId: $shopId) {
+    totalSales
+    totalTransactions
+    averageOrderValue
+    salesByCategory {
+      category
+      sales
+      quantity
+    }
+    salesByDay {
+      date
+      sales
+      transactions
+    }
+  }
+}
+`
+
 export const GET_USERS = gql`
   query GetUsers {
     users {
@@ -604,3 +695,14 @@ export const GET_USERS = gql`
     }
   }
 `;
+export const GET_SHOPS = gql`
+query GetShops {
+  getShops {
+    id
+    shopName
+    description
+    createdAt
+    updatedAt
+  }
+}
+`

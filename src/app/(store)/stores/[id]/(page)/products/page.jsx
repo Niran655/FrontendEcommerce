@@ -4,7 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { DataGrid } from "@mui/x-data-grid";
-
+import "../../../../../../../style/Product.css";
 import {
   Alert,
   Autocomplete,
@@ -59,6 +59,7 @@ import {
   GET_CATEGORY_FOR_SHOP,
   GET_PRODUCT_FOR_SHOP,
 } from "../../../../../../../graphql/queries";
+import { translateLauguage } from "@/app/function/translate";
 
 // Validation schema
 const productSchema = Yup.object().shape({
@@ -141,6 +142,8 @@ const Products = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const { setAlert } = useAuth();
+  const { language } = useAuth();
+  const { t } = translateLauguage(language);
   const [editBanner, setEditBanner] = useState(null);
   const [viewMode, setViewMode] = useState("grid");
   const [openAddBanner, setOpenAddBanner] = useState(false);
@@ -625,15 +628,16 @@ const Products = () => {
         }}
       >
         <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-          Product Management
+          {t(`product_management`)}
         </Typography>
         <Stack direction={"row"} spacing={2}>
           <Button
             variant="contained"
             startIcon={<Plus size={20} />}
             onClick={handleCreateProduct}
+            sx={{ bgcolor: "#1D293D" }}
           >
-            Add Product
+            {t(`create_product`)}
           </Button>
         </Stack>
       </Box>
@@ -642,10 +646,11 @@ const Products = () => {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid size={{ xs: 12, md: 3 }}>
+            <label>{t(`search`)}</label>
             <TextField
               fullWidth
               size="small"
-              placeholder="Search products..."
+              placeholder={t(`search`)}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -656,11 +661,10 @@ const Products = () => {
             />
           </Grid>
           <Grid size={{ xs: 12, md: 2 }}>
+            <label>{t(`main_category`)}</label>
             <FormControl fullWidth>
-              <InputLabel>Category</InputLabel>
               <Select
                 value={selectedCategory}
-                label="Category"
                 size="small"
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -674,11 +678,10 @@ const Products = () => {
             </FormControl>
           </Grid>
           <Grid size={{ xs: 12, md: 2 }}>
+            <label>{t(`shop_category`)}</label>
             <FormControl fullWidth>
-              <InputLabel>Category</InputLabel>
               <Select
                 value={selectedCategoryForShop}
-                label="Shop Category"
                 size="small"
                 onChange={(e) => setSelectCategoryForShop(e.target.value)}
               >
@@ -692,32 +695,47 @@ const Products = () => {
             </FormControl>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 3 }}>
+          <Grid size={{ xs: 12, md: 3 }} mt={2.5}>
             <Stack direction="row" spacing={1}>
               <Button
                 variant={viewMode === "grid" ? "contained" : "outlined"}
                 onClick={() => setViewMode("grid")}
-                size="small"
+                sx={{
+                  backgroundColor:
+                    viewMode === "grid" ? "black" : "transparent",
+                  color: viewMode === "grid" ? "white" : "#1D293D",
+                  borderColor: "#1D293D",
+                }}
               >
                 Grid
               </Button>
               <Button
                 variant={viewMode === "table" ? "contained" : "outlined"}
                 onClick={() => setViewMode("table")}
-                size="small"
+                sx={{
+                  backgroundColor:
+                    viewMode === "table" ? "#1D293D" : "transparent",
+                  color: viewMode === "table" ? "white" : "#1D293D",
+                  borderColor: "#1D293D",
+                }}
               >
                 Table
               </Button>
               <Button
                 variant={viewMode === "banner" ? "contained" : "outlined"}
                 onClick={() => setViewMode("banner")}
-                size="small"
+                sx={{
+                  backgroundColor:
+                    viewMode === "banner" ? "#1D293D" : "transparent",
+                  color: viewMode === "banner" ? "white" : "#1D293D",
+                  borderColor: "#1D293D",
+                }}
               >
                 Banner
               </Button>
             </Stack>
           </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
+          <Grid size={{ xs: 12, md: 2 }} mt={3}>
             <Chip
               label={
                 viewMode === "banner"
@@ -912,13 +930,20 @@ const Products = () => {
         <Box>
           <Stack direction={"row"} justifyContent={"space-between"} mb={2}>
             <Typography variant="h5">Banner Management</Typography>
-            <Button
-              variant="contained"
-              startIcon={<Plus size={20} />}
-              onClick={handleCreateBanner}
-            >
-              Add Banner
-            </Button>
+              <Button
+                variant="contained"
+                startIcon={<Plus size={20} />}
+                onClick={handleCreateBanner}
+                sx={{
+                  backgroundColor: "#1D293D",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "#16202f" 
+                  }
+                }}
+              >
+                Add Banner
+              </Button>
           </Stack>
 
           {banners.length === 0 ? (

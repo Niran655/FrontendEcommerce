@@ -63,26 +63,35 @@ import {
 
 // GraphQL queries
 import {
-  GET_LOW_STOCK_PRODUCTS,
+  GET_LOW_STOCK_PRODUCTS_FOR_SHOP,
   GET_SALES,
-  GET_SALES_REPORT,
+  GET_SALES_REPORT_FOR_SHOP,
 } from "../../../../../../../graphql/queries";
+import { useParams } from "next/navigation";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884d8",
+  "#82ca9d",
+];
 
 const Reports = () => {
   const [reportType, setReportType] = useState("sales");
   const [startDate, setStartDate] = useState(dayjs().subtract(7, "day"));
   const [endDate, setEndDate] = useState(dayjs());
-
+  const { id } = useParams();
   const {
     data: reportData,
     loading: reportLoading,
     refetch: refetchReport,
-  } = useQuery(GET_SALES_REPORT, {
+  } = useQuery(GET_SALES_REPORT_FOR_SHOP, {
     variables: {
       startDate: startDate.toDate(),
       endDate: endDate.toDate(),
+      shopId: id,
     },
   });
 
@@ -90,8 +99,13 @@ const Reports = () => {
     variables: { limit: 50 },
   });
 
-  const { data: lowStockData, loading: lowStockLoading } =
-    useQuery(GET_LOW_STOCK_PRODUCTS);
+  const { data: lowStockData, loading: lowStockLoading } = useQuery(
+    GET_LOW_STOCK_PRODUCTS_FOR_SHOP,{
+      variables:{
+        shopId:id
+      }
+    }
+  );
 
   const handleDateRangeChange = () => {
     refetchReport({
@@ -106,12 +120,13 @@ const Reports = () => {
 
   // ---------------------- SALES REPORT ------------------------
   const renderSalesReport = () => {
-    if (reportLoading)
-      return <Typography>Loading sales report...</Typography>;
-    if (!reportData?.salesReport)
-      return <Alert severity="info">No data available for selected period</Alert>;
+    if (reportLoading) return <Typography>Loading sales report...</Typography>;
+    if (!reportData?.salesReportForShop)
+      return (
+        <Alert severity="info">No data available for selected period</Alert>
+      );
 
-    const report = reportData.salesReport;
+    const report = reportData.salesReportForShop;
     const sortedCategories = [...report.salesByCategory].sort(
       (a, b) => b.sales - a.sales
     );
@@ -119,11 +134,15 @@ const Reports = () => {
     return (
       <Grid container spacing={3}>
         {/* Summary Cards */}
-        <Grid size={{xs:12,sm:4}} >
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Card>
             <CardContent>
               <Box
-                sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
                 <Box>
                   <Typography color="text.secondary" gutterBottom>
@@ -141,11 +160,15 @@ const Reports = () => {
           </Card>
         </Grid>
 
-        <Grid size={{xs:12,sm:4}}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Card>
             <CardContent>
               <Box
-                sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
                 <Box>
                   <Typography color="text.secondary" gutterBottom>
@@ -163,11 +186,15 @@ const Reports = () => {
           </Card>
         </Grid>
 
-        <Grid size={{xs:12,sm:4}}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Card>
             <CardContent>
               <Box
-                sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
                 <Box>
                   <Typography color="text.secondary" gutterBottom>
@@ -186,7 +213,7 @@ const Reports = () => {
         </Grid>
 
         {/* Daily Sales Chart */}
-        <Grid size={{xs:12,lg:8}} >
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -198,7 +225,9 @@ const Reports = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
-                    <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, "Sales"]} />
+                    <Tooltip
+                      formatter={(value) => [`$${value.toFixed(2)}`, "Sales"]}
+                    />
                     <Line
                       type="monotone"
                       dataKey="sales"
@@ -214,7 +243,7 @@ const Reports = () => {
         </Grid>
 
         {/* Category Sales Pie Chart */}
-        <Grid size={{xs:12,lg:4}} >
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -236,7 +265,10 @@ const Reports = () => {
                       dataKey="sales"
                     >
                       {report.salesByCategory.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
@@ -248,7 +280,7 @@ const Reports = () => {
         </Grid>
 
         {/* Category Table */}
-        <Grid size={{xs:12}} >
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -267,18 +299,33 @@ const Reports = () => {
                   </TableHead>
                   <TableBody>
                     {sortedCategories.map((category) => {
-                      const percentage = ((category.sales / report.totalSales) * 100).toFixed(1);
-                      const avg = category.quantity > 0 ? (category.sales / category.quantity).toFixed(2) : 0;
+                      const percentage = (
+                        (category.sales / report.totalSales) *
+                        100
+                      ).toFixed(1);
+                      const avg =
+                        category.quantity > 0
+                          ? (category.sales / category.quantity).toFixed(2)
+                          : 0;
                       return (
                         <TableRow key={category.category}>
                           <TableCell>
-                            <Chip label={category.category} color="primary" variant="outlined" />
+                            <Chip
+                              label={category.category}
+                              color="primary"
+                              variant="outlined"
+                            />
                           </TableCell>
                           <TableCell>${category.sales.toFixed(2)}</TableCell>
                           <TableCell>{category.quantity}</TableCell>
                           <TableCell>${avg}</TableCell>
                           <TableCell>
-                            <Chip label={`${percentage}%`} size="small" color="success" variant="outlined" />
+                            <Chip
+                              label={`${percentage}%`}
+                              size="small"
+                              color="success"
+                              variant="outlined"
+                            />
                           </TableCell>
                         </TableRow>
                       );
@@ -301,7 +348,12 @@ const Reports = () => {
     const staffPerformance = sales.reduce((acc, sale) => {
       const cashierId = sale.cashier.id;
       if (!acc[cashierId]) {
-        acc[cashierId] = { name: sale.cashier.name, totalSales: 0, totalTransactions: 0, averageOrder: 0 };
+        acc[cashierId] = {
+          name: sale.cashier.name,
+          totalSales: 0,
+          totalTransactions: 0,
+          averageOrder: 0,
+        };
       }
       acc[cashierId].totalSales += sale.total;
       acc[cashierId].totalTransactions += 1;
@@ -310,7 +362,9 @@ const Reports = () => {
 
     Object.values(staffPerformance).forEach((staff) => {
       staff.averageOrder =
-        staff.totalTransactions > 0 ? staff.totalSales / staff.totalTransactions : 0;
+        staff.totalTransactions > 0
+          ? staff.totalSales / staff.totalTransactions
+          : 0;
     });
 
     const staffArray = [...Object.values(staffPerformance)].sort(
@@ -319,7 +373,7 @@ const Reports = () => {
 
     return (
       <Grid container spacing={3}>
-        <Grid size={{xs:12}}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
@@ -343,13 +397,24 @@ const Reports = () => {
                       <TableRow key={staff.name}>
                         <TableCell>
                           <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <Avatar sx={{ mr: 2, bgcolor: index === 0 ? "gold" : "primary.main" }}>
+                            <Avatar
+                              sx={{
+                                mr: 2,
+                                bgcolor: index === 0 ? "gold" : "primary.main",
+                              }}
+                            >
                               {staff.name[0]}
                             </Avatar>
                             <Box>
-                              <Typography fontWeight="medium">{staff.name}</Typography>
+                              <Typography fontWeight="medium">
+                                {staff.name}
+                              </Typography>
                               {index === 0 && (
-                                <Chip label="Top Performer" size="small" color="warning" />
+                                <Chip
+                                  label="Top Performer"
+                                  size="small"
+                                  color="warning"
+                                />
                               )}
                             </Box>
                           </Box>
@@ -359,8 +424,20 @@ const Reports = () => {
                         <TableCell>${staff.averageOrder.toFixed(2)}</TableCell>
                         <TableCell>
                           <Chip
-                            label={index === 0 ? "Excellent" : index < 3 ? "Good" : "Average"}
-                            color={index === 0 ? "success" : index < 3 ? "primary" : "default"}
+                            label={
+                              index === 0
+                                ? "Excellent"
+                                : index < 3
+                                ? "Good"
+                                : "Average"
+                            }
+                            color={
+                              index === 0
+                                ? "success"
+                                : index < 3
+                                ? "primary"
+                                : "default"
+                            }
                             variant="outlined"
                             size="small"
                           />
@@ -374,7 +451,7 @@ const Reports = () => {
           </Card>
         </Grid>
 
-        <Grid size={{xs:12,md:6}}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -395,7 +472,7 @@ const Reports = () => {
           </Card>
         </Grid>
 
-        <Grid size={{xs:12,md:6}}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -421,12 +498,13 @@ const Reports = () => {
 
   // ---------------------- INVENTORY REPORT ------------------------
   const renderInventoryReport = () => {
-    if (lowStockLoading) return <Typography>Loading inventory report...</Typography>;
-    const lowStockItems = lowStockData?.lowStockProducts || [];
+    if (lowStockLoading)
+      return <Typography>Loading inventory report...</Typography>;
+    const lowStockItems = lowStockData?.getLowStockProductByShop || [];
 
     return (
       <Grid container spacing={3}>
-        <Grid size={{xs:12}}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Box
@@ -438,7 +516,10 @@ const Reports = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <AlertTriangle size={24} style={{ marginRight: 8, color: "#ff9800" }} />
+                  <AlertTriangle
+                    size={24}
+                    style={{ marginRight: 8, color: "#ff9800" }}
+                  />
                   <Typography variant="h6">Low Stock Report</Typography>
                 </Box>
                 <Chip
@@ -450,7 +531,8 @@ const Reports = () => {
 
               {lowStockItems.length === 0 ? (
                 <Alert severity="success">
-                  All inventory levels are healthy! No items below minimum stock levels.
+                  All inventory levels are healthy! No items below minimum stock
+                  levels.
                 </Alert>
               ) : (
                 <TableContainer>
@@ -468,7 +550,7 @@ const Reports = () => {
                     <TableBody>
                       {lowStockItems.map((item) => {
                         const shortage = item.minStock - item.stock;
-                        const priority =  
+                        const priority =
                           shortage > item.minStock
                             ? "Critical"
                             : shortage > item.minStock * 0.5
@@ -483,7 +565,9 @@ const Reports = () => {
                         return (
                           <TableRow key={item.id}>
                             <TableCell>
-                              <Box sx={{ display: "flex", alignItems: "center" }}>
+                              <Box
+                                sx={{ display: "flex", alignItems: "center" }}
+                              >
                                 <Avatar sx={{ mr: 2, bgcolor: "warning.main" }}>
                                   <Package size={20} />
                                 </Avatar>
@@ -491,13 +575,24 @@ const Reports = () => {
                               </Box>
                             </TableCell>
                             <TableCell>
-                              <Chip label={item.category} size="small" variant="outlined" />
+                              <Chip
+                                label={item.category}
+                                size="small"
+                                variant="outlined"
+                              />
                             </TableCell>
-                            <TableCell color="error.main">{item.stock}</TableCell>
+                            <TableCell color="error.main">
+                              {item.stock}
+                            </TableCell>
                             <TableCell>{item.minStock}</TableCell>
                             <TableCell>{shortage}</TableCell>
                             <TableCell>
-                              <Chip label={priority} color={priorityColor} variant="outlined" size="small" />
+                              <Chip
+                                label={priority}
+                                color={priorityColor}
+                                variant="outlined"
+                                size="small"
+                              />
                             </TableCell>
                           </TableRow>
                         );
@@ -516,11 +611,22 @@ const Reports = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 4,
+          }}
+        >
           <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
             Reports & Analytics
           </Typography>
-          <Button variant="outlined" startIcon={<Download size={20} />} onClick={exportReport}>
+          <Button
+            variant="outlined"
+            startIcon={<Download size={20} />}
+            onClick={exportReport}
+          >
             Export Report
           </Button>
         </Box>
@@ -528,10 +634,14 @@ const Reports = () => {
         {/* Report Controls */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Grid container spacing={3} alignItems="center">
-            <Grid size={{xs:12,md:3}} >
+            <Grid size={{ xs: 12, md: 3 }}>
               <FormControl fullWidth>
                 <InputLabel>Report Type</InputLabel>
-                <Select value={reportType} label="Report Type" onChange={(e) => setReportType(e.target.value)}>
+                <Select
+                  value={reportType}
+                  label="Report Type"
+                  onChange={(e) => setReportType(e.target.value)}
+                >
                   <MenuItem value="sales">Sales Report</MenuItem>
                   <MenuItem value="staff">Staff Performance</MenuItem>
                   <MenuItem value="inventory">Inventory Report</MenuItem>
@@ -541,7 +651,7 @@ const Reports = () => {
 
             {reportType === "sales" && (
               <>
-                <Grid size={{xs:12,md:3}} >
+                <Grid size={{ xs: 12, md: 3 }}>
                   <DatePicker
                     label="Start Date"
                     value={startDate}
@@ -549,16 +659,15 @@ const Reports = () => {
                     slotProps={{ textField: { fullWidth: true } }}
                   />
                 </Grid>
-                <Grid size={{xs:12,md:3}} >
+                <Grid size={{ xs: 12, md: 3 }}>
                   <DatePicker
                     label="End Date"
-                  
                     value={endDate}
                     onChange={(newValue) => setEndDate(newValue)}
                     slotProps={{ textField: { fullWidth: true } }}
                   />
                 </Grid>
-                <Grid size={{xs:12,md:3}} >
+                <Grid size={{ xs: 12, md: 3 }}>
                   <Button
                     variant="contained"
                     fullWidth

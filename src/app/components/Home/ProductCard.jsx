@@ -1,4 +1,5 @@
 "use client";
+
 import { useQuery } from "@apollo/client/react";
 import {
   Box,
@@ -10,7 +11,10 @@ import {
   Chip,
   Grid,
   Typography,
+  Rating,
+  IconButton,
 } from "@mui/material";
+import { FavoriteBorder, Visibility, ShoppingCart } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -32,21 +36,17 @@ const ProductCard = () => {
   };
 
   const handleAddToCart = (product) => {
-
     const productData = {
       id: product.id,
       name: product.name,
       price: product.price,
       image:
         product.image ||
-        "https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg",
+        "https://images.pexels.com/photos/159681/glasses-eyewear-optical-eyes-159681.jpeg",
       stock: product.stock,
       category: product.category,
     };
-
     localStorage.setItem("productToAdd", JSON.stringify(productData));
-
-
     router.push("/pos");
   };
 
@@ -58,80 +58,147 @@ const ProductCard = () => {
     <Grid container spacing={3}>
       {products.map((product) => {
         const price = Number(product.price) || 0;
-        const cost = Number(product.cost) || 0;
-        const isLowStock = Number(product.stock) < Number(product.minStock);
         const image =
           product.image ||
-          "https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg";
+          "https://images.pexels.com/photos/159681/glasses-eyewear-optical-eyes-159681.jpeg";
 
         return (
-          <Grid size={{xs:12,sm:6,md:4,lg:3,}}  key={product.id}>
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={product.id}>
             <Card
               sx={{
-                bgcolor: "#E5E7EB",
-                borderRadius: 1,
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
+                borderRadius: 3,
+                overflow: "hidden",
+                boxShadow: 3,
+                transition: "transform 0.3s",
+                "&:hover": { transform: "translateY(-6px)", boxShadow: 6 },
+                position: "relative",
               }}
-              elevation={0}
             >
-              <CardMedia
-                component="img"
-                height="200"
-                image={image}
-                alt={product.name}
+              {/* Discount Badge */}
+              <Chip
+                label="-17%"
+                color="error"
+                size="small"
+                sx={{
+                  position: "absolute",
+                  top: 10,
+                  left: 10,
+                  bgcolor: "#FF6B6B",
+                  color: "white",
+                  fontWeight: "bold",
+                }}
               />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h6" component="div" noWrap>
-                  {product.name}
-                </Typography>
+
+              {/* Product Image */}
+              <Box sx={{ position: "relative" }}>
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={image}
+                  alt={product.name}
+                  sx={{ objectFit: "cover", width: "100%" }}
+                />
+
+                {/* Quick Actions on Hover */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    opacity: 0,
+                    transition: "opacity 0.3s",
+                    "&:hover": { opacity: 1 },
+                    pointerEvents: "auto",
+                  }}
+                >
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    onClick={() => handleOpenView(product.id)}
+                    sx={{ bgcolor: "white", boxShadow: 1 }}
+                  >
+                    <Visibility fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    color="secondary"
+                    size="small"
+                    onClick={() => handleAddToCart(product)}
+                    sx={{ bgcolor: "white", boxShadow: 1 }}
+                  >
+                    <ShoppingCart fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    color="error"
+                    size="small"
+                    sx={{ bgcolor: "white", boxShadow: 1 }}
+                  >
+                    <FavoriteBorder fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Box>
+
+              {/* Product Info */}
+              <CardContent sx={{ textAlign: "center" }}>
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ mb: 1.5 }}
+                  sx={{ fontWeight: "bold", mb: 0.5 }}
                 >
-                  {product.description}
+                  {product.brand || "Eye Shop"}
                 </Typography>
-                <Box mb={1}>
-                  <Chip label={product.category} color="primary" size="small" />
-                </Box>
+                <Typography
+                  variant="h6"
+                  noWrap
+                  sx={{ fontWeight: "bold", mb: 1 }}
+                >
+                  {product.name}
+                </Typography>
 
-                <Box>
-                  <Typography variant="body1">
-                    💲 Price: ${price.toFixed(2)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    🧾 Cost: ${cost.toFixed(2)}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color={isLowStock ? "error" : "text.secondary"}
-                  >
-                    📦 Stock: {product.stock} {isLowStock && "(Low)"}
-                  </Typography>
-                  <Typography variant="caption" display="block" mt={1}>
-                    SKU: {product.sku}
-                  </Typography>
-                </Box>
+                <Rating
+                  value={4.5}
+                  precision={0.5}
+                  readOnly
+                  size="small"
+                  sx={{ mb: 1 }}
+                />
+                <Typography variant="caption" display="block" gutterBottom>
+                  (65 reviews)
+                </Typography>
+
+                {/* Price */}
+                <Typography
+                  variant="h6"
+                  color="primary"
+                  sx={{ fontWeight: "bold" }}
+                >
+                  ${price.toFixed(2)}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ textDecoration: "line-through", color: "gray" }}
+                >
+                  ${(price * 1.2).toFixed(2)}
+                </Typography>
               </CardContent>
 
-              <CardActions sx={{ px: 2, pb: 2 }}>
+              {/* Add to Cart Button */}
+              <CardActions sx={{ justifyContent: "center", pb: 2 }}>
                 <Button
-                  size="small"
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleOpenView(product.id)}
-                >
-                  View Details
-                </Button>
-                <Button
-                  size="small"
+                  fullWidth
                   variant="outlined"
-                  color="secondary"
+                  color="primary"
                   onClick={() => handleAddToCart(product)}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontWeight: "bold",
+                  }}
+                  startIcon={<ShoppingCart />}
                 >
-                  Add to Cart
+                  Add To Cart
                 </Button>
               </CardActions>
             </Card>

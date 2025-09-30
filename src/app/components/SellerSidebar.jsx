@@ -85,7 +85,7 @@ const staticMenu = [
     label: "settings",
     icon: Settings,
     path: "/settings",
-    roles: ["Admin", "Manager", "Seller"],
+    roles: ["Admin", "Manager"],
   },
   //===============USER ROLE=====================
   {

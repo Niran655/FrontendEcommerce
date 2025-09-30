@@ -3,7 +3,6 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import AddIcon from "@mui/icons-material/Add";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import RemoveIcon from "@mui/icons-material/Remove";
-import { DataGrid } from "@mui/x-data-grid";
 import "../../../../../../../style/Product.css";
 import {
   Alert,
@@ -28,6 +27,12 @@ import {
   Select,
   Stack,
   Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -273,13 +278,14 @@ const Products = () => {
   const handleEditProduct = (product) => {
     setEditingProduct(product);
     console.log("product category shop", product);
+
+
+
     formik.setValues({
       name: product.name,
       description: product.description || "",
       category: product.category,
-      // shopCategoryId: product.shopCategoryId ,
-      shopCategoryId:
-        product.shopCategoryId?.id || product.shopCategoryId || "",
+      shopCategoryId: product.shopCategory?.id || "",
       price: product.price.toString(),
       cost: product.cost.toString(),
       sku: product.sku,
@@ -484,139 +490,9 @@ const Products = () => {
       <Alert severity="error">Error loading products: {error.message}</Alert>
     );
 
-  // DataGrid columns
-  const columns = [
-    {
-      field: "image",
-      headerName: "Image",
-      width: 80,
-      renderCell: (params) => (
-        <Avatar src={params.row.image} sx={{ width: 40, height: 40 }}>
-          <Package size={20} />
-        </Avatar>
-      ),
-    },
-    { field: "name", headerName: "Name", width: 200 },
-    { field: "sku", headerName: "SKU", width: 120 },
-    { field: "category", headerName: "Category", width: 120 },
-    {
-      field: "price",
-      headerName: "Price",
-      width: 100,
-      renderCell: (params) => `$${params.row.price.toFixed(2)}`,
-    },
-    {
-      field: "cost",
-      headerName: "Cost",
-      width: 100,
-      renderCell: (params) => `$${params.row.cost.toFixed(2)}`,
-    },
-    {
-      field: "stock",
-      headerName: "Stock",
-      width: 100,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.stock}
-          color={params.row.lowStock ? "error" : "success"}
-          variant="outlined"
-          size="small"
-        />
-      ),
-    },
-    {
-      field: "active",
-      headerName: "Status",
-      width: 100,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.active ? "Active" : "Inactive"}
-          color={params.row.active ? "success" : "error"}
-          variant="outlined"
-          size="small"
-        />
-      ),
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 150,
-      renderCell: (params) => (
-        <Box>
-          <IconButton
-            size="small"
-            onClick={() => handleEditProduct(params.row)}
-            color="primary"
-          >
-            <Edit size={16} />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => handleDeleteProduct(params.row.id)}
-            color="error"
-          >
-            <Trash2 size={16} />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
-
-  // Banner Grid columns
-  const bannerColumns = [
-    {
-      field: "image",
-      headerName: "Image",
-      width: 100,
-      renderCell: (params) => (
-        <Avatar
-          src={params.row.image}
-          sx={{ width: 60, height: 60 }}
-          variant="square"
-        />
-      ),
-    },
-    { field: "category", headerName: "Category", width: 150 },
-    { field: "title", headerName: "Title", width: 150 },
-    { field: "subtitle", headerName: "Subtitle", width: 200 },
-    {
-      field: "active",
-      headerName: "Status",
-      width: 100,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.active ? "Active" : "Inactive"}
-          color={params.row.active ? "success" : "error"}
-          variant="outlined"
-          size="small"
-        />
-      ),
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 150,
-      renderCell: (params) => (
-        <Box>
-          <IconButton
-            size="small"
-            onClick={() => handleEditBanner(params.row)}
-            color="primary"
-          >
-            <Edit size={16} />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => handleDeleteBanner(params.row.id)}
-            color="error"
-          >
-            <Trash2 size={16} />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
-
+  const getShopCategoryName = (product) => {
+    return product.shopCategory?.name || "—";
+  };
   return (
     <Box>
       <Box
@@ -753,7 +629,7 @@ const Products = () => {
       {viewMode === "grid" ? (
         <Grid container spacing={3}>
           {filteredProducts.map((product) => (
-            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 3 }} key={product.id}>
+            <Grid size={{ xs: 12, sx: 6, md: 6, lg: 3 }} key={product.id}>
               <Card
                 sx={{
                   height: "100%",
@@ -831,6 +707,12 @@ const Products = () => {
                     <Chip
                       label={product.category}
                       size="small"
+                      sx={{ mb: 1, mr: 1 }}
+                    />
+                    <Chip
+                      label={getShopCategoryName(product)}
+                      size="small"
+                      color="secondary"
                       sx={{ mb: 1 }}
                     />
                     <Typography variant="body2" color="text.secondary">
@@ -912,38 +794,143 @@ const Products = () => {
           ))}
         </Grid>
       ) : viewMode == "table" ? (
-        <Box sx={{ height: 600, width: "100%" }}>
-          <DataGrid
-            rows={filteredProducts}
-            columns={columns}
-            pageSize={25}
-            rowsPerPageOptions={[25, 50, 100]}
-            disableSelectionOnClick
-            sx={{
-              "& .MuiDataGrid-cell:focus": {
-                outline: "none",
-              },
-            }}
-          />
-        </Box>
+        <TableContainer component={Paper}>
+          <Table sx={{ minWidth: 650 }} aria-label="products table">
+            <TableHead>
+              <TableRow sx={{ backgroundColor: "action.hover" }}>
+                <TableCell sx={{ fontWeight: "bold", width: 80 }}>
+                  Image
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Name</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>SKU</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Shop Category</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Price</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Cost</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Stock</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Actions
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={10} align="center" sx={{ py: 3 }}>
+                    <Typography>Loading products...</Typography>
+                  </TableCell>
+                </TableRow>
+              ) : filteredProducts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} align="center" sx={{ py: 3 }}>
+                    <Typography>No products found</Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredProducts.map((product) => (
+                  <TableRow
+                    key={product.id}
+                    sx={{
+                      "&:last-child td, &:last-child th": { border: 0 },
+                      "&:hover": { backgroundColor: "action.hover" },
+                    }}
+                  >
+                    <TableCell>
+                      <Avatar
+                        src={product.image}
+                        sx={{ width: 40, height: 40 }}
+                      >
+                        <Package size={20} />
+                      </Avatar>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="medium">
+                        {product.name}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{product.sku}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {product.category}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {getShopCategoryName(product)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="bold">
+                        ${product.price.toFixed(2)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        ${product.cost.toFixed(2)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={product.stock}
+                        color={product.lowStock ? "error" : "success"}
+                        variant="outlined"
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={product.active ? "Active" : "Inactive"}
+                        color={product.active ? "success" : "error"}
+                        variant="outlined"
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditProduct(product)}
+                          color="primary"
+                          sx={{ mr: 1 }}
+                        >
+                          <Edit size={16} />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteProduct(product.id)}
+                          color="error"
+                        >
+                          <Trash2 size={16} />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       ) : (
         <Box>
           <Stack direction={"row"} justifyContent={"space-between"} mb={2}>
             <Typography variant="h5">Banner Management</Typography>
-              <Button
-                variant="contained"
-                startIcon={<Plus size={20} />}
-                onClick={handleCreateBanner}
-                sx={{
-                  backgroundColor: "#1D293D",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "#16202f" 
-                  }
-                }}
-              >
-                Add Banner
-              </Button>
+            <Button
+              variant="contained"
+              startIcon={<Plus size={20} />}
+              onClick={handleCreateBanner}
+              sx={{
+                backgroundColor: "#1D293D",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "#16202f",
+                },
+              }}
+            >
+              Add Banner
+            </Button>
           </Stack>
 
           {banners.length === 0 ? (
@@ -963,20 +950,85 @@ const Products = () => {
               </Button>
             </Paper>
           ) : (
-            <Box sx={{ height: 600, width: "100%" }}>
-              <DataGrid
-                rows={banners}
-                columns={bannerColumns}
-                pageSize={10}
-                rowsPerPageOptions={[10, 25, 50]}
-                disableSelectionOnClick
-                sx={{
-                  "& .MuiDataGrid-cell:focus": {
-                    outline: "none",
-                  },
-                }}
-              />
-            </Box>
+            <TableContainer component={Paper}>
+              <Table sx={{ minWidth: 650 }} aria-label="banners table">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "action.hover" }}>
+                    <TableCell sx={{ fontWeight: "bold", width: 100 }}>
+                      Image
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Title</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Subtitle</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                      Actions
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {banners.map((banner) => (
+                    <TableRow
+                      key={banner.id}
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
+                        "&:hover": { backgroundColor: "action.hover" },
+                      }}
+                    >
+                      <TableCell>
+                        <Avatar
+                          src={banner.image}
+                          sx={{ width: 60, height: 60 }}
+                          variant="square"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="medium">
+                          {banner.category}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {banner.title || "—"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {banner.subtitle || "—"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={banner.active ? "Active" : "Inactive"}
+                          color={banner.active ? "success" : "error"}
+                          variant="outlined"
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Box>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditBanner(banner)}
+                            color="primary"
+                            sx={{ mr: 1 }}
+                          >
+                            <Edit size={16} />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteBanner(banner.id)}
+                            color="error"
+                          >
+                            <Trash2 size={16} />
+                          </IconButton>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </Box>
       )}

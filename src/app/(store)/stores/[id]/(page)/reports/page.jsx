@@ -68,7 +68,9 @@ import {
   GET_SALES_REPORT_FOR_SHOP,
 } from "../../../../../../../graphql/queries";
 import { useParams } from "next/navigation";
-
+import "../../../../../../../style/Report.css"
+import { useAuth } from "@/app/context/AuthContext";
+import { translateLauguage } from "@/app/function/translate";
 const COLORS = [
   "#0088FE",
   "#00C49F",
@@ -82,6 +84,8 @@ const Reports = () => {
   const [reportType, setReportType] = useState("sales");
   const [startDate, setStartDate] = useState(dayjs().subtract(7, "day"));
   const [endDate, setEndDate] = useState(dayjs());
+  const {language} = useAuth()
+  const {t} = translateLauguage(language)
   const { id } = useParams();
   const {
     data: reportData,
@@ -135,7 +139,7 @@ const Reports = () => {
       <Grid container spacing={3}>
         {/* Summary Cards */}
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Card>
+          <Card class="summry-card">
             <CardContent>
               <Box
                 sx={{
@@ -145,23 +149,23 @@ const Reports = () => {
                 }}
               >
                 <Box>
-                  <Typography color="text.secondary" gutterBottom>
+                  <Typography class="text-title" gutterBottom>
                     Total Sales
                   </Typography>
-                  <Typography variant="h4" color="success.main">
+                  <Typography variant="h4" color="white">
                     ${report.totalSales.toFixed(2)}
                   </Typography>
                 </Box>
-                <Avatar sx={{ bgcolor: "success.main" }}>
-                  <DollarSign size={24} />
-                </Avatar>
+                <Box class="icon-style" sx={{ bgcolor: "success.main" }}>
+                  <DollarSign class="icon" size={29} />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Card>
+          <Card class="summry-card2">
             <CardContent>
               <Box
                 sx={{
@@ -171,23 +175,23 @@ const Reports = () => {
                 }}
               >
                 <Box>
-                  <Typography color="text.secondary" gutterBottom>
+                  <Typography class="text-title"  gutterBottom>
                     Total Transactions
                   </Typography>
-                  <Typography variant="h4" color="info.main">
+                  <Typography variant="h4" color="white">
                     {report.totalTransactions}
                   </Typography>
                 </Box>
-                <Avatar sx={{ bgcolor: "info.main" }}>
-                  <BarChart3 size={24} />
-                </Avatar>
+                <Box class="icon-style" sx={{ bgcolor: "info.main" }}>
+                  <BarChart3 class="icon" size={29} />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Card>
+          <Card class="summry-card3">
             <CardContent>
               <Box
                 sx={{
@@ -197,16 +201,16 @@ const Reports = () => {
                 }}
               >
                 <Box>
-                  <Typography color="text.secondary" gutterBottom>
+                  <Typography class="text-title" gutterBottom>
                     Average Order Value
                   </Typography>
-                  <Typography variant="h4" color="primary.main">
+                  <Typography variant="h4"  color="white">
                     ${report.averageOrderValue.toFixed(2)}
                   </Typography>
                 </Box>
-                <Avatar sx={{ bgcolor: "primary.main" }}>
-                  <TrendingUp size={24} />
-                </Avatar>
+                <Box class="icon-style" sx={{ bgcolor: "primary.main" }}>
+                  <TrendingUp class="icon" size={29} />
+                </Box>
               </Box>
             </CardContent>
           </Card>
@@ -284,17 +288,17 @@ const Reports = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Category Performance
+                {t(`category_performance`)}
               </Typography>
               <TableContainer>
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Category</TableCell>
-                      <TableCell>Total Sales</TableCell>
-                      <TableCell>Items Sold</TableCell>
-                      <TableCell>Average per Item</TableCell>
-                      <TableCell>% of Total</TableCell>
+                      <TableCell>{t(`category`)}</TableCell>
+                      <TableCell>{t(`total_sale`)}</TableCell>
+                      <TableCell>{t(`item_sole`)}</TableCell>
+                      <TableCell>{t(`average_per_item`)}</TableCell>
+                      <TableCell>{t(`%_of_total`)}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -620,7 +624,7 @@ const Reports = () => {
           }}
         >
           <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-            Reports & Analytics
+             {t(`reports_analytics`)}
           </Typography>
           <Button
             variant="outlined"
@@ -636,10 +640,11 @@ const Reports = () => {
           <Grid container spacing={3} alignItems="center">
             <Grid size={{ xs: 12, md: 3 }}>
               <FormControl fullWidth>
-                <InputLabel>Report Type</InputLabel>
+                <InputLabel>{t(`report_type`)}</InputLabel>
                 <Select
                   value={reportType}
-                  label="Report Type"
+                  label={t(`report_type`)}
+                  size="small"
                   onChange={(e) => setReportType(e.target.value)}
                 >
                   <MenuItem value="sales">Sales Report</MenuItem>
@@ -653,28 +658,29 @@ const Reports = () => {
               <>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <DatePicker
-                    label="Start Date"
+                    label={t(`start_date`)}
                     value={startDate}
                     onChange={(newValue) => setStartDate(newValue)}
-                    slotProps={{ textField: { fullWidth: true } }}
+                    slotProps={{ textField: { fullWidth: true,size:"small" } }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <DatePicker
-                    label="End Date"
+                    label={t(`end_date`)}
                     value={endDate}
                     onChange={(newValue) => setEndDate(newValue)}
-                    slotProps={{ textField: { fullWidth: true } }}
+                    slotProps={{ textField: { fullWidth: true,size:"small" } }}
                   />
-                </Grid>
+                </Grid> 
                 <Grid size={{ xs: 12, md: 3 }}>
                   <Button
                     variant="contained"
                     fullWidth
                     onClick={handleDateRangeChange}
                     startIcon={<Calendar size={20} />}
+                    sx={{bgcolor:"#000000ff"}}
                   >
-                    Update Report
+                    {t(`update_report`)}
                   </Button>
                 </Grid>
               </>

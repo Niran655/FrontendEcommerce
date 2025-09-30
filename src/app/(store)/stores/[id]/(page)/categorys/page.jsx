@@ -1,5 +1,4 @@
 "use client";
-import { DataGrid } from "@mui/x-data-grid";
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
   Avatar,
@@ -7,7 +6,6 @@ import {
   Button,
   Chip,
   Dialog,
-  DialogTitle,
   FormControl,
   Grid,
   IconButton,
@@ -15,6 +13,12 @@ import {
   Paper,
   Select,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
   Autocomplete,
@@ -37,17 +41,15 @@ import {
 import ImageUploadWithCropModal from "@/app/components/ImageUploadWithCropModal";
 import CloseIcon from "@mui/icons-material/Close";
 import { translateLauguage } from "@/app/function/translate";
+
 const Category = () => {
   const { id } = useParams();
-  const { data: MainCategory, loading: mainCategoryLoading } =
-    useQuery(GET_CATEGORYS);
+  const { data: MainCategory, loading: mainCategoryLoading } = useQuery(GET_CATEGORYS);
   const { data, loading, refetch } = useQuery(GET_CATEGORY_FOR_SHOP, {
-    variables: {
-      shopId: id,
-    },
+    variables: { shopId: id },
   });
 
-  const categorys = data?.getCategoriesForShop || [];
+  const categories = data?.getCategoriesForShop || [];
   const mainCategories = MainCategory?.categorys || [];
   const { setAlert } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,6 +59,7 @@ const Category = () => {
   const [selectedParentCategory, setSelectedParentCategory] = useState(null);
   const { language } = useAuth();
   const { t } = translateLauguage(language);
+
   const handleImageUploadSuccess = (imageData) => {
     const imageUrl = imageData.imageUrl;
     setUploadedImageUrl(imageUrl);
@@ -80,6 +83,7 @@ const Category = () => {
       console.log("Error", err);
     },
   });
+
   const [updateCategory] = useMutation(UPDATE_CATEGORY, {
     onCompleted: ({ updateCategory }) => {
       if (updateCategory.isSuccess) {
@@ -92,6 +96,7 @@ const Category = () => {
       console.log("Error", err);
     },
   });
+
   const [deleteCategory] = useMutation(DELETE_CATEGORY, {
     onCompleted: ({ deleteCategory }) => {
       if (deleteCategory.isSuccess) {
@@ -168,10 +173,7 @@ const Category = () => {
 
   useEffect(() => {
     if (dialogOpen && selectedCategory && mainCategories.length > 0) {
-      if (
-        selectedCategory.parent &&
-        typeof selectedCategory.parent === "object"
-      ) {
+      if (selectedCategory.parent && typeof selectedCategory.parent === "object") {
         const parentCat = mainCategories.find(
           (cat) => cat.id === selectedCategory.parent.id
         );
@@ -194,12 +196,12 @@ const Category = () => {
   const handleEditCategory = (category) => {
     setSelectedCategory(category);
     setDialogOpen(true);
-    // Set basic field values
     setFieldValue("name", category.name);
     setFieldValue("slug", category.slug);
     setFieldValue("description", category.description);
     setFieldValue("image", category.image || "");
     setFieldValue("active", category.active ? "true" : "false");
+    
     if (category.parent && typeof category.parent === "object") {
       const parentCat = mainCategories.find(
         (cat) => cat.id === category.parent.id
@@ -210,6 +212,7 @@ const Category = () => {
       setSelectedParentCategory(null);
       setFieldValue("parent", "");
     }
+    
     if (category.image) {
       setUploadedImageUrl(category.image);
     }
@@ -230,6 +233,7 @@ const Category = () => {
     setSelectedParentCategory(newValue);
     setFieldValue("parent", newValue?.id || "");
   };
+
   const handleClose = () => {
     resetForm();
     setDialogOpen(false);
@@ -238,71 +242,9 @@ const Category = () => {
     setUploadedImageUrl("");
   };
 
-  const filteredCategories = categorys.filter((category) =>
+  const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const columns = [
-    {
-      field: "image",
-      headerName: "Image",
-      width: 80,
-      renderCell: (params) => (
-        <Avatar src={params.row.image} sx={{ width: 40, height: 40 }}>
-          <Package size={20} />
-        </Avatar>
-      ),
-    },
-    { field: "name", headerName: "Name", width: 200 },
-    {
-      field: "parent",
-      headerName: "Parent Category",
-      width: 200,
-      renderCell: (params) => (
-        <Typography variant="body2">
-          {params.row.parent?.name || "—"}
-        </Typography>
-      ),
-    },
-    { field: "description", headerName: "Description", width: 300 },
-    { field: "slug", headerName: "Slug", width: 200 },
-    {
-      field: "active",
-      headerName: "Status",
-      width: 100,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.active ? "Active" : "Inactive"}
-          color={params.row.active ? "success" : "error"}
-          variant="outlined"
-          size="small"
-        />
-      ),
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 150,
-      renderCell: (params) => (
-        <Box>
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={() => handleEditCategory(params.row)}
-          >
-            <Edit size={16} />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleDeleteCategory(params.row.id)}
-          >
-            <Trash2 size={16} />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
 
   return (
     <Box>
@@ -328,7 +270,7 @@ const Category = () => {
 
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{xs:12,md:6}}>
             <TextField
               fullWidth
               size="small"
@@ -342,9 +284,7 @@ const Category = () => {
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 3 }}></Grid>
-          <Grid size={{ xs: 12, md: 3 }}></Grid>
-          <Grid item xs={12} md={2}>
+          <Grid item xs={12} md={6} sx={{ textAlign: "right" }}>
             <Chip
               label={`${filteredCategories.length} categories`}
               color="primary"
@@ -354,23 +294,107 @@ const Category = () => {
         </Grid>
       </Paper>
 
-      <Box sx={{ height: 600, width: "100%" }}>
-        <DataGrid
-          rows={filteredCategories}
-          columns={columns}
-          getRowId={(row) => row.id}
-          pageSize={25}
-          rowsPerPageOptions={[25, 50, 100]}
-          disableSelectionOnClick
-          loading={loading}
-          sx={{
-            "& .MuiDataGrid-cell:focus": {
-              outline: "none",
-            },
-          }}
-        />
-      </Box>
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }} aria-label="categories table">
+          <TableHead>
+            <TableRow sx={{ backgroundColor: 'action.hover' }}>
+              <TableCell sx={{ fontWeight: 'bold', width: 80 }}>Image</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Parent Category</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Slug</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', width: 100 }}>Status</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', width: 150 }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                  <Typography>Loading categories...</Typography>
+                </TableCell>
+              </TableRow>
+            ) : filteredCategories.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                  <Typography>No categories found</Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredCategories.map((category) => (
+                <TableRow 
+                  key={category.id}
+                  sx={{ 
+                    '&:last-child td, &:last-child th': { border: 0 },
+                    '&:hover': { backgroundColor: 'action.hover' }
+                  }}
+                >
+                  <TableCell>
+                    <Avatar src={category.image} sx={{ width: 40, height: 40 }}>
+                      <Package size={20} />
+                    </Avatar>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      {category.name}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {category.parent?.name || "—"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        maxWidth: 300,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {category.description}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{category.slug}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={category.active ? "Active" : "Inactive"}
+                      color={category.active ? "success" : "error"}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Box>
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => handleEditCategory(category)}
+                        sx={{ mr: 1 }}
+                      >
+                        <Edit size={16} />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteCategory(category.id)}
+                      >
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
+      {/* Dialog remains the same */}
       <Dialog open={dialogOpen} maxWidth="md" fullWidth>
         <Paper sx={{ p: 3 }}>
           <FormikProvider value={formik}>
@@ -391,7 +415,7 @@ const Category = () => {
                 </IconButton>
               </Box>
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{xs:12,md:6}}>
                   <TextField
                     label="Name"
                     fullWidth
@@ -400,7 +424,7 @@ const Category = () => {
                     helperText={touched.name && errors.name}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{xs:12,md:6}}>
                   <Autocomplete
                     options={mainCategories}
                     getOptionLabel={(option) => option.name || ""}
@@ -426,7 +450,7 @@ const Category = () => {
                     )}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{xs:12,md:6}}>
                   <FormControl fullWidth>
                     <Select
                       {...getFieldProps("active")}
@@ -438,7 +462,7 @@ const Category = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{xs:12,md:6}}>
                   <TextField
                     label="Slug"
                     fullWidth
@@ -448,7 +472,7 @@ const Category = () => {
                     disabled
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{xs:12}}>
                   <TextField
                     label="Description"
                     fullWidth
@@ -459,8 +483,7 @@ const Category = () => {
                     helperText={touched.description && errors.description}
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
-                  {/* Manual URL Input (optional) */}
+                <Grid size={{xs:12}}>
                   <TextField
                     label="Image URL (Optional)"
                     fullWidth
@@ -476,22 +499,10 @@ const Category = () => {
                       aspectRatio={4 / 3}
                       existingImageUrl={uploadedImageUrl}
                     />
-                    {/* {uploadedImageUrl && (
-                      <Box sx={{ mt: 2, textAlign: "center" }}>
-                        <Typography variant="subtitle2" gutterBottom>
-                          Preview:
-                        </Typography>
-                        <Avatar
-                          src={uploadedImageUrl}
-                          sx={{ width: 100, height: 100, mx: "auto" }}
-                          variant="rounded"
-                        />
-                      </Box>
-                    )} */}
                   </Stack>
                 </Grid>
 
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{xs:12}}>
                   <Stack direction="row" spacing={2} justifyContent={"end"}>
                     <Button
                       variant="outlined"

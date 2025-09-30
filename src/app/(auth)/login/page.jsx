@@ -119,7 +119,7 @@ const Login = () => {
               }}
             />
             <Typography variant="h4" component="h1" gutterBottom>
-              Ecomerce
+              Ecommerce
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Sign in to access your account
@@ -176,30 +176,7 @@ const Login = () => {
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-{/* 
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 3, mb: 1 }}>
-            Quick Login (Demo)
-          </Typography>
-          <Stack spacing={1}>
-            {testAccounts.map((account) => (
-              <Button
-                key={account.role}
-                variant="outlined"
-                onClick={() => handleQuickLogin(account)}
-                disabled={loading}
-                startIcon={
-                  <Chip label={account.role} color={getRoleColor(account.role)} size="small" />
-                }
-                sx={{
-                  justifyContent: "flex-start",
-                  textTransform: "none",
-                  py: 1,
-                }}
-              >
-                {account.email}
-              </Button>
-            ))}
-          </Stack> */}
+
         </CardContent>
       </Card>
     </Box>

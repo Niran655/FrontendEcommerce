@@ -196,12 +196,21 @@
   "village": "Village",
   "void": "Void",
   "Wholesale": "Wholesale",
-  "all_products_are_adequately_stocked ":"All products are adequately stocked! ",
+  "all_products_are_adequately_stocked":"All products are adequately stocked! ",
   "today's_sales":"Today's Sales",
   "transactions":"Transactions",
   "average_order":"Average Order",
   "low_stock_items":"Low Stock Items",
   "today's_hourly_sales":"Today's Hourly Sales",
   "top_selling_products":"Top Selling Products",
-  "numberic":"Number"
+  "numberic":"Number",
+  "reports_analytics":"Reports & Analytics",
+  "report_type":"Report Type",
+  "update_report":"Update Report",
+  "category_performance":"Category Performance",
+  "total_sale":"Total Sales",
+  "item_sole":"Items Sold",
+  "average_per_item":"Average per Item",
+  "%_of_total":"% of Total"
+
 }

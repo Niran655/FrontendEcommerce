@@ -597,23 +597,8 @@ const UserManagement = () => {
                 </Grid>
               </Grid>
 
-              {/* Role Permissions Info */}
-              <Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  {t("role_permissions")}:
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Admin:</strong> {t("admin_permissions")}
-                  <br />
-                  <strong>Manager:</strong> {t("manager_permissions")}
-                  <br />
-                  <strong>Cashier:</strong> {t("cashier_permissions")}
-                  <br />
-                  <strong>StockKeeper:</strong> {t("stockkeeper_permissions")}
-                  <br />
-                  <strong>Shop:</strong> {t("shop_permissions")}
-                </Typography>
-              </Box>
+
+              
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
               <Button

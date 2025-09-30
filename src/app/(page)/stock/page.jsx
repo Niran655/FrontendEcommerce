@@ -185,10 +185,10 @@ const StockManagement = () => {
                           </Avatar>
                           <Box>
                             <Typography variant="body2" fontWeight="medium">
-                              {movement.product.name}
+                              {/* {movement.product.name} */}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              {movement.product.sku}
+                              {/* {movement.product.sku} */}
                             </Typography>
                           </Box>
                         </Box>

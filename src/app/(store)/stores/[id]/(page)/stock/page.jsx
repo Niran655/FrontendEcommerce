@@ -43,17 +43,19 @@ import {
   Minus,
   Search,
   FileText,
+  SquarePlus, 
+  ListX
 } from "lucide-react";
 import {
-  GET_STOCK_MOVEMENTS,
+  GET_STOCK_MOVEMENTS_FOR_SHOP,
   GET_LOW_STOCK_PRODUCTS_FOR_SHOP,
-  GET_PRODUCT_FOR_SHOP,
+  GET_PRODUCT_FOR_SHOP_WITH_PAGNATION,
 } from "../../../../../../../graphql/queries";
 import { ADJUST_STOCK } from "../../../../../../../graphql/mutation";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { translateLauguage } from "@/app/function/translate";
-
+import FooterPagination from "@/app/include/FooterPagination";
 // Validation Schema using Yup :cite[5]:cite[10]
 const adjustmentSchema = Yup.object().shape({
   quantity: Yup.number()
@@ -72,6 +74,9 @@ const adjustmentSchema = Yup.object().shape({
 });
 
 const StockManagement = () => {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [keyword, setKeyword] = useState("");
   const [activeTab, setActiveTab] = useState(0);
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -79,11 +84,16 @@ const StockManagement = () => {
   const { t } = translateLauguage(language);
   const [searchTerm, setSearchTerm] = useState("");
   const { id } = useParams();
+
   const {
     data: stockData,
     loading: stockLoading,
     refetch: refetchStock,
-  } = useQuery(GET_STOCK_MOVEMENTS);
+  } = useQuery(GET_STOCK_MOVEMENTS_FOR_SHOP, {
+    variables: {
+      shopId: id,
+    },
+  });
 
   const {
     data: lowStockData,
@@ -94,10 +104,15 @@ const StockManagement = () => {
       shopId: id,
     },
   });
+
   const { data: productsData, loading: productsLoading } = useQuery(
-    GET_PRODUCT_FOR_SHOP,
+    GET_PRODUCT_FOR_SHOP_WITH_PAGNATION,
     {
       variables: {
+        page: page,
+        limit: limit,
+        pagination: true,
+        keyword: keyword,
         shopId: id,
       },
     }
@@ -164,15 +179,18 @@ const StockManagement = () => {
     }
   };
 
-  const filteredProducts =
-    productsData?.getProductsForShop?.filter(
-      (product) =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+  const paginator = productsData?.getProductForShopWithPagination?.paginator;
+  const rows = productsData?.getProductForShopWithPagination?.data ?? [];
 
   const lowStockProducts = lowStockData?.getLowStockProductByShop || [];
-  const stockMovements = stockData?.stockMovements || [];
+  const stockMovements = stockData?.getStockMovementsByShop || [];
+
+  //========================= pagination====================================
+  const handleLimit = (e) => {
+    const newLimit = parseInt(e.target.value, 10);
+    setLimit(newLimit);
+    setPage(1);
+  };
 
   if (stockLoading || lowStockLoading || productsLoading) {
     return <Typography>Loading stock data...</Typography>;
@@ -241,13 +259,13 @@ const StockManagement = () => {
                           </Avatar>
                           <Box>
                             <Typography variant="body2" fontWeight="medium">
-                              {movement.product.name}
+                              {/* {movement.product.name} */}
                             </Typography>
                             <Typography
                               variant="caption"
                               color="text.secondary"
                             >
-                              {movement.product.sku}
+                              {/* {movement.product.sku} */}
                             </Typography>
                           </Box>
                         </Box>
@@ -399,8 +417,8 @@ const StockManagement = () => {
                 <TextField
                   placeholder="Search products..."
                   size="small"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
                   InputProps={{
                     startAdornment: (
                       <Search
@@ -412,7 +430,6 @@ const StockManagement = () => {
                   sx={{ mb: 3 }}
                 />
               </Box>
-              <Box></Box>
             </Stack>
             <TableContainer>
               <Table>
@@ -428,7 +445,7 @@ const StockManagement = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredProducts.slice(0, 20).map((product) => (
+                  {rows.slice(0, 20).map((product) => (
                     <TableRow key={product.id}>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -474,7 +491,7 @@ const StockManagement = () => {
                                 setAdjustDialogOpen(true);
                               }}
                             >
-                              <Plus size={16} />
+                              <SquarePlus size={20} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Remove Stock">
@@ -486,7 +503,7 @@ const StockManagement = () => {
                                 setAdjustDialogOpen(true);
                               }}
                             >
-                              <Minus size={16} />
+                              <ListX size={20} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Custom Adjustment">
@@ -495,7 +512,7 @@ const StockManagement = () => {
                               color="primary"
                               onClick={() => handleAdjustStock(product)}
                             >
-                              <Settings size={16} />
+                              <Settings size={20} />
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -506,6 +523,21 @@ const StockManagement = () => {
               </Table>
             </TableContainer>
           </CardContent>
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            sx={{ padding: 2 }}
+          >
+            <FooterPagination
+              page={page}
+              limit={limit}
+              setPage={setPage}
+              handleLimit={handleLimit}
+              totalDocs={paginator?.totalDocs}
+              totalPages={paginator?.totalPages}
+            />
+          </Stack>
         </Card>
       )}
 

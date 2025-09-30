@@ -320,7 +320,7 @@ const POS = () => {
                 </FormControl>
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                   <label>{t(`main_category`)}</label>
+                <label>{t(`main_category`)}</label>
                 <Autocomplete
                   options={childCategoryNames}
                   value={selectedChildCategory}
@@ -336,13 +336,16 @@ const POS = () => {
                   )}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 2 }}>
-                <label>{t(`product_count`)}</label>
-                <Chip
+              <Grid size={{ xs: 12, md: 2 }} mt={2}>
+                {/* <label>{t(`product_count`)}</label> */}
+                {/* <Chip
                   label={`${filteredProducts.length} items`}
                   color="primary"
                   variant="outlined"
-                />
+                /> */}
+                <Button variant="outlined" size="larg" style={{bgcolor:"black"}} >
+                  {filteredProducts.length} items
+                </Button>
               </Grid>
             </Grid>
           </Paper>

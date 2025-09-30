@@ -146,56 +146,56 @@ export const GET_PROUCT_BY_CATEGORY = gql`
   }
 `;
 export const GET_PRODUCT_BY_SHOP_CATEGORY_ID = gql`
-query GetProductByShopCategoryId($shopCategoryId: String) {
-  getProductByShopCategoryId(shopCategoryId: $shopCategoryId) {
-    id
-    name
-    updatedAt
-    subImage {
-      id
-      url
-      altText
-      caption
-    }
-    stock
-    sku
-    price
-    minStock
-    mainStock {
-      quantity
-      minStock
-      lowStock
-    }
-    image
-    lowStock
-    isCombo
-    discount {
-      id
-      defaultPrice
-      description
-      discountPrice
-    }
-    active
-    addSlide {
-      id
-      title
-      header
-      description
-      image
-    }
-    category
-    comboItems {
-      quantity
-    }
-    shopCategory {
+  query GetProductByShopCategoryId($shopCategoryId: String) {
+    getProductByShopCategoryId(shopCategoryId: $shopCategoryId) {
       id
       name
+      updatedAt
+      subImage {
+        id
+        url
+        altText
+        caption
+      }
+      stock
+      sku
+      price
+      minStock
+      mainStock {
+        quantity
+        minStock
+        lowStock
+      }
+      image
+      lowStock
+      isCombo
+      discount {
+        id
+        defaultPrice
+        description
+        discountPrice
+      }
+      active
+      addSlide {
+        id
+        title
+        header
+        description
+        image
+      }
+      category
+      comboItems {
+        quantity
+      }
+      shopCategory {
+        id
+        name
+      }
+      description
+      cost
+      createdAt
     }
-    description
-    cost
-    createdAt
   }
-}
 `;
 export const GET_PRODUCT_FOR_SHOP = gql`
   query GetProductsForShop($shopId: ID!) {
@@ -229,10 +229,10 @@ export const GET_PRODUCT_FOR_SHOP = gql`
         minStock
         lowStock
       }
-          shopCategory {
-      id
-      name
-    }
+      shopCategory {
+        id
+        name
+      }
       minStock
       name
       price
@@ -247,6 +247,67 @@ export const GET_PRODUCT_FOR_SHOP = gql`
     }
   }
 `;
+export const GET_PRODUCT_FOR_SHOP_WITH_PAGNATION = gql`
+query GetProductForShopWithPagination($page: Int, $limit: Int, $pagination: Boolean, $keyword: String, $shopId: ID) {
+  getProductForShopWithPagination(page: $page, limit: $limit, pagination: $pagination, keyword: $keyword, shopId: $shopId) {
+    data {
+       id
+      active
+      addSlide {
+        id
+        title
+        header
+        description
+        image
+      }
+      category
+      comboItems {
+        quantity
+      }
+      cost
+      description
+      discount {
+        id
+        defaultPrice
+        description
+        discountPrice
+      }
+      image
+      isCombo
+      lowStock
+      mainStock {
+        quantity
+        minStock
+        lowStock
+      }
+      
+      minStock
+      name
+      price
+      sku
+      stock
+      subImage {
+        id
+        url
+        altText
+        caption
+      }
+    }
+    paginator {
+      slNo
+      prev
+      next
+      perPage
+      totalPosts
+      totalPages
+      currentPage
+      hasPrevPage
+      hasNextPage
+      totalDocs
+    }
+  }
+}
+`
 // ================================END PRODUCT QUERY===================================
 
 export const GET_BANNERS = gql`
@@ -426,17 +487,17 @@ export const GET_LOW_STOCK_PRODUCTS = gql`
 `;
 
 export const GET_LOW_STOCK_PRODUCTS_FOR_SHOP = gql`
-query GetLowStockProductByShop($shopId: ID) {
-  getLowStockProductByShop(shopId: $shopId) {
+  query GetLowStockProductByShop($shopId: ID) {
+    getLowStockProductByShop(shopId: $shopId) {
       id
       name
       category
       stock
       minStock
       lowStock
+    }
   }
-}
-`
+`;
 // ===============================END LOW STOCK PRODUCT======================================
 export const GET_SALES = gql`
   query GetSales($limit: Int, $offset: Int) {
@@ -485,9 +546,9 @@ export const GET_SUPPLIERS = gql`
     }
   }
 `;
-export const GET_SUPPLIERS_FOR_SHOP=gql`
-query GetSuppliersForShop($shopId: ID) {
-  getSuppliersForShop(shopId: $shopId) {
+export const GET_SUPPLIERS_FOR_SHOP = gql`
+  query GetSuppliersForShop($shopId: ID) {
+    getSuppliersForShop(shopId: $shopId) {
       id
       name
       contactPerson
@@ -497,9 +558,9 @@ query GetSuppliersForShop($shopId: ID) {
       active
       createdAt
       updatedAt
+    }
   }
-}
-`
+`;
 // ===============================END SUPPLIER QUERY================================
 
 export const GET_PURCHASE_ORDERS = gql`
@@ -546,11 +607,39 @@ export const GET_PURCHASE_ORDERS = gql`
     }
   }
 `;
-
+// ============================START GET STOCK MMOVEMENT==============================
 export const GET_STOCK_MOVEMENTS = gql`
-  query GetStockMovements($productId: ID) {
-    stockMovements(productId: $productId) {
+query StockMovements($productId: ID) {
+  stockMovements(productId: $productId) {
+    id
+    product {
       id
+      name
+    }
+    type
+    quantity
+    reason
+    reference
+    user {
+      id
+      name
+      email
+      role
+      active
+      lastLogin
+      createdAt
+      updatedAt
+    }
+    previousStock
+    newStock
+    createdAt
+  }
+}
+`;
+export const GET_STOCK_MOVEMENTS_FOR_SHOP = gql`
+query GetStockMovementsByShop($productId: ID, $shopId: ID) {
+  getStockMovementsByShop(productId: $productId, shopId: $shopId) {
+          id
       product {
         id
         name
@@ -567,10 +656,10 @@ export const GET_STOCK_MOVEMENTS = gql`
       previousStock
       newStock
       createdAt
-    }
   }
-`;
-
+}
+`
+// ============================START GET STOCK MMOVEMENT==============================
 export const GET_DASHBOARD_STATS = gql`
   query GetDashboardStats {
     dashboardStats {
@@ -604,8 +693,8 @@ export const GET_DASHBOARD_STATS = gql`
 `;
 
 export const GET_DASHBOARD_STATS_FOR_SHOP = gql`
-query DashboardStatsForShop($shopId: ID) {
-  dashboardStatsForShop(shopId: $shopId) {
+  query DashboardStatsForShop($shopId: ID) {
+    dashboardStatsForShop(shopId: $shopId) {
       totalTransactions
       averageOrderValue
       lowStockItems {
@@ -620,26 +709,26 @@ query DashboardStatsForShop($shopId: ID) {
         sales
         transactions
       }
-    todaySales
-    topProducts {
-      quantitySold
-      revenue
-      product {
-        name
-        category
-        cost
-        minStock
-        price
-        sku
-        stock
-        image
-        description
-        active
+      todaySales
+      topProducts {
+        quantitySold
+        revenue
+        product {
+          name
+          category
+          cost
+          minStock
+          price
+          sku
+          stock
+          image
+          description
+          active
+        }
       }
     }
   }
-}
-`
+`;
 
 export const GET_SALES_REPORT = gql`
   query GetSalesReport($startDate: Date!, $endDate: Date!) {
@@ -662,24 +751,28 @@ export const GET_SALES_REPORT = gql`
 `;
 
 export const GET_SALES_REPORT_FOR_SHOP = gql`
-query SalesReportForShop($startDate: Date!, $endDate: Date!, $shopId: ID) {
-  salesReportForShop(startDate: $startDate, endDate: $endDate, shopId: $shopId) {
-    totalSales
-    totalTransactions
-    averageOrderValue
-    salesByCategory {
-      category
-      sales
-      quantity
-    }
-    salesByDay {
-      date
-      sales
-      transactions
+  query SalesReportForShop($startDate: Date!, $endDate: Date!, $shopId: ID) {
+    salesReportForShop(
+      startDate: $startDate
+      endDate: $endDate
+      shopId: $shopId
+    ) {
+      totalSales
+      totalTransactions
+      averageOrderValue
+      salesByCategory {
+        category
+        sales
+        quantity
+      }
+      salesByDay {
+        date
+        sales
+        transactions
+      }
     }
   }
-}
-`
+`;
 
 export const GET_USERS = gql`
   query GetUsers {
@@ -696,13 +789,13 @@ export const GET_USERS = gql`
   }
 `;
 export const GET_SHOPS = gql`
-query GetShops {
-  getShops {
-    id
-    shopName
-    description
-    createdAt
-    updatedAt
+  query GetShops {
+    getShops {
+      id
+      shopName
+      description
+      createdAt
+      updatedAt
+    }
   }
-}
-`
+`;

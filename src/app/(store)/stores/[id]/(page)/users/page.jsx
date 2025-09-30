@@ -36,16 +36,18 @@ import {
 } from "@mui/material";
 import {
   Edit,
-  Key,
   Plus,
   Search,
   Shield,
   Trash2,
   UserCheck,
   Users,
-  UserCog, 
+  UserRoundPen,
+  Store,
   UserX,
   User,
+  UserCog,
+  UserStar,
 } from "lucide-react";
 import React, { useState } from "react";
 import "../../../../../../../style/User.css";
@@ -54,13 +56,17 @@ import {
   DELETE_USER,
   UPDATE_USER,
 } from "../../../../../../../graphql/mutation";
-import { GET_USERS } from "../../../../../../../graphql/queries";
+import { GET_USERS, GET_SHOPS } from "../../../../../../../graphql/queries";
+import CircularIndeterminate from "@/app/function/loading/Loading";
+import { useAuth } from "@/app/context/AuthContext";
+import { translateLauguage } from "@/app/function/translate";
+import { DiamondPlus } from "lucide-react";
 import { Form, FormikProvider, useFormik } from "formik";
 import * as Yup from "yup";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
-const roles = ["Admin", "Manager", "Cashier", "StockKeeper", "User"];
+const roles = ["Admin", "Manager", "Cashier", "StockKeeper", "User", "Shop"];
 
 const UserManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -69,7 +75,10 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState("All");
   const [showPassword, setShowPassword] = useState(false);
 
+  const { language } = useAuth();
+  const { t } = translateLauguage(language);
   const { data, loading, error, refetch } = useQuery(GET_USERS);
+  const { data: shopData, loading: shopLoading } = useQuery(GET_SHOPS);
 
   const [createUser] = useMutation(CREATE_USER, {
     onCompleted: () => {
@@ -97,34 +106,37 @@ const UserManagement = () => {
   });
 
   const users = data?.users || [];
+  const shops = shopData?.getShops || [];
+  const shopLength = shops?.length;
 
   // Validation Schema
   const validationSchema = Yup.object().shape({
     name: Yup.string()
-      .required("Full name is required")
+      .required(`${t("required")}`)
       .min(2, "Name must be at least 2 characters"),
     email: Yup.string()
       .email("Invalid email format")
-      .required("Email is required"),
-    password: Yup.string()
-      .when('isEditing', {
-        is: false,
-        then: (schema) => schema
-          .required("Password is required")
+      .required(`${t("required")}`),
+    password: Yup.string().when("isEditing", {
+      is: false,
+      then: (schema) =>
+        schema
+          .required(`${t("required")}`)
           .min(8, "Password must be at least 8 characters")
           .matches(
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
             "Password must contain at least one uppercase letter, one lowercase letter, and one number"
           ),
-        otherwise: (schema) => schema
+      otherwise: (schema) =>
+        schema
           .notRequired()
           .min(8, "Password must be at least 8 characters")
           .matches(
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
             "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-          )
-      }),
-    role: Yup.string().required("Role is required"),
+          ),
+    }),
+    role: Yup.string().required(`${t("required")}`),
     active: Yup.boolean(),
   });
 
@@ -175,9 +187,9 @@ const UserManagement = () => {
   const handleCreateUser = () => {
     setEditingUser(null);
     formik.resetForm();
-    formik.setFieldValue('isEditing', false);
-    formik.setFieldValue('role', 'Cashier');
-    formik.setFieldValue('active', true);
+    formik.setFieldValue("isEditing", false);
+    formik.setFieldValue("role", "Cashier");
+    formik.setFieldValue("active", true);
     setDialogOpen(true);
   };
 
@@ -216,6 +228,7 @@ const UserManagement = () => {
       Cashier: "info",
       StockKeeper: "success",
       User: "primary",
+      Shop: "secondary",
     };
     return colors[role] || "default";
   };
@@ -223,53 +236,34 @@ const UserManagement = () => {
   const getRoleIcon = (role) => {
     switch (role) {
       case "Admin":
-        return <Shield size={16} />;
+        return <Shield size={36} color="white" />;
       case "Manager":
-        return <UserCheck size={16} />;
+        return <UserCog size={36} color="white" />;
       case "Cashier":
-        return <Users size={16} />;
+        return <UserStar size={36} color="white" />;
       case "StockKeeper":
-        return <Users size={16} />;
+        return <UserRoundPen size={36} color="white" />;
       case "User":
-        return <User size={16} />;
+        return <User size={36} color="white" />;
+      case "Shop":
+        return <Store size={36} color="white" />;
       default:
-        return <Users size={16} />;
+        return <Users size={36} color="white" />;
     }
   };
 
-  if (loading) return <Typography>Loading users...</Typography>;
   if (error)
     return <Alert severity="error">Error loading users: {error.message}</Alert>;
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 4,
-        }}
-      >
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-          User Management
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Plus size={20} />}
-          onClick={handleCreateUser}
-        >
-          Add User
-        </Button>
-      </Box>
-
       {/* User Statistics */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {roles.map((role) => {
           const count = users.filter((user) => user.role === role).length;
           return (
-            <Grid item xs={6} md={3} key={role}>
-              <Card className={`box-content-${role}`}>
+            <Grid size={{ xs: 6, md: 3 }} key={role}>
+              <Card class={`box-content-${role}`}>
                 <CardContent>
                   <Box
                     sx={{
@@ -279,19 +273,21 @@ const UserManagement = () => {
                     }}
                   >
                     <Box>
-                      <Typography color="text.secondary" gutterBottom>
+                      <Typography
+                        class={`text-dashboard-card-${role}`}
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         {role}
                       </Typography>
                       <Typography
                         variant="h4"
                         color={`${getRoleColor(role)}.main`}
                       >
-                        {count}
+                        {count || shopLength}
                       </Typography>
                     </Box>
-                    <Avatar sx={{ bgcolor: `${getRoleColor(role)}.main` }}>
-                      {getRoleIcon(role)}
-                    </Avatar>
+                    <Box class={`box-icon-${role}`}>{getRoleIcon(role)}</Box>
                   </Box>
                 </CardContent>
               </Card>
@@ -303,10 +299,11 @@ const UserManagement = () => {
       {/* Search and Filter */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={3}>
+            <Typography>{t(`search`)}</Typography>
             <TextField
               fullWidth
-              placeholder="Search users..."
+              placeholder={t(`search`)}
               value={searchTerm}
               size="small"
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -317,16 +314,17 @@ const UserManagement = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+
+          {/* Filter */}
+          <Grid item xs={12} md={3}>
+            <Typography>{t(`filter_by_role`)}</Typography>
             <FormControl fullWidth>
-              <InputLabel>Filter by Role</InputLabel>
               <Select
                 value={roleFilter}
                 size="small"
-                label="Filter by Role"
                 onChange={(e) => setRoleFilter(e.target.value)}
               >
-                <MenuItem value="All">All Roles</MenuItem>
+                <MenuItem value="All">{t(`all_role`)}</MenuItem>
                 {roles.map((role) => (
                   <MenuItem key={role} value={role}>
                     {role}
@@ -335,12 +333,21 @@ const UserManagement = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={2}>
+
+          {/* Spacer pushes next items right */}
+          <Grid item sx={{ ml: "auto", display: "flex", gap: 2 }}>
             <Chip
-              label={`${filteredUsers.length} users`}
+              label={`${filteredUsers.length} ${t("user")}`}
               color="primary"
               variant="outlined"
             />
+            <Button
+              variant="contained"
+              startIcon={<DiamondPlus size={20} />}
+              onClick={handleCreateUser}
+            >
+              {t(`create`)}
+            </Button>
           </Grid>
         </Grid>
       </Paper>
@@ -352,93 +359,104 @@ const UserManagement = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>User</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Last Login</TableCell>
-                  <TableCell>Created</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell className="siemreap-regular">
+                    {t(`user`)}
+                  </TableCell>
+                  <TableCell>{t(`email`)}</TableCell>
+                  <TableCell>{t(`role`)}</TableCell>
+                  <TableCell>{t(`status`)}</TableCell>
+                  <TableCell>{t(`last_login`)}</TableCell>
+                  <TableCell>{t(`create`)}</TableCell>
+                  <TableCell>{t(`action`)}</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Avatar
-                          sx={{
-                            mr: 2,
-                            bgcolor: `${getRoleColor(user.role)}.main`,
-                          }}
-                        >
-                          {user.name[0]}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body2" fontWeight="medium">
-                            {user.name}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Chip
-                        icon={getRoleIcon(user.role)}
-                        label={user.role}
-                        color={getRoleColor(user.role)}
-                        variant="outlined"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        icon={
-                          user.active ? (
-                            <UserCheck size={16} />
-                          ) : (
-                            <UserX size={16} />
-                          )
-                        }
-                        label={user.active ? "Active" : "Inactive"}
-                        color={user.active ? "success" : "error"}
-                        variant="outlined"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {user.lastLogin
-                        ? new Date(user.lastLogin).toLocaleDateString()
-                        : "Never"}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1}>
-                        <Tooltip title="Edit User">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEditUser(user)}
-                            color="primary"
-                          >
-                            <Edit size={16} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete User">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDeleteUser(user.id)}
-                            color="error"
-                          >
-                            <Trash2 size={16} />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
+              {loading ? (
+                <TableBody>
+                  <TableRow>
+                    <TableCell colSpan={7}>
+                      <CircularIndeterminate />
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
+                </TableBody>
+              ) : (
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <Avatar
+                            sx={{
+                              mr: 2,
+                              bgcolor: `${getRoleColor(user.role)}.main`,
+                            }}
+                          >
+                            {user.name[0]}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" fontWeight="medium">
+                              {user.name}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={user.role}
+                          color={getRoleColor(user.role)}
+                          variant="outlined"
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          icon={
+                            user.active ? (
+                              <UserCheck size={16} />
+                            ) : (
+                              <UserX size={16} />
+                            )
+                          }
+                          label={user.active ? t("active") : t("inactive")}
+                          color={user.active ? "success" : "error"}
+                          variant="outlined"
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {user.lastLogin
+                          ? new Date(user.lastLogin).toLocaleDateString()
+                          : t("never")}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1}>
+                          <Tooltip title={t("edit_user")}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEditUser(user)}
+                              color="primary"
+                            >
+                              <Edit size={16} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={t("delete_user")}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteUser(user.id)}
+                              color="error"
+                            >
+                              <Trash2 size={16} />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              )}
             </Table>
           </TableContainer>
         </CardContent>
@@ -459,15 +477,15 @@ const UserManagement = () => {
             <DialogTitle>
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Users size={24} style={{ marginRight: 8 }} />
-                {editingUser ? "Edit User" : "Create New User"}
+                {editingUser ? t("edit_user") : t("create_new_user")}
               </Box>
             </DialogTitle>
             <DialogContent>
               <Grid container spacing={2} sx={{ mt: 1 }}>
-                <Grid item xs={12}>
+                <Grid size={{xs:12}}>
                   <TextField
                     fullWidth
-                    label="Full Name"
+                    label={t("full_name")}
                     name="name"
                     value={formik.values.name}
                     onChange={formik.handleChange}
@@ -477,10 +495,10 @@ const UserManagement = () => {
                     required
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{xs:12}}>
                   <TextField
                     fullWidth
-                    label="Email"
+                    label={t("email")}
                     type="email"
                     name="email"
                     value={formik.values.email}
@@ -491,17 +509,19 @@ const UserManagement = () => {
                     required
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <FormControl 
-                    fullWidth 
-                    error={formik.touched.password && Boolean(formik.errors.password)}
+                <Grid size={{xs:12}}>
+                  <FormControl
+                    fullWidth
+                    error={
+                      formik.touched.password && Boolean(formik.errors.password)
+                    }
                   >
                     <TextField
                       fullWidth
                       label={
                         editingUser
-                          ? "New Password (leave blank to keep current)"
-                          : "Password"
+                          ? t("new_password_placeholder")
+                          : t("password")
                       }
                       type={showPassword ? "text" : "password"}
                       name="password"
@@ -516,36 +536,42 @@ const UserManagement = () => {
                               onMouseDown={handleMouseDownPassword}
                               edge="end"
                             >
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                              {showPassword ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
                             </IconButton>
                           </InputAdornment>
                         ),
                       }}
                       required={!editingUser}
+                      helperText={
+                        editingUser ? t("password_change_helper") : ""
+                      }
                     />
                     {formik.touched.password && formik.errors.password && (
                       <FormHelperText>{formik.errors.password}</FormHelperText>
                     )}
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControl 
-                    fullWidth 
+                <Grid size={{xs:12,md:6}}>
+                  <FormControl
+                    fullWidth
                     required
                     error={formik.touched.role && Boolean(formik.errors.role)}
                   >
-                    <InputLabel>Role</InputLabel>
+                    <InputLabel>{t("role")}</InputLabel>
                     <Select
                       name="role"
                       value={formik.values.role}
-                      label="Role"
+                      label={t("role")}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                     >
                       {roles.map((role) => (
                         <MenuItem key={role} value={role}>
                           <Box sx={{ display: "flex", alignItems: "center" }}>
-                            {getRoleIcon(role)}
                             <Typography sx={{ ml: 1 }}>{role}</Typography>
                           </Box>
                         </MenuItem>
@@ -556,7 +582,7 @@ const UserManagement = () => {
                     )}
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{xs:12,md:6}}>
                   <FormControlLabel
                     control={
                       <Switch
@@ -566,49 +592,34 @@ const UserManagement = () => {
                         color="primary"
                       />
                     }
-                    label="Active User"
+                    label={t("active_user")}
                   />
                 </Grid>
               </Grid>
 
-              {/* Role Permissions Info */}
-              <Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Role Permissions:
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Admin:</strong> Full system access including user
-                  management
-                  <br />
-                  <strong>Manager:</strong> All operations except user management
-                  <br />
-                  <strong>Cashier:</strong> POS operations and basic reporting
-                  <br />
-                  <strong>StockKeeper:</strong> Inventory and supplier management
-                </Typography>
-              </Box>
+
+              
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
-              <Button 
+              <Button
                 onClick={() => {
                   setDialogOpen(false);
                   formik.resetForm();
                 }}
                 disabled={formik.isSubmitting}
               >
-                Cancel
+                {t("cancel")}
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 variant="contained"
                 disabled={formik.isSubmitting || !formik.isValid}
               >
-                {formik.isSubmitting 
-                  ? "Processing..." 
-                  : editingUser 
-                    ? "Update User" 
-                    : "Create User"
-                }
+                {formik.isSubmitting
+                  ? t("loading")
+                  : editingUser
+                  ? t("update_user")
+                  : t("create_user")}
               </Button>
             </DialogActions>
           </Form>

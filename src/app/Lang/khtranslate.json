@@ -206,5 +206,13 @@
   "low_stock_items":"ផលិតផលស្តុកទាប",
   "today's_hourly_sales":"ការលក់ប្រចាំម៉ោងថ្ងៃនេះ",
   "top_selling_products":"ផលិតផលលក់ដាច់បំផុត",
-  "numberic":"លេខ"
+  "numberic":"លេខ",
+  "reports_analytics":"របាយការណ៍ & វិភាគការលក់",
+  "report_type":"ប្រភេទរបាយការណ៍",
+  "update_report":"ធ្វើបច្ចុប្បន្នភាព",
+  "category_performance":"ដំណើរការប្រភេទ",
+  "total_sale":"ការលក់សរុប",
+  "item_sole":"ទំនិញបានលក់",
+  "average_per_item":"ជាមធ្យមក្នុងមួយធាតុ",
+  "%_of_total":"% នៃចំនួនសរុប"
 }

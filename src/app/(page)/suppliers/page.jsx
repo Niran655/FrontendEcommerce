@@ -386,7 +386,7 @@ const Suppliers = () => {
       {activeTab === 0 && (
         <Grid container spacing={3}>
           {suppliers.map((supplier) => (
-            <Grid size={{xs:12}} md={6} lg={4} key={supplier.id}>
+            <Grid size={{xs:12,md:6,lg:4}}  key={supplier.id}>
               <Card>
                 <CardContent>
                   <Box

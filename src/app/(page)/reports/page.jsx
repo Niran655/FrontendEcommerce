@@ -4,12 +4,12 @@ import React, { useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import dayjs from "dayjs";
 
-// MUI X Date Pickers
+
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
-// MUI Core
+
 import {
   Alert,
   Avatar,
@@ -33,7 +33,7 @@ import {
   Typography,
 } from "@mui/material";
 
-// Icons
+
 import {
   AlertTriangle,
   BarChart3,
@@ -45,7 +45,7 @@ import {
   Users,
 } from "lucide-react";
 
-// Charts
+
 import {
   Bar,
   BarChart,
@@ -61,7 +61,7 @@ import {
   YAxis,
 } from "recharts";
 
-// GraphQL queries
+
 import {
   GET_LOW_STOCK_PRODUCTS,
   GET_SALES,

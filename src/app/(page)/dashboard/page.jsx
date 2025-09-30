@@ -43,14 +43,20 @@ const StatCard = ({
   color = "primary",
   subtitle,
 }) => (
-  <Card sx={{ height: "100%" }}>
-    <CardContent className="dashboard-box"  >
-      <Box borderRadius={"10px"} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between"}}>
-        <Box >
-          <Typography color="text.secondary" gutterBottom variant="h6">
+  <Card class={`box-content-${color}`} sx={{ height: "100%" }}>
+    <CardContent>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box>
+          <Typography class="text-title" gutterBottom variant="h6">
             {title}
           </Typography>
-          <Typography variant="h4" component="div" color={`${color}.main`}>
+          <Typography variant="h4" component="div" color="#FAFAF9">
             {value}
           </Typography>
           {subtitle && (
@@ -59,9 +65,9 @@ const StatCard = ({
             </Typography>
           )}
         </Box>
-        <Avatar sx={{ bgcolor: `${color}.main`, width: 56, height: 56 }}>
-          <Icon size={24} />
-        </Avatar>
+        <Box class="icon-style" sx={{ width: 56, height: 56 }}>
+          <Icon size={30} class="icon" />
+        </Box>
       </Box>
     </CardContent>
   </Card>

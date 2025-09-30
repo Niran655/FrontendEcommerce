@@ -34,12 +34,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Trophy } from 'lucide-react';
+import { Trophy } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { GET_DASHBOARD_STATS_FOR_SHOP } from "../../../../../../../graphql/queries";
 import { useAuth } from "@/app/context/AuthContext";
 import { translateLauguage } from "@/app/function/translate";
-import "../../../../../../../style/Dashboard.css"
+import "../../../../../../../style/Dashboard.css";
 const StatCard = ({
   title,
   value,
@@ -57,10 +57,10 @@ const StatCard = ({
         }}
       >
         <Box>
-          <Typography   class="text-title" gutterBottom variant="h6">
+          <Typography class="text-title" gutterBottom variant="h6">
             {title}
           </Typography>
-          <Typography variant="h4"  component="div" color="#FAFAF9">
+          <Typography variant="h4" component="div" color="#FAFAF9">
             {value}
           </Typography>
           {subtitle && (
@@ -69,7 +69,7 @@ const StatCard = ({
             </Typography>
           )}
         </Box>
-        <Box class='icon-style' sx={{ width: 56, height: 56 }}>
+        <Box class="icon-style" sx={{ width: 56, height: 56 }}>
           <Icon size={30} class="icon" />
         </Box>
       </Box>
@@ -126,7 +126,7 @@ const Dashboard = () => {
   const validTopProducts = (stats?.topProducts || []).filter(
     (item) => item?.product != null
   );
-  console.log("validTopProducts",validTopProducts)
+  console.log("validTopProducts", validTopProducts);
   return (
     <Box>
       <Typography
@@ -324,7 +324,7 @@ const Dashboard = () => {
                           color="primary"
                           sx={{ fontWeight: "bold" }}
                         >
-                          <Trophy size={15}/> {index + 1}
+                          <Trophy size={15} /> {index + 1}
                         </Typography>
                       </Paper>
                     </Grid>

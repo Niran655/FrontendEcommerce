@@ -419,3 +419,27 @@ export const UPDATE_PURCHASE_ORDER_STATUS = gql`
     }
   }
 `;
+// ======================================SHOP MUTATION===========================
+export const CREATE_SHOP = gql`
+mutation CreateShopForSeller($input: ShopInput) {
+  createShopForSeller(input: $input) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`
+
+export const CREATE_ORDER_BY_CUSTOMER=gql`
+mutation CreateCustomerOrderProduct($input: OrderInput) {
+  createCustomerOrderProduct(input: $input) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`

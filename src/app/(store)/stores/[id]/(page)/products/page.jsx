@@ -279,8 +279,6 @@ const Products = () => {
     setEditingProduct(product);
     console.log("product category shop", product);
 
-
-
     formik.setValues({
       name: product.name,
       description: product.description || "",
@@ -536,40 +534,36 @@ const Products = () => {
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <label>{t(`main_category`)}</label>
-            <FormControl fullWidth>
-              <Select
-                value={selectedCategory}
-                size="small"
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <MenuItem value="All">All Categories</MenuItem>
-                {categoryNames.map((category) => (
-                  <MenuItem key={category} value={category}>
-                    {category}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <label>{t(`shop_category`)}</label>
-            <FormControl fullWidth>
-              <Select
-                value={selectedCategoryForShop}
-                size="small"
-                onChange={(e) => setSelectCategoryForShop(e.target.value)}
-              >
-                <MenuItem value="All">All Categories</MenuItem>
-                {categoryNamesForShop.map((category) => (
-                  <MenuItem key={category} value={category}>
-                    {category}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+   <Grid size={{ xs: 12, md: 2 }}>
+  <label>{t(`main_category`)}</label>
+  <Autocomplete
+    size="small"
+    options={["All", ...categoryNames]}
+    value={selectedCategory}
+    onChange={(event, newValue) => setSelectedCategory(newValue || "All")}
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        placeholder="Select category"
+      />
+    )}
+  />
+</Grid>
+<Grid size={{ xs: 12, md: 2 }}>
+  <label>{t(`shop_category`)}</label>
+  <Autocomplete
+    size="small"
+    options={["All", ...categoryNamesForShop]}
+    value={selectedCategoryForShop}
+    onChange={(event, newValue) => setSelectCategoryForShop(newValue || "All")}
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        placeholder="Select shop category"
+      />
+    )}
+  />
+</Grid>
 
           <Grid size={{ xs: 12, md: 3 }} mt={2.5}>
             <Stack direction="row" spacing={1}>

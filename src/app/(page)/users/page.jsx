@@ -48,6 +48,8 @@ import {
   User,
   UserCog,
   UserStar,
+  Building,
+  MapPin,
 } from "lucide-react";
 import React, { useState } from "react";
 import "../../../../style/User.css";
@@ -55,6 +57,7 @@ import {
   CREATE_USER,
   DELETE_USER,
   UPDATE_USER,
+  CREATE_SHOP,
 } from "../../../../graphql/mutation";
 import { GET_USERS, GET_SHOPS } from "../../../../graphql/queries";
 import CircularIndeterminate from "@/app/function/loading/Loading";
@@ -70,6 +73,7 @@ const roles = ["Admin", "Manager", "Cashier", "StockKeeper", "User", "Shop"];
 
 const UserManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [shopDialogOpen, setShopDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -105,11 +109,75 @@ const UserManagement = () => {
     onError: (error) => alert(`Error: ${error.message}`),
   });
 
+  const [createShop] = useMutation(CREATE_SHOP, {
+    onCompleted: () => {
+      setShopDialogOpen(false);
+      shopFormik.resetForm();
+      // Refetch shops if you have a refetch function for shops
+    },
+    onError: (error) => alert(`Error creating shop: ${error.message}`),
+  });
+
   const users = data?.users || [];
   const shops = shopData?.getShops || [];
   const shopLength = shops?.length;
 
-  // Validation Schema
+  // Shop Validation Schema
+  const shopValidationSchema = Yup.object().shape({
+    shopName: Yup.string()
+      .required("Shop name is required")
+      .min(2, "Shop name must be at least 2 characters"),
+    enName: Yup.string()
+      .required("English name is required")
+      .min(2, "English name must be at least 2 characters"),
+    description: Yup.string()
+      .required("Description is required")
+      .min(10, "Description must be at least 10 characters"),
+    image: Yup.string()
+      .url("Must be a valid URL")
+      .required("Image URL is required"),
+    typeId: Yup.string().required("Shop type is required"),
+    owner: Yup.string().required("Owner is required"),
+  });
+
+  // Shop Formik initialization
+  const shopFormik = useFormik({
+    initialValues: {
+      shopName: "",
+      enName: "",
+      description: "",
+      image: "",
+      typeId: "",
+      owner: "",
+      slug: null,
+      code: null,
+    },
+    validationSchema: shopValidationSchema,
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        await createShopForSeller({
+          variables: {
+            input: {
+              shopName: values.shopName,
+              enName: values.enName,
+              description: values.description,
+              image: values.image,
+              typeId: values.typeId,
+              owner: values.owner,
+              slug: values.slug,
+              code: values.code,
+            },
+          },
+        });
+      } catch (error) {
+        console.error("Error creating shop:", error);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  // User Validation Schema (your existing schema)
   const validationSchema = Yup.object().shape({
     name: Yup.string()
       .required(`${t("required")}`)
@@ -140,7 +208,7 @@ const UserManagement = () => {
     active: Yup.boolean(),
   });
 
-  // Formik initialization
+  // User Formik initialization (your existing formik)
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -191,6 +259,11 @@ const UserManagement = () => {
     formik.setFieldValue("role", "Cashier");
     formik.setFieldValue("active", true);
     setDialogOpen(true);
+  };
+
+  const handleCreateShop = () => {
+    shopFormik.resetForm();
+    setShopDialogOpen(true);
   };
 
   const handleEditUser = (user) => {
@@ -341,6 +414,13 @@ const UserManagement = () => {
               color="primary"
               variant="outlined"
             />
+            <Button
+              variant="outlined"
+              startIcon={<Building size={20} />}
+              onClick={handleCreateShop}
+            >
+              Create Shop
+            </Button>
             <Button
               variant="contained"
               startIcon={<DiamondPlus size={20} />}
@@ -596,9 +676,6 @@ const UserManagement = () => {
                   />
                 </Grid>
               </Grid>
-
-
-              
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
               <Button
@@ -620,6 +697,176 @@ const UserManagement = () => {
                   : editingUser
                   ? t("update_user")
                   : t("create_user")}
+              </Button>
+            </DialogActions>
+          </Form>
+        </FormikProvider>
+      </Dialog>
+
+      {/* Shop Creation Dialog */}
+      <Dialog
+        open={shopDialogOpen}
+        onClose={() => {
+          setShopDialogOpen(false);
+          shopFormik.resetForm();
+        }}
+        maxWidth="md"
+        fullWidth
+      >
+        <FormikProvider value={shopFormik}>
+          <Form onSubmit={shopFormik.handleSubmit}>
+            <DialogTitle>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Building size={24} style={{ marginRight: 8 }} />
+                Create New Shop
+              </Box>
+            </DialogTitle>
+            <DialogContent>
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid size={{xs:12,md:6}}>
+                  <TextField
+                    fullWidth
+                    label="Shop Name (Local)"
+                    name="shopName"
+                    value={shopFormik.values.shopName}
+                    onChange={shopFormik.handleChange}
+                    onBlur={shopFormik.handleBlur}
+                    error={shopFormik.touched.shopName && Boolean(shopFormik.errors.shopName)}
+                    helperText={shopFormik.touched.shopName && shopFormik.errors.shopName}
+                    required
+                  />
+                </Grid>
+                <Grid size={{xs:12,md:6}}>
+                  <TextField
+                    fullWidth
+                    label="Shop Name (English)"
+                    name="enName"
+                    value={shopFormik.values.enName}
+                    onChange={shopFormik.handleChange}
+                    onBlur={shopFormik.handleBlur}
+                    error={shopFormik.touched.enName && Boolean(shopFormik.errors.enName)}
+                    helperText={shopFormik.touched.enName && shopFormik.errors.enName}
+                    required
+                  />
+                </Grid>
+                <Grid size={{xs:12}}>
+                  <TextField
+                    fullWidth
+                    label="Description"
+                    name="description"
+                    multiline
+                    rows={3}
+                    value={shopFormik.values.description}
+                    onChange={shopFormik.handleChange}
+                    onBlur={shopFormik.handleBlur}
+                    error={shopFormik.touched.description && Boolean(shopFormik.errors.description)}
+                    helperText={shopFormik.touched.description && shopFormik.errors.description}
+                    required
+                  />
+                </Grid>
+                <Grid size={{xs:12}}>
+                  <TextField
+                    fullWidth
+                    label="Image URL"
+                    name="image"
+                    value={shopFormik.values.image}
+                    onChange={shopFormik.handleChange}
+                    onBlur={shopFormik.handleBlur}
+                    error={shopFormik.touched.image && Boolean(shopFormik.errors.image)}
+                    helperText={shopFormik.touched.image && shopFormik.errors.image}
+                    required
+                  />
+                </Grid>
+                <Grid size={{xs:12,md:6}}>
+                  <FormControl
+                    fullWidth
+                    required
+                    error={shopFormik.touched.typeId && Boolean(shopFormik.errors.typeId)}
+                  >
+                    <InputLabel>Shop Type</InputLabel>
+                    <Select
+                      name="typeId"
+                      value={shopFormik.values.typeId}
+                      label="Shop Type"
+                      onChange={shopFormik.handleChange}
+                      onBlur={shopFormik.handleBlur}
+                    >
+                      {/* You'll need to replace these with actual shop types from your API */}
+                      <MenuItem value="68dccb157cb2b26b129eef06">Restaurant</MenuItem>
+                      <MenuItem value="68dccb157cb2b26b129eef07">Cafe</MenuItem>
+                      <MenuItem value="68dccb157cb2b26b129eef08">Retail</MenuItem>
+                    </Select>
+                    {shopFormik.touched.typeId && shopFormik.errors.typeId && (
+                      <FormHelperText>{shopFormik.errors.typeId}</FormHelperText>
+                    )}
+                  </FormControl>
+                </Grid>
+                <Grid size={{xs:12,md:6}}>
+                  <FormControl
+                    fullWidth
+                    required
+                    error={shopFormik.touched.owner && Boolean(shopFormik.errors.owner)}
+                  >
+                    <InputLabel>Owner</InputLabel>
+                    <Select
+                      name="owner"
+                      value={shopFormik.values.owner}
+                      label="Owner"
+                      onChange={shopFormik.handleChange}
+                      onBlur={shopFormik.handleBlur}
+                    >
+                      {users
+                        .filter(user => user.role === "Admin" || user.role === "Manager")
+                        .map((user) => (
+                          <MenuItem key={user.id} value={user.id}>
+                            {user.name} ({user.email})
+                          </MenuItem>
+                        ))}
+                    </Select>
+                    {shopFormik.touched.owner && shopFormik.errors.owner && (
+                      <FormHelperText>{shopFormik.errors.owner}</FormHelperText>
+                    )}
+                  </FormControl>
+                </Grid>
+                <Grid size={{xs:12,md:6}}>
+                  <TextField
+                    fullWidth
+                    label="Slug (Optional)"
+                    name="slug"
+                    value={shopFormik.values.slug || ''}
+                    onChange={shopFormik.handleChange}
+                    onBlur={shopFormik.handleBlur}
+                    helperText="Leave empty for auto-generation"
+                  />
+                </Grid>
+                <Grid size={{xs:12,md:6}}>
+                  <TextField
+                    fullWidth
+                    label="Code (Optional)"
+                    name="code"
+                    value={shopFormik.values.code || ''}
+                    onChange={shopFormik.handleChange}
+                    onBlur={shopFormik.handleBlur}
+                  />
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions sx={{ p: 3 }}>
+              <Button
+                onClick={() => {
+                  setShopDialogOpen(false);
+                  shopFormik.resetForm();
+                }}
+                disabled={shopFormik.isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={shopFormik.isSubmitting || !shopFormik.isValid}
+              >
+                {shopFormik.isSubmitting ? "Creating..." : "Create Shop"}
               </Button>
             </DialogActions>
           </Form>

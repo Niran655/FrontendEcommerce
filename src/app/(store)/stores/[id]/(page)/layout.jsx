@@ -9,26 +9,29 @@ import SellerSidebar from "@/app/components/SellerSidebar";
 // import StorePage from "../../../storeLogin/page";
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const {id} = useParams()
+  const { id } = useParams();
   const handleSidebarToggle = () => {
     setSidebarOpen((prev) => !prev);
   };
 
-    const [storeOpen, setStoreOpen] = useState(false);
-  
-    const handleOpenStore = () => {
-      setStoreOpen(true);
-    };
-  
-    const handleCloseStore = () => {
-      setStoreOpen(false);
-    };
-  
+  const [storeOpen, setStoreOpen] = useState(false);
+
+  const handleOpenStore = () => {
+    setStoreOpen(true);
+  };
+
+  const handleCloseStore = () => {
+    setStoreOpen(false);
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
-      <Header onSidebarToggle={handleSidebarToggle}  onStoreOpen={handleOpenStore} />
-      <SellerSidebar open={sidebarOpen} onClose={handleSidebarToggle}   />
-       {/* <StorePage open={storeOpen} onClose={handleCloseStore} /> */}
+      <Header
+        onSidebarToggle={handleSidebarToggle}
+        onStoreOpen={handleOpenStore}
+      />
+      <SellerSidebar open={sidebarOpen} onClose={handleSidebarToggle} />
+      {/* <StorePage open={storeOpen} onClose={handleCloseStore} /> */}
       <Box
         component="main"
         sx={{

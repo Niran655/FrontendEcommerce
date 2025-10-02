@@ -87,6 +87,7 @@ const Category = () => {
   const formik = useFormik({
     initialValues: {
       name: "",
+      nameKh:"",
       slug: "",
       description: "",
       image: "",
@@ -96,6 +97,7 @@ const Category = () => {
     onSubmit: async (values) => {
       const input = {
         name: values.name,
+        nameKh:values.nameKh,
         slug: values.slug,
         description: values.description,
         image: values.image,
@@ -299,11 +301,20 @@ const Category = () => {
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
-                    label="Name"
+                    label="Name English"
                     fullWidth
                     {...getFieldProps("name")}
                     error={touched.name && Boolean(errors.name)}
                     helperText={touched.name && errors.name}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    label="Name Khmer"
+                    fullWidth
+                    {...getFieldProps("nameKh")}
+                    error={touched.nameKh && Boolean(errors.nameKh)}
+                    helperText={touched.nameKh && errors.nameKh}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>

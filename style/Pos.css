@@ -1,0 +1,39 @@
+.shop-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 20px;
+  transition: transform 0.2s ease-in-out;
+  max-width: 400px;
+}
+
+.shop-card:hover {
+  transform: scale(1.02);
+}
+
+.shop-card img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.shop-info {
+  flex-grow: 1;
+  padding-left: 16px;
+}
+
+.shop-info-shopName {
+  font-size: 25px ;
+  font-weight: bold;
+  margin-bottom: 4px;
+  margin-left: 10px;
+
+}
+
+.shop-info p {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 2px 0;
+}

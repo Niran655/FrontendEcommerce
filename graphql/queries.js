@@ -248,66 +248,78 @@ export const GET_PRODUCT_FOR_SHOP = gql`
   }
 `;
 export const GET_PRODUCT_FOR_SHOP_WITH_PAGNATION = gql`
-query GetProductForShopWithPagination($page: Int, $limit: Int, $pagination: Boolean, $keyword: String, $shopId: ID) {
-  getProductForShopWithPagination(page: $page, limit: $limit, pagination: $pagination, keyword: $keyword, shopId: $shopId) {
-    data {
-       id
-      active
-      addSlide {
+  query GetProductForShopWithPagination(
+    $page: Int
+    $limit: Int
+    $pagination: Boolean
+    $keyword: String
+    $shopId: ID
+  ) {
+    getProductForShopWithPagination(
+      page: $page
+      limit: $limit
+      pagination: $pagination
+      keyword: $keyword
+      shopId: $shopId
+    ) {
+      data {
         id
-        title
-        header
+        active
+        addSlide {
+          id
+          title
+          header
+          description
+          image
+        }
+        category
+        comboItems {
+          quantity
+        }
+        cost
         description
+        discount {
+          id
+          defaultPrice
+          description
+          discountPrice
+        }
         image
-      }
-      category
-      comboItems {
-        quantity
-      }
-      cost
-      description
-      discount {
-        id
-        defaultPrice
-        description
-        discountPrice
-      }
-      image
-      isCombo
-      lowStock
-      mainStock {
-        quantity
-        minStock
+        isCombo
         lowStock
+        mainStock {
+          quantity
+          minStock
+          lowStock
+        }
+
+        minStock
+        name
+        price
+        sku
+        stock
+        subImage {
+          id
+          url
+          altText
+          caption
+        }
       }
-      
-      minStock
-      name
-      price
-      sku
-      stock
-      subImage {
-        id
-        url
-        altText
-        caption
+      paginator {
+        slNo
+        prev
+        next
+        perPage
+        totalPosts
+        totalPages
+        currentPage
+        hasPrevPage
+        hasNextPage
+        totalDocs
       }
-    }
-    paginator {
-      slNo
-      prev
-      next
-      perPage
-      totalPosts
-      totalPages
-      currentPage
-      hasPrevPage
-      hasNextPage
-      totalDocs
     }
   }
-}
-`
+`;
 // ================================END PRODUCT QUERY===================================
 
 export const GET_BANNERS = gql`
@@ -434,6 +446,7 @@ export const GET_ADMIN_CATEGORY = gql`
     getParentCategoryForAdmin {
       id
       name
+      slug
       description
       image
       active
@@ -451,6 +464,21 @@ export const GET_CATEGORY = gql`
   }
 `;
 // ==================================END CATEGORY QUERY================================
+export const GET_ALL_SHOPS = gql`
+  query GetShops {
+    getShops {
+      id
+      code
+      slug
+      image
+      shopName
+      description
+      createdAt
+      updatedAt
+      enName
+    }
+  }
+`;
 export const GET_MY_SHOPS = gql`
   query GetShopsByOwnerId($getShopsByOwnerIdId: ID!) {
     getShopsByOwnerId(id: $getShopsByOwnerIdId) {
@@ -466,6 +494,39 @@ export const GET_MY_SHOPS = gql`
         updatedAt
       }
       shopName
+      description
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const GET_SHOP_BY_SHOP_ID = gql`
+  query Shop($shopId: ID!) {
+    shop(id: $shopId) {
+      id
+      code
+      slug
+      image
+      shopName
+      enName
+      type {
+        name
+      }
+      description
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const GET_SHOP_BY_TYPE_ID = gql`
+  query GetShopsByTypeId($typeId: ID) {
+    getShopsByTypeId(typeId: $typeId) {
+      id
+      code
+      slug
+      image
+      shopName
+      enName
       description
       createdAt
       updatedAt
@@ -609,37 +670,37 @@ export const GET_PURCHASE_ORDERS = gql`
 `;
 // ============================START GET STOCK MMOVEMENT==============================
 export const GET_STOCK_MOVEMENTS = gql`
-query StockMovements($productId: ID) {
-  stockMovements(productId: $productId) {
-    id
-    product {
+  query StockMovements($productId: ID) {
+    stockMovements(productId: $productId) {
       id
-      name
-    }
-    type
-    quantity
-    reason
-    reference
-    user {
-      id
-      name
-      email
-      role
-      active
-      lastLogin
+      product {
+        id
+        name
+      }
+      type
+      quantity
+      reason
+      reference
+      user {
+        id
+        name
+        email
+        role
+        active
+        lastLogin
+        createdAt
+        updatedAt
+      }
+      previousStock
+      newStock
       createdAt
-      updatedAt
     }
-    previousStock
-    newStock
-    createdAt
   }
-}
 `;
 export const GET_STOCK_MOVEMENTS_FOR_SHOP = gql`
-query GetStockMovementsByShop($productId: ID, $shopId: ID) {
-  getStockMovementsByShop(productId: $productId, shopId: $shopId) {
-          id
+  query GetStockMovementsByShop($productId: ID, $shopId: ID) {
+    getStockMovementsByShop(productId: $productId, shopId: $shopId) {
+      id
       product {
         id
         name
@@ -656,9 +717,9 @@ query GetStockMovementsByShop($productId: ID, $shopId: ID) {
       previousStock
       newStock
       createdAt
+    }
   }
-}
-`
+`;
 // ============================START GET STOCK MMOVEMENT==============================
 export const GET_DASHBOARD_STATS = gql`
   query GetDashboardStats {
@@ -799,3 +860,26 @@ export const GET_SHOPS = gql`
     }
   }
 `;
+ export const  GET_ORDER_FOR_SHOP = gql`
+ query GetOrderForShop($shopId: ID) {
+  getOrderForShop(shopId: $shopId) {
+    id
+    tax
+    items {
+      product {
+        id
+        name
+      }
+      quantity
+      total
+      price
+    }
+    customer {
+      firstName
+      lastName
+      phone
+      email
+    }
+  }
+}
+`

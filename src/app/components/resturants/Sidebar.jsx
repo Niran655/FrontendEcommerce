@@ -28,74 +28,31 @@ import {
   ChartBarStacked,
 } from "lucide-react";
 import React, { useRef, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useQuery } from "@apollo/client/react";
-import { GET_ADMIN_CATEGORY } from "../../../graphql/queries";
-import { translateLauguage } from "../function/translate";
+import { GET_ADMIN_CATEGORY } from "../../../../graphql/queries";
+import { translateLauguage } from "../../function/translate";
 const drawerWidth = 240;
 
 const staticMenu = [
   {
-    label: "dashboard",
+    label: "Home",
     icon: LayoutDashboard,
-    path: "/dashboard",
+    path: "/restaurants",
     roles: ["Admin", "Manager", "Cashier", "StockKeeper", "Seller"],
   },
-  {
-    label: "pos_system",
-    icon: ShoppingCart,
-    path: "/pos",
-    roles: ["Admin", "Manager", "Cashier", "Seller"],
-  },
-  {
-    label: "categorys",
-    icon: ChartNoAxesGantt,
-    path: "/categorys",
-    roles: ["Admin", "Manager", "StockKeeper", "Seller"],
-  },
-  {
-    label: "products",
-    icon: Package,
-    path: "/products",
-    roles: ["Admin", "Manager", "StockKeeper", "Seller"],
-  },
-  {
-    label: "stock_mg",
-    icon: Warehouse,
-    path: "/stock",
-    roles: ["Admin", "Manager", "StockKeeper", "Seller"],
-  },
-  {
-    label: "suppliers_po",
-    icon: Truck,
-    path: "/suppliers",
-    roles: ["Admin", "Manager", "StockKeeper", "Seller"],
-  },
-  {
-    label: "reports",
-    icon: BarChart3,
-    path: "/reports",
-    roles: ["Admin", "Manager", "Seller"],
-  },
-  {
-    label: "user_management",
-    icon: Users,
-    path: "/users",
-    roles: ["Admin", "Manager", "Seller"],
-  },
-  {
-    label: "settings",
-    icon: Settings,
-    path: "/settings",
-    roles: ["Admin", "Manager", "Seller"],
-  },
-  //===============USER ROLE=====================
-  {
-    label: "home",
-    icon: Warehouse,
-    path: "/home",
-    roles: ["Manager", "User"],
-  },
+  // {
+  //   label: "pos_system",
+  //   icon: ShoppingCart,
+  //   path: "/pos",
+  //   roles: ["Admin", "Manager", "Cashier", "Seller"],
+  // },
+  // {
+  //   label: "categorys",
+  //   icon: ChartNoAxesGantt,
+  //   path: "/categorys",
+  //   roles: ["Admin", "Manager", "StockKeeper", "Seller"],
+  // },
 ];
 
 const Sidebar = ({ open, onClose }) => {
@@ -109,28 +66,27 @@ const Sidebar = ({ open, onClose }) => {
 
   const { data, loading } = useQuery(GET_ADMIN_CATEGORY);
 
- 
   const handleNavigation = (path) => {
-    
     if (drawerRef.current) {
-      sessionStorage.setItem('sidebarScroll', drawerRef.current.scrollTop.toString());
+      sessionStorage.setItem(
+        "sidebarScroll",
+        drawerRef.current.scrollTop.toString()
+      );
     }
-    
+
     router.push(path);
     onClose && onClose();
   };
 
-
   useEffect(() => {
-    const savedScroll = sessionStorage.getItem('sidebarScroll');
+    const savedScroll = sessionStorage.getItem("sidebarScroll");
     if (savedScroll && drawerRef.current) {
       const scrollPosition = parseInt(savedScroll);
       drawerRef.current.scrollTop = scrollPosition;
- 
-      sessionStorage.removeItem('sidebarScroll');
+
+      sessionStorage.removeItem("sidebarScroll");
     }
   }, [pathname]);
-
 
   const visibleMenuItems = staticMenu.filter((item) =>
     hasPermission(item.roles)
@@ -139,17 +95,17 @@ const Sidebar = ({ open, onClose }) => {
   const DrawerContent = () => (
     <>
       <Toolbar />
-      <Box 
+      <Box
         ref={drawerRef}
-        sx={{ 
-          overflow: "auto", 
-          mt: 1, 
-          height: 'calc(100vh - 64px)',
-          overscrollBehavior: 'contain'
+        sx={{
+          overflow: "auto",
+          mt: 1,
+          height: "calc(100vh - 64px)",
+          overscrollBehavior: "contain",
         }}
       >
         <List>
-          {visibleMenuItems.map((item) => {
+          {staticMenu.map((item) => {
             const IconComponent = item.icon;
             const isActive = pathname === item.path;
 
@@ -176,10 +132,10 @@ const Sidebar = ({ open, onClose }) => {
                   >
                     <IconComponent size={20} />
                   </ListItemIcon>
-                  <ListItemText 
-                    primary={t(item.label)}  
+                  <ListItemText
+                    primary={t(item.label)}
                     primaryTypographyProps={{
-                      variant: 'body2',
+                      variant: "body2",
                     }}
                   />
                 </ListItemButton>
@@ -191,7 +147,7 @@ const Sidebar = ({ open, onClose }) => {
         {/* Divider for categories */}
         <Divider sx={{ my: 1 }} />
         <Typography alignItems={"center"} variant="body1" sx={{ px: 2, mt: 1 }}>
-          Categories
+          ប្រភេទម្ហូប
         </Typography>
 
         <List>
@@ -201,12 +157,12 @@ const Sidebar = ({ open, onClose }) => {
             </Typography>
           ) : (
             data?.getParentCategoryForAdmin.map((cat) => {
-              const isActive = pathname === `/product/category/${cat.name}`;
+              const isActive = pathname === `/restaurants/category/${cat.id}`;
               return (
                 <ListItem key={cat.id} disablePadding>
                   <ListItemButton
                     onClick={() =>
-                      handleNavigation(`/product/category/${cat.name}`)
+                      handleNavigation(`/restaurants/category/${cat.id}`)
                     }
                     selected={isActive}
                     sx={{
@@ -227,11 +183,11 @@ const Sidebar = ({ open, onClose }) => {
                     >
                       <PackageSearch size={20} />
                     </ListItemIcon>
-                    <ListItemText 
-                      primary={cat.name}  
+                    <ListItemText
+                      primary={cat.name}
                       primaryTypographyProps={{
-                        variant: 'body2',
-                      }} 
+                        variant: "body2",
+                      }}
                     />
                   </ListItemButton>
                 </ListItem>

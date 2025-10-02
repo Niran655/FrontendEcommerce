@@ -1,0 +1,110 @@
+import { useState } from "react";
+import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete";
+
+export default function AddressPicker({ onSelect }) {
+  const {
+    value,
+    suggestions: { status, data },
+    setValue,
+    clearSuggestions,
+  } = usePlacesAutocomplete({
+    requestOptions: {
+      // Restrict to Cambodia
+      componentRestrictions: { country: "kh" },
+    },
+    debounce: 300, // prevent too many requests
+  });
+
+  const handleSelect = async (description) => {
+    setValue(description, false);
+    clearSuggestions();
+
+    const results = await getGeocode({ address: description });
+    const { lat, lng } = await getLatLng(results[0]);
+
+    onSelect({
+      formatted: description,
+      latitude: lat,
+      longitude: lng,
+    });
+  };
+
+  return (
+    <div>
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="បញ្ចូលអាសយដ្ឋានរបស់អ្នក"
+      />
+      {status === "OK" && (
+        <ul>
+          {data.map(({ place_id, description }) => (
+            <li
+              key={place_id}
+              onClick={() => handleSelect(description)}
+              style={{ cursor: "pointer" }}
+            >
+              {description}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+///==============
+import { useState } from "react";
+
+export default function LocationButton({ onLocation }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLoading(false);
+        const { latitude, longitude } = position.coords;
+
+        // return to parent
+        onLocation({ latitude, longitude });
+      },
+      (error) => {
+        setLoading(false);
+        console.error(error);
+        alert("Cannot get location: " + error.message);
+      },
+      {
+        enableHighAccuracy: true, // use GPS if available
+        timeout: 10000, // wait max 10s
+        maximumAge: 0,
+      }
+    );
+  };
+
+  return (
+    <button onClick={handleGetLocation} disabled={loading}>
+      {loading ? "កំពុងរកទីតាំង..." : "ចាប់ទីតាំងរបស់ខ្ញុំ"}
+    </button>
+  );
+}
+
+//=================
+const AddressSchema = new mongoose.Schema({
+  formatted: String,
+  latitude: Number,
+  longitude: Number,
+});
+
+const OrderSchema = new mongoose.Schema({
+  customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer" },
+  restaurant: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" },
+  items: [OrderItemSchema],
+  deliveryAddress: AddressSchema,  // <<<< Save with Lat/Lng
+  ...
+});

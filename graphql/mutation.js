@@ -443,3 +443,14 @@ mutation CreateCustomerOrderProduct($input: OrderInput) {
   }
 }
 `
+export const UPDATE_ORDER_STATUS = gql`
+mutation UpdateOrderStatus($orderId: ID, $status: OrderStatus) {
+  updateOrderStatus(orderId: $orderId, status: $status) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`

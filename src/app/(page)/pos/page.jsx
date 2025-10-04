@@ -75,7 +75,7 @@ const POS = () => {
     },
   });
 
-  // Check for product to add from localStorage
+
   useEffect(() => {
     const productToAdd = localStorage.getItem("productToAdd");
     if (productToAdd) {

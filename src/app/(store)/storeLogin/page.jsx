@@ -38,7 +38,6 @@ export default function StorePage() {
           Create Stock
         </Button>
       </Stack>
-
       <Grid container spacing={2}>
         {loading ? (
           <Typography sx={{ m: 2 }}>កំពុងផ្ទុកហាង...</Typography>

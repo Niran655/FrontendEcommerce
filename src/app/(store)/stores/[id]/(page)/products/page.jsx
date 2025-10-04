@@ -1,8 +1,5 @@
 "use client";
-import { useMutation, useQuery } from "@apollo/client/react";
-import AddIcon from "@mui/icons-material/Add";
-import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
-import RemoveIcon from "@mui/icons-material/Remove";
+import { useQuery } from "@apollo/client/react";
 import "../../../../../../../style/Product.css";
 import {
   Alert,
@@ -10,23 +7,10 @@ import {
   Avatar,
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  FormControlLabel,
-  Grid,
-  IconButton,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
+  Grid,
   Stack,
-  Switch,
   Table,
   TableBody,
   TableCell,
@@ -36,28 +20,15 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useFormik } from "formik";
 import {
-  AlertTriangle,
-  Edit,
   Package,
   Plus,
   Search,
-  Trash2,
 } from "lucide-react";
-import { useCallback, useState } from "react";
-import * as Yup from "yup";
+import { useState } from "react";
 
 import { useAuth } from "@/app/context/AuthContext";
 import { useParams } from "next/navigation";
-import {
-  CREATE_BANNER,
-  CREATE_PRODUCT_FOR_SHOP,
-  DELETE_BANNER,
-  DELETE_PRODUCT_FOR_SHOP,
-  UPDATE_BANNER,
-  UPDATE_PRODUCT_FOR_SHOP,
-} from "../../../../../../../graphql/mutation";
 import {
   GET_ADMIN_CATEGORY,
   GET_BANNERS,
@@ -65,79 +36,11 @@ import {
   GET_PRODUCT_FOR_SHOP,
 } from "../../../../../../../graphql/queries";
 import { translateLauguage } from "@/app/function/translate";
-
-// Validation schema
-const productSchema = Yup.object().shape({
-  name: Yup.string().required("required"),
-  description: Yup.string(),
-  category: Yup.string().required("required"),
-  shopCategoryId: Yup.string().required("required"),
-  price: Yup.number().min(0, "Price must be positive").required("required"),
-  cost: Yup.number().min(0, "Cost must be positive").required("required"),
-  sku: Yup.string().required("required"),
-  stock: Yup.number()
-    .integer("Stock must be an integer")
-    .min(0, "Stock must be positive")
-    .required("required"),
-  minStock: Yup.number()
-    .integer("Minimum stock must be an integer")
-    .min(0, "Minimum stock must be positive")
-    .required("required"),
-  image: Yup.string().url("Must be a valid URL"),
-  subImage: Yup.array().of(
-    Yup.object().shape({
-      url: Yup.string().url("Must be a valid URL"),
-      altText: Yup.string(),
-      caption: Yup.string(),
-    })
-  ),
-  discount: Yup.array().of(
-    Yup.object().shape({
-      defaultPrice: Yup.number().min(0, "Price must be positive"),
-      description: Yup.string().required("required"),
-      discountPrice: Yup.number().min(0, "Price must be positive"),
-    })
-  ),
-  isCombo: Yup.boolean(),
-  comboItems: Yup.array(),
-});
-
-const bannerSchema = Yup.object().shape({
-  category: Yup.string().required("Category is required"),
-  image: Yup.string()
-    .url("Must be a valid URL")
-    .required("Image URL is required"),
-  title: Yup.string(),
-  subtitle: Yup.string(),
-  link: Yup.string(),
-  active: Yup.boolean(),
-});
-
-const initialFormData = {
-  name: "",
-  description: "",
-  category: "",
-  shopCategoryId: "",
-  price: "",
-  cost: "",
-  sku: "",
-  stock: "",
-  minStock: "",
-  image: "",
-  subImage: [],
-  discount: [],
-  isCombo: false,
-  comboItems: [],
-};
-
-const initialBannerData = {
-  category: "",
-  image: "",
-  title: "",
-  subtitle: "",
-  link: "",
-  active: true,
-};
+import ProductForm from "../../../../../components/SellerComponent/Product/ProductForm";
+import BannerForm from "../../../../../components/SellerComponent/Product/BannerForm";
+import ProductActions from "../../../../../components/SellerComponent/Product/ProductAction";
+import BannerActions from "../../../../../components/SellerComponent/Product/BannerAction";
+import ProductCard from "../../../../../components/SellerComponent/Product//ProductCard";
 
 const Products = () => {
   const { id } = useParams();
@@ -152,16 +55,13 @@ const Products = () => {
   const [editBanner, setEditBanner] = useState(null);
   const [viewMode, setViewMode] = useState("grid");
   const [openAddBanner, setOpenAddBanner] = useState(false);
+  
   const { data, loading, error, refetch } = useQuery(GET_PRODUCT_FOR_SHOP, {
-    variables: {
-      shopId: id,
-    },
+    variables: { shopId: id },
   });
   const { data: categoryData } = useQuery(GET_ADMIN_CATEGORY);
   const { data: categoryForShop } = useQuery(GET_CATEGORY_FOR_SHOP, {
-    variables: {
-      shopId: id,
-    },
+    variables: { shopId: id },
   });
   const {
     data: bannerData,
@@ -171,80 +71,11 @@ const Products = () => {
 
   const categorys = categoryData?.getParentCategoryForAdmin || [];
   const categorysForShop = categoryForShop?.getCategoriesForShop || [];
+  const banners = bannerData?.banners || [];
+  const products = data?.getProductsForShop || [];
 
   const categoryNames = categorys.map((cat) => cat.name);
   const categoryNamesForShop = categorysForShop.map((cat) => cat.name);
-
-  const banners = bannerData?.banners || [];
-
-  const [createProductForShop] = useMutation(CREATE_PRODUCT_FOR_SHOP, {
-    onCompleted: ({ createProductForShop }) => {
-      if (createProductForShop.isSuccess) {
-        setAlert(true, "success", createProductForShop.message);
-        setDialogOpen(false);
-        formik.resetForm();
-        setEditingProduct(null);
-        refetch();
-      } else {
-        setAlert(true, "error", createProductForShop.message);
-      }
-    },
-    onError: (error) => alert(`Error: ${error.message}`),
-  });
-
-  const [updateProductForShop] = useMutation(UPDATE_PRODUCT_FOR_SHOP, {
-    onCompleted: ({ updateProductForShop }) => {
-      if (updateProductForShop.isSuccess) {
-        setAlert(true, "success", updateProductForShop.message);
-        setDialogOpen(false);
-        formik.resetForm();
-        setEditingProduct(null);
-        refetch();
-      } else {
-        setAlert(true, "error", updateProductForShop.message);
-      }
-    },
-    onError: (error) => alert(`Error: ${error.message}`),
-  });
-
-  const [deleteProductForShop] = useMutation(DELETE_PRODUCT_FOR_SHOP, {
-    onCompleted: ({ deleteProductForShop }) => {
-      if (deleteProductForShop.isSuccess) {
-        setAlert(true, "success", deleteProductForShop.message);
-        refetch();
-      } else {
-        setAlert(true, "error", deleteProductForShop.message);
-      }
-    },
-    onError: (error) => alert(`Error: ${error.message}`),
-  });
-
-  const [createBanner] = useMutation(CREATE_BANNER, {
-    onCompleted: () => {
-      setOpenAddBanner(false);
-      bannerFormik.resetForm();
-      setEditBanner(null);
-      refetchBanners();
-    },
-    onError: (error) => alert(`Error: ${error.message}`),
-  });
-
-  const [updateBanner] = useMutation(UPDATE_BANNER, {
-    onCompleted: () => {
-      setOpenAddBanner(false);
-      bannerFormik.resetForm();
-      setEditBanner(null);
-      refetchBanners();
-    },
-    onError: (error) => alert(`Error: ${error.message}`),
-  });
-
-  const [deleteBanner] = useMutation(DELETE_BANNER, {
-    onCompleted: () => refetchBanners(),
-    onError: (error) => alert(`Error: ${error.message}`),
-  });
-
-  const products = data?.getProductsForShop || [];
 
   const filteredProducts = products.filter((product) => {
     const name = product.name?.toLowerCase() || "";
@@ -265,222 +96,37 @@ const Products = () => {
 
   const handleCreateProduct = () => {
     setEditingProduct(null);
-    formik.resetForm();
     setDialogOpen(true);
   };
 
   const handleCreateBanner = () => {
     setEditBanner(null);
-    bannerFormik.resetForm();
     setOpenAddBanner(true);
   };
 
   const handleEditProduct = (product) => {
     setEditingProduct(product);
-    console.log("product category shop", product);
-
-    formik.setValues({
-      name: product.name,
-      description: product.description || "",
-      category: product.category,
-      shopCategoryId: product.shopCategory?.id || "",
-      price: product.price.toString(),
-      cost: product.cost.toString(),
-      sku: product.sku,
-      stock: product.stock.toString(),
-      minStock: product.minStock.toString(),
-      image: product.image || "",
-      subImage:
-        product.subImage && Array.isArray(product.subImage)
-          ? product.subImage.map((img) => ({
-              url: img.url || "",
-              altText: img.altText || "",
-              caption: img.caption || "",
-            }))
-          : [],
-      discount:
-        product.discount?.map((dis) => ({
-          discountPrice: dis.discountPrice.toString() || "",
-          defaultPrice: dis.defaultPrice.toString() || "",
-          description: dis.description || "",
-        })) || [],
-      hasDiscount:
-        Array.isArray(product.discount) && product.discount.length > 0,
-      isCombo: product.isCombo,
-      comboItems: product.comboItems || [],
-    });
     setDialogOpen(true);
   };
 
   const handleEditBanner = (banner) => {
     setEditBanner(banner);
-    bannerFormik.setValues({
-      category: banner.category,
-      image: banner.image || "",
-      title: banner.title || "",
-      subtitle: banner.subtitle || "",
-      link: banner.link || "",
-      active: banner.active !== undefined ? banner.active : true,
-    });
     setOpenAddBanner(true);
   };
 
-  const handleDeleteProduct = async (productId) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      await deleteProductForShop({ variables: { productId: productId } });
-    }
+  const handleCloseProductDialog = () => {
+    setDialogOpen(false);
+    setEditingProduct(null);
   };
 
-  const handleDeleteBanner = async (bannerId) => {
-    if (window.confirm("Are you sure you want to delete this banner?")) {
-      await deleteBanner({ variables: { deleteBannerId: bannerId } });
-    }
+  const handleCloseBannerDialog = () => {
+    setOpenAddBanner(false);
+    setEditBanner(null);
   };
 
-  const formik = useFormik({
-    initialValues: initialFormData,
-    validationSchema: productSchema,
-    onSubmit: async (values) => {
-      const productData = {
-        name: values.name,
-        description: values.description,
-        category: values.category,
-        shopCategoryId: values.shopCategoryId,
-        price: parseFloat(values.price),
-        cost: parseFloat(values.cost),
-        sku: values.sku,
-        stock: parseInt(values.stock),
-        minStock: parseInt(values.minStock),
-        image: values.image,
-        subImage: values.subImage,
-        discount: values.discount.map((d) => ({
-          defaultPrice: parseFloat(d.defaultPrice),
-          discountPrice: parseFloat(d.discountPrice),
-          description: d.description,
-        })),
-        isCombo: values.isCombo,
-        comboItems: values.comboItems,
-      };
-
-      const input = {
-        shopId: id,
-        productData: productData,
-      };
-
-      if (editingProduct) {
-        await updateProductForShop({
-          variables: {
-            productId: editingProduct.id,
-            input: input,
-          },
-        });
-      } else {
-        await createProductForShop({
-          variables: { input },
-        });
-      }
-    },
-  });
-
-  const bannerFormik = useFormik({
-    initialValues: initialBannerData,
-    validationSchema: bannerSchema,
-    onSubmit: async (values) => {
-      if (!editBanner) {
-        const existingBanner = banners.find(
-          (banner) => banner.category === values.category
-        );
-        if (existingBanner) {
-          alert(
-            "This category already has a banner. Please choose another category."
-          );
-          return;
-        }
-      }
-
-      const input = {
-        category: values.category,
-        image: values.image,
-        title: values.title,
-        subtitle: values.subtitle,
-        link: values.link,
-        active: values.active,
-      };
-
-      if (editBanner) {
-        await updateBanner({
-          variables: { updateBannerId: editBanner.id, input },
-        });
-      } else {
-        await createBanner({ variables: { input } });
-      }
-    },
-  });
-
-  const { values, errors, touched, handleChange, setFieldValue } = formik;
-  const {
-    values: bannerValues,
-    errors: bannerErrors,
-    touched: bannerTouched,
-    handleChange: handleBannerChange,
-    setFieldValue: setBannerFieldValue,
-  } = bannerFormik;
-
-  //===========================PRODUCT SUB IMAGE ====================
-  const addSubImage = useCallback(() => {
-    setFieldValue("subImage", [
-      ...values.subImage,
-      { url: "", altText: "", caption: "" },
-    ]);
-  }, [setFieldValue, values.subImage]);
-
-  const updateSubImage = useCallback(
-    (index, field, value) => {
-      const next = [...values.subImage];
-      if (!next[index]) return;
-      next[index][field] = value;
-      setFieldValue("subImage", next);
-    },
-    [setFieldValue, values.subImage]
-  );
-
-  const removeSubImage = useCallback(
-    (index) => {
-      const next = values.subImage.filter((_, i) => i !== index);
-      setFieldValue("subImage", next);
-    },
-    [setFieldValue, values.subImage]
-  );
-
-  //==========================PRODUCT DISCOUND=========================
-  const addDiscount = useCallback(() => {
-    setFieldValue("discount", [
-      ...values.discount,
-      {
-        defaultPrice: parseFloat(values.price),
-        description: "",
-        discountPrice: 0,
-      },
-    ]);
-  }, [setFieldValue, values.discount]);
-
-  const updateDiscount = useCallback(
-    (index, field, value) => {
-      const next = [...values.discount];
-      if (!next[index]) return;
-      next[index][field] = value;
-      setFieldValue("discount", next);
-    },
-    [setFieldValue, values.discount]
-  );
-
-  const removeDiscount = useCallback(
-    (index) => {
-      const next = values.discount.filter((_, i) => i !== index);
-      setFieldValue("discount", next);
-    },
-    [setFieldValue, values.discount]
-  );
+  const getShopCategoryName = (product) => {
+    return product.shopCategory?.name || "—";
+  };
 
   if (loading || bannerLoading) return <Typography>Loading...</Typography>;
   if (error)
@@ -488,19 +134,9 @@ const Products = () => {
       <Alert severity="error">Error loading products: {error.message}</Alert>
     );
 
-  const getShopCategoryName = (product) => {
-    return product.shopCategory?.name || "—";
-  };
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 4,
-        }}
-      >
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
           {t(`product_management`)}
         </Typography>
@@ -534,36 +170,36 @@ const Products = () => {
               }}
             />
           </Grid>
-   <Grid size={{ xs: 12, md: 2 }}>
-  <label>{t(`main_category`)}</label>
-  <Autocomplete
-    size="small"
-    options={["All", ...categoryNames]}
-    value={selectedCategory}
-    onChange={(event, newValue) => setSelectedCategory(newValue || "All")}
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        placeholder="Select category"
-      />
-    )}
-  />
-</Grid>
-<Grid size={{ xs: 12, md: 2 }}>
-  <label>{t(`shop_category`)}</label>
-  <Autocomplete
-    size="small"
-    options={["All", ...categoryNamesForShop]}
-    value={selectedCategoryForShop}
-    onChange={(event, newValue) => setSelectCategoryForShop(newValue || "All")}
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        placeholder="Select shop category"
-      />
-    )}
-  />
-</Grid>
+          <Grid size={{ xs: 12, md: 2 }}>
+            <label>{t(`main_category`)}</label>
+            <Autocomplete
+              size="small"
+              options={["All", ...categoryNames]}
+              value={selectedCategory}
+              onChange={(event, newValue) => setSelectedCategory(newValue || "All")}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Select category"
+                />
+              )}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 2 }}>
+            <label>{t(`shop_category`)}</label>
+            <Autocomplete
+              size="small"
+              options={["All", ...categoryNamesForShop]}
+              value={selectedCategoryForShop}
+              onChange={(event, newValue) => setSelectCategoryForShop(newValue || "All")}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Select shop category"
+                />
+              )}
+            />
+          </Grid>
 
           <Grid size={{ xs: 12, md: 3 }} mt={2.5}>
             <Stack direction="row" spacing={1}>
@@ -571,32 +207,29 @@ const Products = () => {
                 variant={viewMode === "grid" ? "contained" : "outlined"}
                 onClick={() => setViewMode("grid")}
                 sx={{
-                  backgroundColor:
-                    viewMode === "grid" ? "black" : "transparent",
+                  backgroundColor: viewMode === "grid" ? "black" : "transparent",
                   color: viewMode === "grid" ? "white" : "#1D293D",
                   borderColor: "#1D293D",
                 }}
               >
-                Grid
+                {t(`card`)}
               </Button>
               <Button
                 variant={viewMode === "table" ? "contained" : "outlined"}
                 onClick={() => setViewMode("table")}
                 sx={{
-                  backgroundColor:
-                    viewMode === "table" ? "#1D293D" : "transparent",
+                  backgroundColor: viewMode === "table" ? "#1D293D" : "transparent",
                   color: viewMode === "table" ? "white" : "#1D293D",
                   borderColor: "#1D293D",
                 }}
               >
-                Table
+                {t(`table`)}
               </Button>
               <Button
                 variant={viewMode === "banner" ? "contained" : "outlined"}
                 onClick={() => setViewMode("banner")}
                 sx={{
-                  backgroundColor:
-                    viewMode === "banner" ? "#1D293D" : "transparent",
+                  backgroundColor: viewMode === "banner" ? "#1D293D" : "transparent",
                   color: viewMode === "banner" ? "white" : "#1D293D",
                   borderColor: "#1D293D",
                 }}
@@ -624,166 +257,11 @@ const Products = () => {
         <Grid container spacing={3}>
           {filteredProducts.map((product) => (
             <Grid size={{ xs: 12, sx: 6, md: 6, lg: 3 }} key={product.id}>
-              <Card
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <Box sx={{ position: "relative" }}>
-                  <Avatar
-                    src={product.image}
-                    variant="square"
-                    sx={{ width: "100%", height: 120, borderRadius: 0 }}
-                  ></Avatar>
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      display: "flex",
-                      gap: 1,
-                    }}
-                  >
-                    {product.lowStock && (
-                      <Chip
-                        label="Low Stock"
-                        color="warning"
-                        size="small"
-                        icon={<AlertTriangle size={16} />}
-                      />
-                    )}
-                    {!product.active && (
-                      <Chip label="Inactive" color="error" size="small" />
-                    )}
-                  </Box>
-                  {Array.isArray(product.discount) &&
-                    product.discount.length > 0 &&
-                    product.price > 0 && (
-                      <Chip
-                        label={`-${(
-                          ((product.price -
-                            Number(product.discount[0].discountPrice)) /
-                            product.price) *
-                          100
-                        ).toFixed(0)}%`}
-                        color="error"
-                        size="small"
-                        sx={{
-                          position: "absolute",
-                          top: 8,
-                          left: 8,
-                          fontWeight: "bold",
-                          backgroundColor: "#f44336",
-                          color: "#fff",
-                        }}
-                      />
-                    )}
-                </Box>
-
-                <CardContent
-                  sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
-                >
-                  <Typography variant="h6" component="h3" gutterBottom noWrap>
-                    {product.name}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 2, flexGrow: 1 }}
-                  >
-                    {product.description}
-                  </Typography>
-
-                  <Box sx={{ mb: 2 }}>
-                    <Chip
-                      label={product.category}
-                      size="small"
-                      sx={{ mb: 1, mr: 1 }}
-                    />
-                    <Chip
-                      label={getShopCategoryName(product)}
-                      size="small"
-                      color="secondary"
-                      sx={{ mb: 1 }}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      SKU: {product.sku}
-                    </Typography>
-                  </Box>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 2,
-                    }}
-                  >
-                    {product.discount.length > 0 && (
-                      <Stack direction={"row"} spacing={2}>
-                        <Typography
-                          variant="h6"
-                          color="primary"
-                          fontWeight="bold"
-                        >
-                          $
-                          {parseFloat(
-                            product.discount[0].discountPrice
-                          ).toFixed(2)}
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          color="primary"
-                          fontWeight="bold"
-                          sx={{ textDecoration: "line-through", color: "gray" }}
-                        >
-                          ${product.price.toFixed(2)}
-                        </Typography>
-                      </Stack>
-                    )}
-
-                    {product.discount.length === 0 && (
-                      <Typography
-                        variant="h6"
-                        color="primary"
-                        fontWeight="bold"
-                      >
-                        ${product.price.toFixed(2) || "0.00"}
-                      </Typography>
-                    )}
-
-                    <Chip
-                      label={`Stock: ${product.stock}`}
-                      color={product.lowStock ? "error" : "success"}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </Box>
-
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEditProduct(product)}
-                      color="primary"
-                    >
-                      <Edit size={16} />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteProduct(product.id)}
-                      color="error"
-                    >
-                      <Trash2 size={16} />
-                    </IconButton>
-                    <IconButton>
-                      <MoreVertOutlinedIcon />
-                    </IconButton>
-                  </Box>
-                </CardContent>
-              </Card>
+              <ProductCard 
+                product={product} 
+                onEdit={handleEditProduct}
+                getShopCategoryName={getShopCategoryName}
+              />
             </Grid>
           ))}
         </Grid>
@@ -792,20 +270,16 @@ const Products = () => {
           <Table sx={{ minWidth: 650 }} aria-label="products table">
             <TableHead>
               <TableRow sx={{ backgroundColor: "action.hover" }}>
-                <TableCell sx={{ fontWeight: "bold", width: 80 }}>
-                  Image
-                </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>SKU</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Shop Category</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Price</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Cost</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Stock</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
-                  Actions
-                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 80 }}>{t(`image`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t(`name`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t(`sku`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t(`category`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t(`shop_category`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t(`price`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t(`cost`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t(`stock`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>{t(`status`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -831,10 +305,7 @@ const Products = () => {
                     }}
                   >
                     <TableCell>
-                      <Avatar
-                        src={product.image}
-                        sx={{ width: 40, height: 40 }}
-                      >
+                      <Avatar src={product.image} sx={{ width: 40, height: 40 }}>
                         <Package size={20} />
                       </Avatar>
                     </TableCell>
@@ -847,9 +318,7 @@ const Products = () => {
                       <Typography variant="body2">{product.sku}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
-                        {product.category}
-                      </Typography>
+                      <Typography variant="body2">{product.category}</Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
@@ -883,23 +352,11 @@ const Products = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Box>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEditProduct(product)}
-                          color="primary"
-                          sx={{ mr: 1 }}
-                        >
-                          <Edit size={16} />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeleteProduct(product.id)}
-                          color="error"
-                        >
-                          <Trash2 size={16} />
-                        </IconButton>
-                      </Box>
+                      <ProductActions 
+                        product={product} 
+                        onEdit={handleEditProduct} 
+                        refetch={refetch}
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -910,7 +367,7 @@ const Products = () => {
       ) : (
         <Box>
           <Stack direction={"row"} justifyContent={"space-between"} mb={2}>
-            <Typography variant="h5">Banner Management</Typography>
+            <Typography variant="h5">{t(`benner_management`)}</Typography>
             <Button
               variant="contained"
               startIcon={<Plus size={20} />}
@@ -918,12 +375,10 @@ const Products = () => {
               sx={{
                 backgroundColor: "#1D293D",
                 color: "white",
-                "&:hover": {
-                  backgroundColor: "#16202f",
-                },
+                "&:hover": { backgroundColor: "#16202f" },
               }}
             >
-              Add Banner
+              {t(`add_banner`)}
             </Button>
           </Stack>
 
@@ -948,16 +403,12 @@ const Products = () => {
               <Table sx={{ minWidth: 650 }} aria-label="banners table">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "action.hover" }}>
-                    <TableCell sx={{ fontWeight: "bold", width: 100 }}>
-                      Image
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Title</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Subtitle</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", width: 150 }}>
-                      Actions
-                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold", width: 100 }}>{t(`image`)}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>{t(`category`)}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>{t(`title`)}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>{t(`discription`)}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>{t(`status`)}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", width: 150 }}>{t(`action`)}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -1000,23 +451,11 @@ const Products = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <Box>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEditBanner(banner)}
-                            color="primary"
-                            sx={{ mr: 1 }}
-                          >
-                            <Edit size={16} />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDeleteBanner(banner.id)}
-                            color="error"
-                          >
-                            <Trash2 size={16} />
-                          </IconButton>
-                        </Box>
+                        <BannerActions 
+                          banner={banner} 
+                          onEdit={handleEditBanner} 
+                          refetchBanners={refetchBanners}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1027,437 +466,26 @@ const Products = () => {
         </Box>
       )}
 
-      {/* ===============================Product Dialog==================================== */}
-      <Dialog
+      {/* Forms */}
+      <ProductForm
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <form onSubmit={formik.handleSubmit}>
-          <DialogTitle>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Package size={24} style={{ marginRight: 8 }} />
-              {editingProduct ? "Edit Product" : "Create New Product"}
-            </Box>
-          </DialogTitle>
-          <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  label="Product Name"
-                  name="name"
-                  value={values.name}
-                  onChange={handleChange}
-                  error={touched.name && Boolean(errors.name)}
-                  helperText={touched.name && errors.name}
-                  required
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  label="SKU"
-                  name="sku"
-                  value={values.sku}
-                  onChange={handleChange}
-                  error={touched.sku && Boolean(errors.sku)}
-                  helperText={touched.sku && errors.sku}
-                  required
-                />
-              </Grid>
+        onClose={handleCloseProductDialog}
+        editingProduct={editingProduct}
+        categories={categorys}
+        shopCategories={categorysForShop}
+        shopId={id}
+        refetch={refetch}
+        t={t}
+      />
 
-              <Grid size={{ xs: 12, md: 4 }}>
-                <Autocomplete
-                  fullWidth
-                  options={categorys.map((cat) => cat.name)}
-                  value={values.category}
-                  onChange={(event, newValue) => {
-                    handleChange({
-                      target: {
-                        name: "category",
-                        value: newValue,
-                      },
-                    });
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      name="category"
-                      label="Category"
-                      required
-                      error={touched.category && Boolean(errors.category)}
-                      helperText={touched.category && errors.category}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Shop Category *</InputLabel>
-                  <Select
-                    name="shopCategoryId"
-                    value={values.shopCategoryId}
-                    label="Shop Category *"
-                    onChange={handleChange}
-                    error={
-                      touched.shopCategoryId && Boolean(errors.shopCategoryId)
-                    }
-                  >
-                    <MenuItem value="">Select a category</MenuItem>
-                    {categorysForShop.map((category) => (
-                      <MenuItem key={category.id} value={category.id}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {touched.shopCategoryId && errors.shopCategoryId && (
-                    <Typography variant="caption" color="error">
-                      {errors.shopCategoryId}
-                    </Typography>
-                  )}
-                </FormControl>
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  label="Price"
-                  name="price"
-                  type="number"
-                  value={values.price}
-                  onChange={handleChange}
-                  error={touched.price && Boolean(errors.price)}
-                  helperText={touched.price && errors.price}
-                  inputProps={{ min: 0, step: 0.01 }}
-                  required
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  label="Cost"
-                  name="cost"
-                  type="number"
-                  value={values.cost}
-                  onChange={handleChange}
-                  error={touched.cost && Boolean(errors.cost)}
-                  helperText={touched.cost && errors.cost}
-                  inputProps={{ min: 0, step: 0.01 }}
-                  required
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  label="Stock Quantity"
-                  name="stock"
-                  type="number"
-                  value={values.stock}
-                  onChange={handleChange}
-                  error={touched.stock && Boolean(errors.stock)}
-                  helperText={touched.stock && errors.stock}
-                  inputProps={{ min: 0 }}
-                  required
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  label="Minimum Stock"
-                  name="minStock"
-                  type="number"
-                  value={values.minStock}
-                  onChange={handleChange}
-                  error={touched.minStock && Boolean(errors.minStock)}
-                  helperText={touched.minStock && errors.minStock}
-                  inputProps={{ min: 0 }}
-                  required
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Description"
-                  name="description"
-                  multiline
-                  rows={2}
-                  value={values.description}
-                  onChange={handleChange}
-                  error={touched.description && Boolean(errors.description)}
-                  helperText={touched.description && errors.description}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Image URL"
-                  name="image"
-                  value={values.image}
-                  onChange={handleChange}
-                  error={touched.image && Boolean(errors.image)}
-                  helperText={touched.image && errors.image}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <Stack direction={"row"} justifyContent={"space-between"}>
-                  <Typography>Additional Images</Typography>
-                  <IconButton onClick={addSubImage}>
-                    <AddIcon />
-                  </IconButton>
-                </Stack>
-              </Grid>
-
-              {values.subImage.map((img, index) => (
-                <Grid container alignItems="center" spacing={1} key={index}>
-                  <Grid size={{ xs: 5 }} mt={1}>
-                    <TextField
-                      fullWidth
-                      label={`Image URL ${index + 1}`}
-                      value={img.url}
-                      onChange={(e) =>
-                        updateSubImage(index, "url", e.target.value)
-                      }
-                      error={
-                        touched.subImage &&
-                        touched.subImage[index]?.url &&
-                        Boolean(errors.subImage?.[index]?.url)
-                      }
-                      helperText={
-                        touched.subImage &&
-                        touched.subImage[index]?.url &&
-                        errors.subImage?.[index]?.url
-                      }
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 3 }} mt={1}>
-                    <TextField
-                      fullWidth
-                      label="Alt Text"
-                      value={img.altText || ""}
-                      onChange={(e) =>
-                        updateSubImage(index, "altText", e.target.value)
-                      }
-                      placeholder="e.g. Laptop front view"
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 3 }} mt={1}>
-                    <TextField
-                      fullWidth
-                      label="Caption"
-                      value={img.caption || ""}
-                      onChange={(e) =>
-                        updateSubImage(index, "caption", e.target.value)
-                      }
-                      placeholder="e.g. High-resolution image of product"
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 1 }}>
-                    <IconButton onClick={() => removeSubImage(index)}>
-                      <RemoveIcon />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-              ))}
-
-              {/* ========================ADD TO Discount ============================= */}
-              <Grid size={{ xs: 12 }}>
-                <Stack direction={"row"} justifyContent={"space-between"}>
-                  <Typography>Discount</Typography>
-                  <IconButton onClick={addDiscount}>
-                    <AddIcon />
-                  </IconButton>
-                </Stack>
-              </Grid>
-              {values.discount.map((dis, index) => (
-                <Grid container alignItems="center" spacing={1} key={index}>
-                  <Grid size={{ xs: 5 }} mt={1}>
-                    <TextField
-                      fullWidth
-                      label="Discount Price"
-                      type="number"
-                      value={dis.discountPrice || ""}
-                      onChange={(e) =>
-                        updateDiscount(index, "discountPrice", e.target.value)
-                      }
-                      placeholder="Discount Price"
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 3 }} mt={1}>
-                    <TextField
-                      fullWidth
-                      label="Default Price"
-                      disabled
-                      type="number"
-                      value={dis.defaultPrice || ""}
-                      onChange={(e) =>
-                        updateDiscount(index, "defaultPrice", e.target.value)
-                      }
-                      placeholder="defaultPrice Price"
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 3 }} mt={1}>
-                    <TextField
-                      fullWidth
-                      label="Discription"
-                      value={dis.description || ""}
-                      onChange={(e) =>
-                        updateDiscount(index, "description", e.target.value)
-                      }
-                      placeholder="Description"
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 1 }}>
-                    <IconButton onClick={() => removeDiscount(index)}>
-                      <RemoveIcon />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-              ))}
-            </Grid>
-          </DialogContent>
-          <DialogActions sx={{ p: 3 }}>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained">
-              {editingProduct ? "Update Product" : "Create Product"}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
-
-      {/* ===============================Banner Dialog==================================== */}
-      <Dialog
+      <BannerForm
         open={openAddBanner}
-        onClose={() => setOpenAddBanner(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <form onSubmit={bannerFormik.handleSubmit}>
-          <DialogTitle>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Package size={24} style={{ marginRight: 8 }} />
-              {editBanner ? "Edit Banner" : "Create New Banner"}
-            </Box>
-          </DialogTitle>
-          <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid size={{ xs: 12 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Category *</InputLabel>
-                  <Select
-                    name="category"
-                    value={bannerValues.category}
-                    label="Category *"
-                    onChange={handleBannerChange}
-                    disabled={!!editBanner}
-                    error={
-                      bannerTouched.category && Boolean(bannerErrors.category)
-                    }
-                  >
-                    {categoryNames.map((category) => {
-                      const hasBanner = banners.some(
-                        (b) =>
-                          b.category === category &&
-                          (!editBanner || b.id !== editBanner.id)
-                      );
-                      return (
-                        <MenuItem
-                          key={category}
-                          value={category}
-                          disabled={!editBanner && hasBanner} // Disable if category already has a banner
-                        >
-                          {category}{" "}
-                          {!editBanner && hasBanner
-                            ? " (Already has a banner)"
-                            : ""}
-                        </MenuItem>
-                      );
-                    })}
-                  </Select>
-                  {bannerTouched.category && bannerErrors.category && (
-                    <Typography variant="caption" color="error">
-                      {bannerErrors.category}
-                    </Typography>
-                  )}
-                </FormControl>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Image URL *"
-                  name="image"
-                  value={bannerValues.image}
-                  onChange={handleBannerChange}
-                  error={bannerTouched.image && Boolean(bannerErrors.image)}
-                  helperText={bannerTouched.image && bannerErrors.image}
-                  placeholder="https://example.com/banner.jpg"
-                  required
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Title"
-                  name="title"
-                  value={bannerValues.title}
-                  onChange={handleBannerChange}
-                  placeholder="Banner title"
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Subtitle"
-                  name="subtitle"
-                  value={bannerValues.subtitle}
-                  onChange={handleBannerChange}
-                  placeholder="Banner subtitle"
-                  multiline
-                  rows={2}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Link"
-                  name="link"
-                  value={bannerValues.link}
-                  onChange={handleBannerChange}
-                  placeholder="https://example.com"
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={bannerValues.active}
-                      onChange={(e) =>
-                        setBannerFieldValue("active", e.target.checked)
-                      }
-                      name="active"
-                    />
-                  }
-                  label="Active"
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions sx={{ p: 3 }}>
-            <Button onClick={() => setOpenAddBanner(false)}>Cancel</Button>
-            <Button type="submit" variant="contained">
-              {editBanner ? "Update Banner" : "Create Banner"}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+        onClose={handleCloseBannerDialog}
+        editBanner={editBanner}
+        categories={categoryNames}
+        banners={banners}
+        refetchBanners={refetchBanners}
+      />
     </Box>
   );
 };

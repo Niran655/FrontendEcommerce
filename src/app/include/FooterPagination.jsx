@@ -23,7 +23,7 @@ export default function FooterPagination({
       sx={{
         px: 2,
         py: 1,
-        // background: 'linear-gradient(to right, rgb(55, 65, 81), rgba(17, 24, 39, 0.48), rgba(0, 0, 0, 0.15))',
+
         borderRadius: 2,
         color: "black",
         flexWrap: "wrap",

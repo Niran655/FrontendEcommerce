@@ -1,29 +1,27 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
+import { useAuth } from "@/app/context/AuthContext";
+import { useMutation } from "@apollo/client/react";
 import CloseIcon from "@mui/icons-material/Close";
 import {
   AppBar,
+  Box,
   Button,
+  Card,
+  CircularProgress,
   Dialog,
+  Divider,
   Grid,
   IconButton,
   Slide,
-  Box,
-  Toolbar,
-  Typography,
   TextField,
-  Divider,
-  Card,
-  Alert,
-  Snackbar,
-  CircularProgress,
+  Toolbar,
+  Typography
 } from "@mui/material";
-import AddressPicker from "../../../include/LocationSelcet";   // ✅ use fixed AddressPicker
+import { useFormik } from "formik";
+import React from "react";
+import * as Yup from "yup";
 import { CREATE_ORDER_BY_CUSTOMER } from "../../../../../graphql/mutation";
-import { useMutation } from "@apollo/client/react";
-import { useAuth } from "@/app/context/AuthContext";
+import AddressPicker from "../../../include/LocationSelcet";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -53,11 +51,7 @@ const validationSchema = Yup.object({
 });
 
 export default function Checkout({ open, onClose, cartItems = [], shop, shopId }) {
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+
   const { setAlert } = useAuth();
 
   const [createCustomerOrderProduct, { loading }] = useMutation(
@@ -70,6 +64,8 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
       },
     }
   );
+
+
 
   const calculateTotals = () => {
     const subtotal = cartItems.reduce(
@@ -139,9 +135,7 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
     formik.setFieldValue("deliveryAddress", locationData);
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
+
 
   return (
     <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
@@ -365,16 +359,7 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
         </Box>
       </Box>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+     
     </Dialog>
   );
 }

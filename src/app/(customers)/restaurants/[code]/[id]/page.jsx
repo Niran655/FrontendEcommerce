@@ -509,12 +509,7 @@ const InShopPage = () => {
                         size="small"
                         variant="outlined"
                       />
-                      <Chip
-                        label={`Stock: ${product.stock}`}
-                        size="small"
-                        color={product.stock < 5 ? "error" : "success"}
-                        variant="outlined"
-                      />
+
                     </Box>
                   </CardContent>
                 </Card>
@@ -522,8 +517,6 @@ const InShopPage = () => {
             ))}
           </Grid>
         </Grid>
-
-        {/* Cart Section */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ position: "sticky", top: 24 }}>
             <CardContent>
@@ -600,9 +593,7 @@ const InShopPage = () => {
                       </ListItem>
                     ))}
                   </List>
-
                   <Divider sx={{ mb: 2 }} />
-                  {/* Discount */}
                   <TextField
                     fullWidth
                     label="Discount %"
@@ -619,7 +610,6 @@ const InShopPage = () => {
                     sx={{ mb: 2 }}
                     inputProps={{ min: 0, max: 100 }}
                   />
-                  {/* Order Summary */}
                   <Box sx={{ mb: 3 }}>
                     <Box
                       sx={{

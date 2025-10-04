@@ -17,6 +17,7 @@ import {
   Typography,
   Stack,
   Badge,
+  Tab,
 } from "@mui/material";
 import {
   LogOut,
@@ -37,7 +38,6 @@ import { translateLauguage } from "../function/translate";
 import Image from "next/image";
 import NotificationPage from "../(store)/stores/[id]/notification/Notification";
 
-// Apollo Query
 import { useQuery } from "@apollo/client/react";
 import { GET_ORDER_FOR_SHOP } from "../../../graphql/queries";
 
@@ -47,16 +47,14 @@ const Header = ({ onSidebarToggle }) => {
   const { id } = useParams();
   const { t } = translateLauguage(language);
 
-  // ===== Query Notifications =====
   const { data } = useQuery(GET_ORDER_FOR_SHOP, {
     variables: { shopId: id },
-    pollInterval: 10000, // auto refresh every 10s
+    pollInterval: 10000,
   });
 
   const notifications = data?.getOrderForShop || [];
   const notificationCount = notifications.length;
 
-  // ===== User & Notification Menus =====
   const [anchorEl, setAnchorEl] = useState(null);
   const [openNotification, setOpenNotification] = useState(null);
 
@@ -83,7 +81,6 @@ const Header = ({ onSidebarToggle }) => {
     return colors[role] || "default";
   };
 
-  // ===== Language Switcher =====
   const languages = [
     { code: "en", name: "English", flag: EnglishFlag },
     { code: "kh", name: "ភាសាខ្មែរ", flag: CambodiaFlag },
@@ -119,7 +116,6 @@ const Header = ({ onSidebarToggle }) => {
       }}
     >
       <Toolbar>
-        {/* Sidebar toggle */}
         <IconButton
           edge="start"
           color="inherit"
@@ -130,20 +126,25 @@ const Header = ({ onSidebarToggle }) => {
           <MenuIcon />
         </IconButton>
 
-        {/* Logo */}
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           GLOBAL ECOMMERCE
         </Typography>
 
-        {/* Right Controls */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton href="pos" color="white">
-            <ShoppingCart className="glass-background" size={33} color="white" />
+            <ShoppingCart
+              className="glass-background"
+              size={33}
+              color="white"
+            />
           </IconButton>
 
-          {/* ===== Notification with Badge ===== */}
           <IconButton onClick={handleOpenNotification}>
-            <Badge badgeContent={notificationCount} color="error" overlap="circular">
+            <Badge
+              badgeContent={notificationCount}
+              color="error"
+              overlap="circular"
+            >
               <Bell className="glass-background" size={33} color="white" />
             </Badge>
           </IconButton>
@@ -152,7 +153,6 @@ const Header = ({ onSidebarToggle }) => {
             <Warehouse className="glass-background" size={33} color="white" />
           </IconButton>
 
-          {/* Language Switcher */}
           <Button
             onClick={handleLangClick}
             className="glass-background"
@@ -207,7 +207,6 @@ const Header = ({ onSidebarToggle }) => {
             ))}
           </Menu>
 
-          {/* Role Chip */}
           <Chip
             label={user?.role}
             color={getRoleColor(user?.role)}
@@ -216,7 +215,6 @@ const Header = ({ onSidebarToggle }) => {
             sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)" }}
           />
 
-          {/* User Menu */}
           <Button
             onClick={handleMenuOpen}
             sx={{ color: "white", textTransform: "none" }}
@@ -227,18 +225,46 @@ const Header = ({ onSidebarToggle }) => {
             {user?.name}
           </Button>
         </Box>
-
-        {/* Notification Menu */}
         <Menu
           anchorEl={openNotification}
           open={Boolean(openNotification)}
-          onClose={handleCloseNotification}
-          onClick={handleCloseNotification}
+          slotProps={{
+            paper: {
+              elevation: 0,
+              sx: {
+                overflow: "visible",
+                filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
+                mt: 1.5,
+                "& .MuiAvatar-root": {
+                  width: 32,
+                  height: 32,
+                  ml: -0.5,
+                  mr: 1,
+                },
+                "&::before": {
+                  content: '""',
+                  display: "block",
+                  position: "absolute",
+                  top: 0,
+                  left: 140,
+                  width: 10,
+                  height: 10,
+                  bgcolor: "background.paper",
+                  transform: "translateY(-50%) rotate(45deg)",
+                  zIndex: 0,
+                },
+              },
+            },
+          }}
         >
-          <NotificationPage orders={notifications} />
+          <Box className="notification-box">
+            <NotificationPage
+              orders={notifications}
+              onClose={handleCloseNotification}
+            />
+          </Box>
         </Menu>
 
-        {/* User Dropdown Menu */}
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}

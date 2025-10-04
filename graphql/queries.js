@@ -880,6 +880,35 @@ export const GET_SHOPS = gql`
       phone
       email
     }
+   deliveryAddress {
+      formatted
+    }
+  }
+}
+`
+export const GET_ORDER_COMPLETED = gql`
+query GetOrderComplete($shopId: ID, $status: OrderStatus) {
+  getOrderComplete(shopId: $shopId, status: $status) {
+       id
+    tax
+    items {
+      product {
+        id
+        name
+      }
+      quantity
+      total
+      price
+    }
+    customer {
+      firstName
+      lastName
+      phone
+      email
+    }
+   deliveryAddress {
+      formatted
+    }
   }
 }
 `

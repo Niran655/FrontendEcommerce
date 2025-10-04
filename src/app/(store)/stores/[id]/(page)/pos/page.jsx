@@ -49,6 +49,8 @@ import { GET_PRODUCT_FOR_SHOP } from "../../../../../../../graphql/queries";
 import { GET_CATEGORY_FOR_SHOP } from "../../../../../../../graphql/queries";
 import { translateLauguage } from "@/app/function/translate";
 import { useAuth } from "@/app/context/AuthContext";
+import PaymentDialog from "@/app/components/Pos/OpenPayment";
+
 const POS = () => {
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,7 +63,9 @@ const POS = () => {
   const [amountPaid, setAmountPaid] = useState("");
   const [discount, setDiscount] = useState(0);
   const { id } = useParams();
-  // Product details dialog state
+  const [orderId,setOrderId] = useState(null);
+  const [currentCustomer, setCurrentCustomer] = useState(null);
+  const [currentLocation,setCurrentLocatin] = useState(null)
   const [openProductView, setOpenProductView] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -91,26 +95,79 @@ const POS = () => {
     },
   });
 
-  // Check for product to add from localStorage
   useEffect(() => {
-    const productToAdd = localStorage.getItem("productToAdd");
-    if (productToAdd) {
+    const storedData = localStorage.getItem("productsToAdd");
+  
+    if (storedData) {
       try {
-        const productData = JSON.parse(productToAdd);
-        addToCart(productData);
-        localStorage.removeItem("productToAdd");
+        const parsedData = JSON.parse(storedData);
+
+        setCart((prevCart) => {
+          let updatedCart = [...prevCart];
+
+          let productsToProcess = [];
+
+          if (Array.isArray(parsedData)) {
+            productsToProcess = parsedData;
+          } else if (
+            parsedData.products &&
+            Array.isArray(parsedData.products)
+          ) {
+            productsToProcess = parsedData.products;
+
+            if (parsedData.customer) {
+              setCurrentCustomer(parsedData.customer);
+            }
+          } else {
+            productsToProcess = [parsedData];
+          }
+          if(parsedData.deliveryAddress){
+              setCurrentLocatin(parsedData.deliveryAddress)
+          }
+
+          if(parsedData.orderId){
+            setOrderId(parsedData.orderId)
+          }
+  
+          console.log("Processing products:", productsToProcess);
+
+          productsToProcess.forEach((product) => {
+            const existingItemIndex = updatedCart.findIndex(
+              (item) => item.id === product.id
+            );
+
+            if (existingItemIndex >= 0) {
+              updatedCart[existingItemIndex] = {
+                ...updatedCart[existingItemIndex],
+                quantity:
+                  updatedCart[existingItemIndex].quantity +
+                  (product.quantity || 1),
+              };
+            } else {
+              updatedCart.push({
+                ...product,
+                quantity: product.quantity || 1,
+              });
+            }
+          });
+
+          return updatedCart;
+        });
+
+        localStorage.removeItem("productsToAdd");
       } catch (error) {
-        console.error("Error parsing product data:", error);
+        console.error("Error parsing stored data:", error);
       }
     }
   }, []);
 
+  
   const products = data?.getProductsForShop || [];
   const categories = ["All", ...new Set(products.map((p) => p.category))];
   const childCategoryNames = [
     "All",
     ...new Set(
-      products.map((p) => p.shopCategory?.name).filter((name) => !!name) // បំបាត់ null/undefined
+      products.map((p) => p.shopCategory?.name).filter((name) => !!name)
     ),
   ];
 
@@ -130,6 +187,7 @@ const POS = () => {
       matchesSearch && matchesCategory && matchesChildCategory && product.active
     );
   });
+
   const subtotal = cart.reduce((sum, item) => {
     const hasDiscount =
       item.discount?.length > 0 && item.discount[0]?.discountPrice;
@@ -149,27 +207,22 @@ const POS = () => {
   const total = subtotal + tax - discountAmount;
 
   const addToCart = (product) => {
-    if (product.stock <= 0) {
-      alert("Product out of stock!");
-      return;
-    }
-
-    const existingItem = cart.find((item) => item.id === product.id);
-    if (existingItem) {
-      if (existingItem.quantity >= product.stock) {
-        alert("Not enough stock available!");
-        return;
-      }
-      setCart(
-        cart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
+    setCart((prevCart) => {
+      const existingItemIndex = prevCart.findIndex(
+        (item) => item.id === product.id
       );
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
+
+      if (existingItemIndex >= 0) {
+        const updatedCart = [...prevCart];
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: updatedCart[existingItemIndex].quantity + 1,
+        };
+        return updatedCart;
+      } else {
+        return [...prevCart, { ...product, quantity: 1 }];
+      }
+    });
   };
 
   const updateQuantity = (productId, newQuantity) => {
@@ -179,20 +232,20 @@ const POS = () => {
     }
 
     const product = products.find((p) => p.id === productId);
-    if (newQuantity > product.stock) {
+    if (product && newQuantity > product.stock) {
       alert("Not enough stock available!");
       return;
     }
 
-    setCart(
-      cart.map((item) =>
+    setCart((prevCart) =>
+      prevCart.map((item) =>
         item.id === productId ? { ...item, quantity: newQuantity } : item
       )
     );
   };
 
   const removeFromCart = (productId) => {
-    setCart(cart.filter((item) => item.id !== productId));
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
   const clearCart = () => {
@@ -215,28 +268,27 @@ const POS = () => {
       return;
     }
 
-  const saleInput = {
-    items: cart.map((item) => ({
-      product: item.id,
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-      total: item.price * item.quantity,
-    })),
-    subtotal,
-    tax,
-    discount: discountAmount,
-    total,
-    paymentMethod,
-    amountPaid: paymentMethod === "cash" ? paidAmount : total,
-    change: paymentMethod === "cash" ? Math.max(0, paidAmount - total) : 0,
-    shopId: id || null,
-  };
+    const saleInput = {
+      items: cart.map((item) => ({
+        product: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        total: item.price * item.quantity,
+      })),
+      subtotal,
+      tax,
+      discount: discountAmount,
+      total,
+      paymentMethod,
+      amountPaid: paymentMethod === "cash" ? paidAmount : total,
+      change: paymentMethod === "cash" ? Math.max(0, paidAmount - total) : 0,
+      shopId: id || null,
+    };
 
     createSale({ variables: { input: saleInput } });
   };
 
-  // Product details dialog handlers
   const handleOpenProductView = (product) => {
     setSelectedProduct(product);
     setOpenProductView(true);
@@ -247,7 +299,7 @@ const POS = () => {
     setSelectedProduct(null);
   };
 
-  const getPaymentMethodIcon = (method) => {
+  const getPaymentMethodIcon = (method) => { 
     switch (method) {
       case "cash":
         return <DollarSign size={20} />;
@@ -304,10 +356,8 @@ const POS = () => {
               <Grid size={{ xs: 12, md: 3 }}>
                 <label>{t(`shop_category`)}</label>
                 <FormControl fullWidth>
-                 
                   <Select
                     value={selectedCategory}
-        
                     size="small"
                     onChange={(e) => setSelectedCategory(e.target.value)}
                   >
@@ -328,22 +378,16 @@ const POS = () => {
                     setSelectedChildCategory(newValue)
                   }
                   renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      size="small"
-                      variant="outlined"
-                    />
+                    <TextField {...params} size="small" variant="outlined" />
                   )}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 2 }} mt={2}>
-                {/* <label>{t(`product_count`)}</label> */}
-                {/* <Chip
-                  label={`${filteredProducts.length} items`}
-                  color="primary"
+                <Button
                   variant="outlined"
-                /> */}
-                <Button variant="outlined" size="larg" style={{bgcolor:"black"}} >
+                  size="larg"
+                  style={{ bgcolor: "black" }}
+                >
                   {filteredProducts.length} items
                 </Button>
               </Grid>
@@ -521,11 +565,16 @@ const POS = () => {
                         <Avatar src={item.image} sx={{ mr: 2 }}>
                           {item.name[0]}
                         </Avatar>
-                        <ListItemText
+                        {/* <ListItemText
                           primary={item.name}
                           secondary={`$${
-                            item.discount[0]?.discountPrice || ""
-                          } $${item.price.toFixed(2)} each `}
+                            item.discount[0]?.discountPrice || item.price
+                          } each `}
+                        /> */}
+                        <ListItemText
+                          primary={item.name}
+                          secondary={`$${item.discount?.discountPrice || item.price}`}
+                          
                         />
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
@@ -722,96 +771,21 @@ const POS = () => {
       </Dialog>
 
       {/* Payment Dialog */}
-      <Dialog
+      <PaymentDialog
         open={paymentDialogOpen}
         onClose={() => setPaymentDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Receipt size={24} style={{ marginRight: 8 }} />
-            Complete Payment
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ mb: 3, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
-            <Typography
-              variant="h5"
-              align="center"
-              color="primary"
-              fontWeight="bold"
-            >
-              Total: ${total.toFixed(2)}
-            </Typography>
-          </Box>
-
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel>Payment Method</InputLabel>
-            <Select
-              value={paymentMethod}
-              label="Payment Method"
-              onChange={(e) => setPaymentMethod(e.target.value)}
-            >
-              <MenuItem value="cash">
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <DollarSign size={20} style={{ marginRight: 8 }} />
-                  Cash
-                </Box>
-              </MenuItem>
-              <MenuItem value="card">
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <CreditCard size={20} style={{ marginRight: 8 }} />
-                  Card
-                </Box>
-              </MenuItem>
-              <MenuItem value="qr">
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <QrCode size={20} style={{ marginRight: 8 }} />
-                  QR Code
-                </Box>
-              </MenuItem>
-            </Select>
-          </FormControl>
-
-          {paymentMethod === "cash" && (
-            <TextField
-              fullWidth
-              label="Amount Paid"
-              type="number"
-              value={amountPaid}
-              onChange={(e) => setAmountPaid(e.target.value)}
-              inputProps={{ min: 0, step: 0.01 }}
-              sx={{ mb: 2 }}
-            />
-          )}
-
-          {paymentMethod === "cash" && amountPaid && (
-            <Alert
-              severity={parseFloat(amountPaid) >= total ? "success" : "warning"}
-              sx={{ mb: 2 }}
-            >
-              {parseFloat(amountPaid) >= total
-                ? `Change: $${(parseFloat(amountPaid) - total).toFixed(2)}`
-                : `Need $${(total - parseFloat(amountPaid)).toFixed(2)} more`}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setPaymentDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={processSale}
-            disabled={
-              paymentMethod === "cash" &&
-              (!amountPaid || parseFloat(amountPaid) < total)
-            }
-            startIcon={getPaymentMethodIcon(paymentMethod)}
-          >
-            Complete Sale
-          </Button>
-        </DialogActions>
-      </Dialog>
+        total={total}
+        orderId={orderId}
+        currentCustomer={currentCustomer}
+        currentLocation={currentLocation}
+        cart={cart}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        amountPaid={amountPaid}
+        setAmountPaid={setAmountPaid}
+        onProcessSale={processSale}
+        getPaymentMethodIcon={getPaymentMethodIcon}
+      />
     </Box>
   );
 };

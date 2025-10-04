@@ -1,0 +1,25 @@
+.notification-box{
+    background-color:rgb(255, 255, 255) ;
+    .notification-menu{
+        border-left: 2px solid rgb(0, 200, 255);
+        margin-top: 5px;
+    }
+}
+.customer-box{
+    background-color: #E2E8F0;
+    border-radius: 10px;
+}
+.product-box{
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: #E2E8F0;
+}
+.activities{
+    margin-top: 10px;
+    align-items: center;
+    // background-color: #E2E8F0;
+    border: 2px solid #CAD5E2;
+    padding: 8px;
+    border-radius: 6px;
+}

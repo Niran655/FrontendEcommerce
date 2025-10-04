@@ -22,6 +22,8 @@ import Image from "next/image";
 
 export default function ProductByCategoryPage() {
   const { name } = useParams();
+  const {id}  = useParams()
+  console.log("id",id)
   console.log("first", name);
   const router = useRouter();
   const { data, loading, error } = useQuery(GET_PRODUCT_BY_SHOP_CATEGORY_ID, {
@@ -50,8 +52,8 @@ export default function ProductByCategoryPage() {
       category: product.category,
     };
 
-    localStorage.setItem("productToAdd", JSON.stringify(productData));
-    router.push("/pos");
+    localStorage.setItem("productsToAdd", JSON.stringify(productData));
+    router.push(`/stores/${id}/pos`);
   };
 
   const handleCloseView = () => setProductViewOpen(false);

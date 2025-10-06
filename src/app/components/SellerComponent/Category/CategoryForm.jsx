@@ -111,6 +111,7 @@ const CategoryForm = ({
         };
 
         if (selectedCategory) {
+
           await updateCategory({
             variables: {
               updateCategoryId: selectedCategory.id,
@@ -181,10 +182,14 @@ const CategoryForm = ({
     setAlert(true, "error", `Image upload failed: ${error.message || error}`);
   };
 
+  // const handleParentChange = (event, newValue) => {
+  //   setSelectedParentCategory(newValue);
+  //   setFieldValue("parent", newValue?.id || "");
+  // };
   const handleParentChange = (event, newValue) => {
-    setSelectedParentCategory(newValue);
-    setFieldValue("parent", newValue?.id || "");
-  };
+  setSelectedParentCategory(newValue);
+  setFieldValue("parent", newValue ? newValue.id : "");
+};
 
   const handleImageUrlChange = (event) => {
     const value = event.target.value;

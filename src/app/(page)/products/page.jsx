@@ -59,7 +59,6 @@ import {
 import { useAuth } from "@/app/context/AuthContext";
 const categories = ["Laptop", "Desktop", "Phone"];
 
-// Validation schema
 const productSchema = Yup.object().shape({
   name: Yup.string().required("Product name is required"),
   description: Yup.string(),
@@ -79,10 +78,10 @@ const productSchema = Yup.object().shape({
     .integer("Minimum stock must be an integer")
     .min(0, "Minimum stock must be positive")
     .required("Minimum stock is required"),
-  image: Yup.string().url("Must be a valid URL"),
+  image: Yup.string(),
   subImage: Yup.array().of(
     Yup.object().shape({
-      url: Yup.string().url("Must be a valid URL"),
+      url: Yup.string(),
       altText: Yup.string(),
       caption: Yup.string(),
     })

@@ -20,11 +20,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import {
-  Package,
-  Plus,
-  Search,
-} from "lucide-react";
+import { Package, Plus, Search } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/app/context/AuthContext";
@@ -33,7 +29,7 @@ import {
   GET_ADMIN_CATEGORY,
   GET_BANNERS,
   GET_CATEGORY_FOR_SHOP,
-  GET_PRODUCT_FOR_SHOP,
+  GET_PRODUCT_FOR_SHOP_WITH_PAGNATION,
 } from "../../../../../../../graphql/queries";
 import { translateLauguage } from "@/app/function/translate";
 import ProductForm from "../../../../../components/SellerComponent/Product/ProductForm";
@@ -41,6 +37,7 @@ import BannerForm from "../../../../../components/SellerComponent/Product/Banner
 import ProductActions from "../../../../../components/SellerComponent/Product/ProductAction";
 import BannerActions from "../../../../../components/SellerComponent/Product/BannerAction";
 import ProductCard from "../../../../../components/SellerComponent/Product//ProductCard";
+import FooterPagination from "@/app/include/FooterPagination";
 
 const Products = () => {
   const { id } = useParams();
@@ -50,15 +47,27 @@ const Products = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const { setAlert } = useAuth();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(6);
+  const [keyword, setKeyword] = useState("");
   const { language } = useAuth();
   const { t } = translateLauguage(language);
   const [editBanner, setEditBanner] = useState(null);
   const [viewMode, setViewMode] = useState("grid");
   const [openAddBanner, setOpenAddBanner] = useState(false);
-  
-  const { data, loading, error, refetch } = useQuery(GET_PRODUCT_FOR_SHOP, {
-    variables: { shopId: id },
-  });
+
+  const { data, loading, error, refetch } = useQuery(
+    GET_PRODUCT_FOR_SHOP_WITH_PAGNATION,
+    {
+      variables: {
+        shopId: id,
+        page,
+        limit,
+        pagination: true,
+        keyword: "",
+      },
+    }
+  );
   const { data: categoryData } = useQuery(GET_ADMIN_CATEGORY);
   const { data: categoryForShop } = useQuery(GET_CATEGORY_FOR_SHOP, {
     variables: { shopId: id },
@@ -72,8 +81,8 @@ const Products = () => {
   const categorys = categoryData?.getParentCategoryForAdmin || [];
   const categorysForShop = categoryForShop?.getCategoriesForShop || [];
   const banners = bannerData?.banners || [];
-  const products = data?.getProductsForShop || [];
-
+  const products = data?.getProductForShopWithPagination?.data || [];
+  const paginator = data?.getProductForShopWithPagination?.paginator;
   const categoryNames = categorys.map((cat) => cat.name);
   const categoryNamesForShop = categorysForShop.map((cat) => cat.name);
 
@@ -124,6 +133,15 @@ const Products = () => {
     setEditBanner(null);
   };
 
+  const handleLimit = (e) => {
+    const newLimit = parseInt(e.target.value, 10);
+    setLimit(newLimit);
+    setPage(1);
+  };
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
   const getShopCategoryName = (product) => {
     return product.shopCategory?.name || "—";
   };
@@ -136,7 +154,14 @@ const Products = () => {
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
         <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
           {t(`product_management`)}
         </Typography>
@@ -176,12 +201,11 @@ const Products = () => {
               size="small"
               options={["All", ...categoryNames]}
               value={selectedCategory}
-              onChange={(event, newValue) => setSelectedCategory(newValue || "All")}
+              onChange={(event, newValue) =>
+                setSelectedCategory(newValue || "All")
+              }
               renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="Select category"
-                />
+                <TextField {...params} placeholder="Select category" />
               )}
             />
           </Grid>
@@ -191,12 +215,11 @@ const Products = () => {
               size="small"
               options={["All", ...categoryNamesForShop]}
               value={selectedCategoryForShop}
-              onChange={(event, newValue) => setSelectCategoryForShop(newValue || "All")}
+              onChange={(event, newValue) =>
+                setSelectCategoryForShop(newValue || "All")
+              }
               renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="Select shop category"
-                />
+                <TextField {...params} placeholder="Select shop category" />
               )}
             />
           </Grid>
@@ -207,7 +230,8 @@ const Products = () => {
                 variant={viewMode === "grid" ? "contained" : "outlined"}
                 onClick={() => setViewMode("grid")}
                 sx={{
-                  backgroundColor: viewMode === "grid" ? "black" : "transparent",
+                  backgroundColor:
+                    viewMode === "grid" ? "black" : "transparent",
                   color: viewMode === "grid" ? "white" : "#1D293D",
                   borderColor: "#1D293D",
                 }}
@@ -218,7 +242,8 @@ const Products = () => {
                 variant={viewMode === "table" ? "contained" : "outlined"}
                 onClick={() => setViewMode("table")}
                 sx={{
-                  backgroundColor: viewMode === "table" ? "#1D293D" : "transparent",
+                  backgroundColor:
+                    viewMode === "table" ? "#1D293D" : "transparent",
                   color: viewMode === "table" ? "white" : "#1D293D",
                   borderColor: "#1D293D",
                 }}
@@ -229,7 +254,8 @@ const Products = () => {
                 variant={viewMode === "banner" ? "contained" : "outlined"}
                 onClick={() => setViewMode("banner")}
                 sx={{
-                  backgroundColor: viewMode === "banner" ? "#1D293D" : "transparent",
+                  backgroundColor:
+                    viewMode === "banner" ? "#1D293D" : "transparent",
                   color: viewMode === "banner" ? "white" : "#1D293D",
                   borderColor: "#1D293D",
                 }}
@@ -257,8 +283,8 @@ const Products = () => {
         <Grid container spacing={3}>
           {filteredProducts.map((product) => (
             <Grid size={{ xs: 12, sx: 6, md: 6, lg: 3 }} key={product.id}>
-              <ProductCard 
-                product={product} 
+              <ProductCard
+                product={product}
                 onEdit={handleEditProduct}
                 getShopCategoryName={getShopCategoryName}
               />
@@ -270,16 +296,24 @@ const Products = () => {
           <Table sx={{ minWidth: 650 }} aria-label="products table">
             <TableHead>
               <TableRow sx={{ backgroundColor: "action.hover" }}>
-                <TableCell sx={{ fontWeight: "bold", width: 80 }}>{t(`image`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 80 }}>
+                  {t(`image`)}
+                </TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>{t(`name`)}</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>{t(`sku`)}</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>{t(`category`)}</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>{t(`shop_category`)}</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>
+                  {t(`category`)}
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>
+                  {t(`shop_category`)}
+                </TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>{t(`price`)}</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>{t(`cost`)}</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>{t(`stock`)}</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>{t(`status`)}</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: 150 }}>Actions</TableCell>
+                <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -305,7 +339,10 @@ const Products = () => {
                     }}
                   >
                     <TableCell>
-                      <Avatar src={product.image} sx={{ width: 40, height: 40 }}>
+                      <Avatar
+                        src={product.image}
+                        sx={{ width: 40, height: 40 }}
+                      >
                         <Package size={20} />
                       </Avatar>
                     </TableCell>
@@ -318,7 +355,9 @@ const Products = () => {
                       <Typography variant="body2">{product.sku}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{product.category}</Typography>
+                      <Typography variant="body2">
+                        {product.category}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
@@ -352,9 +391,9 @@ const Products = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <ProductActions 
-                        product={product} 
-                        onEdit={handleEditProduct} 
+                      <ProductActions
+                        product={product}
+                        onEdit={handleEditProduct}
                         refetch={refetch}
                       />
                     </TableCell>
@@ -363,6 +402,21 @@ const Products = () => {
               )}
             </TableBody>
           </Table>
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            sx={{ padding: 2 }}
+          >
+            <FooterPagination
+              page={page}
+              limit={limit}
+              setPage={handlePageChange}
+              handleLimit={handleLimit}
+              totalDocs={paginator?.totalDocs}
+              totalPages={paginator?.totalPages}
+            />
+          </Stack>
         </TableContainer>
       ) : (
         <Box>
@@ -403,12 +457,24 @@ const Products = () => {
               <Table sx={{ minWidth: 650 }} aria-label="banners table">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "action.hover" }}>
-                    <TableCell sx={{ fontWeight: "bold", width: 100 }}>{t(`image`)}</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>{t(`category`)}</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>{t(`title`)}</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>{t(`discription`)}</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>{t(`status`)}</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", width: 150 }}>{t(`action`)}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", width: 100 }}>
+                      {t(`image`)}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      {t(`category`)}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      {t(`title`)}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      {t(`discription`)}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      {t(`status`)}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                      {t(`action`)}
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -451,9 +517,9 @@ const Products = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <BannerActions 
-                          banner={banner} 
-                          onEdit={handleEditBanner} 
+                        <BannerActions
+                          banner={banner}
+                          onEdit={handleEditBanner}
                           refetchBanners={refetchBanners}
                         />
                       </TableCell>

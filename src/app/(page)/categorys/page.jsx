@@ -1,83 +1,82 @@
 "use client";
-import { DataGrid } from "@mui/x-data-grid";
 import { useMutation, useQuery } from "@apollo/client/react";
-import {
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogTitle,
-  FormControl,
-  Grid,
-  IconButton,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { Edit, Package, Plus, Search, Trash2 } from "lucide-react";
-import { Form, FormikProvider, useFormik } from "formik";
-import { useContext, useState } from "react";
+import { Box, Typography, Button } from "@mui/material";
+import { useFormik } from "formik";
+import { useState } from "react";
 import * as Yup from "yup";
+import { Plus } from "lucide-react";
+
 import { useAuth } from "../../context/AuthContext";
 import {
   CREATE_CATEGORY,
   DELETE_CATEGORY,
   UPDATE_CATEGORY,
 } from "../../../../graphql/mutation";
-import { GET_CATEGORYS } from "../../../../graphql/queries";
+import { GET_ADMIN_CATEGORY } from "../../../../graphql/queries";
+import CategoryTable from "../../components/Admin/Category/CategoryTable";
+import CategoryForm from "../../components/Admin/Category/CategoryForm";
 
 const Category = () => {
-  const { data, loading, refetch } = useQuery(GET_CATEGORYS);
-  const categorys = data?.categorys || [];
+  const { data, loading, refetch } = useQuery(GET_ADMIN_CATEGORY);
+  const categorys = data?.getParentCategoryForAdmin || [];
   const { setAlert } = useAuth();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+
 
   const [createCategory] = useMutation(CREATE_CATEGORY, {
     onCompleted: ({ createCategory }) => {
       if (createCategory.isSuccess) {
         setAlert(true, "success", createCategory.message);
+        handleCloseDialog();
+        refetch();
       } else {
         setAlert(true, "error", createCategory.message);
       }
     },
     onError: (err) => {
-      console.log("Error", err);
+      console.error("Create category error:", err);
+      setAlert(true, "error", "Failed to create category");
     },
   });
+
   const [updateCategory] = useMutation(UPDATE_CATEGORY, {
     onCompleted: ({ updateCategory }) => {
       if (updateCategory.isSuccess) {
         setAlert(true, "success", updateCategory.message);
+        handleCloseDialog();
+        refetch();
       } else {
-        setAlert(false, "error", updateCategory.message);
+        setAlert(true, "error", updateCategory.message);
       }
     },
     onError: (err) => {
-      console.log("Error", err);
+      console.error("Update category error:", err);
+      setAlert(true, "error", "Failed to update category");
     },
   });
+
   const [deleteCategory] = useMutation(DELETE_CATEGORY, {
     onCompleted: ({ deleteCategory }) => {
       if (deleteCategory.isSuccess) {
         setAlert(true, "success", deleteCategory.message);
+        refetch();
       } else {
-        setAlert(false, "error", deleteCategory.message);
+        setAlert(true, "error", deleteCategory.message);
       }
     },
     onError: (err) => {
-      console.log("Error", err);
+      console.error("Delete category error:", err);
+      setAlert(true, "error", "Failed to delete category");
     },
   });
-  const safeId = selectedCategory?.id ?? "";
 
+  // Validation Schema
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required").min(2),
+    nameKh: Yup.string(),
     slug: Yup.string().required("Slug is required"),
     description: Yup.string().required("Description is required").max(500),
     image: Yup.string().url("Must be a valid URL"),
@@ -87,7 +86,7 @@ const Category = () => {
   const formik = useFormik({
     initialValues: {
       name: "",
-      nameKh:"",
+      nameKh: "",
       slug: "",
       description: "",
       image: "",
@@ -97,7 +96,7 @@ const Category = () => {
     onSubmit: async (values) => {
       const input = {
         name: values.name,
-        nameKh:values.nameKh,
+        nameKh: values.nameKh,
         slug: values.slug,
         description: values.description,
         image: values.image,
@@ -106,284 +105,108 @@ const Category = () => {
 
       try {
         if (selectedCategory) {
-          console.log("selectedCategory  kd ", selectedCategory.id);
           await updateCategory({
-            variables: { updateCategoryId: selectedCategory.id, input },
+            variables: {
+              updateCategoryId: selectedCategory.id,
+              input,
+            },
           });
         } else {
           await createCategory({ variables: { input } });
         }
-        refetch();
-        setDialogOpen(false);
-        resetForm();
-        setSelectedCategory(null);
       } catch (err) {
         console.error("Mutation error:", err);
       }
     },
+    enableReinitialize: true,
   });
 
-  const {
-    errors,
-    touched,
-    handleSubmit,
-    setFieldValue,
-    getFieldProps,
-    resetForm,
-    isSubmitting,
-  } = formik;
-
+  // Event Handlers
   const handleCreateCategory = () => {
-    resetForm();
     setSelectedCategory(null);
+    formik.resetForm();
     setDialogOpen(true);
   };
 
   const handleEditCategory = (category) => {
     setSelectedCategory(category);
+    formik.setValues({
+      name: category.name || "",
+      nameKh: category.nameKh || "",
+      slug: category.slug || "",
+      description: category.description || "",
+      image: category.image || "",
+      active: category.active ? "true" : "false",
+    });
     setDialogOpen(true);
-    setFieldValue("name", category.name);
-    setFieldValue("slug", category.slug);
-    setFieldValue("description", category.description);
-    setFieldValue("image", category.image || "");
-    setFieldValue("active", category.active ? "true" : "false");
   };
 
   const handleDeleteCategory = async (id) => {
     if (confirm("Are you sure you want to delete this category?")) {
       try {
         await deleteCategory({ variables: { deleteCategoryId: id } });
-        refetch();
       } catch (err) {
         console.error("Delete error:", err);
       }
     }
   };
 
-  const filteredCategories = categorys.filter((category) =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setSelectedCategory(null);
+    formik.resetForm();
+  };
 
-  const columns = [
-    {
-      field: "image",
-      headerName: "Image",
-      width: 80,
-      renderCell: (params) => (
-        <Avatar src={params.row.image} sx={{ width: 40, height: 40 }}>
-          <Package size={20} />
-        </Avatar>
-      ),
-    },
-    { field: "name", headerName: "Name", width: 200 },
-    { field: "description", headerName: "Description", width: 300 },
-    { field: "slug", headerName: "Slug", width: 200 },
-    {
-      field: "active",
-      headerName: "Status",
-      width: 100,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.active ? "Active" : "Inactive"}
-          color={params.row.active ? "success" : "error"}
-          variant="outlined"
-          size="small"
-        />
-      ),
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 150,
-      renderCell: (params) => (
-        <Box>
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={() => handleEditCategory(params.row)}
-          >
-            <Edit size={16} />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleDeleteCategory(params.row.id)}
-          >
-            <Trash2 size={16} />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Inline Header Component
+  const CategoryHeader = () => (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        mb: 4,
+      }}
+    >
+      <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+        Category Management
+      </Typography>
+      <Button
+        variant="contained"
+        onClick={handleCreateCategory}
+        startIcon={<Plus size={20} />}
+        sx={{
+          bgcolor: "primary.main",
+          "&:hover": { bgcolor: "primary.dark" },
+        }}
+      >
+        Add Category
+      </Button>
+    </Box>
+  );
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 4,
-        }}
-      >
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-          Category Management
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={handleCreateCategory}
-          startIcon={<Plus size={20} />}
-        >
-          Add Category
-        </Button>
-      </Box>
+      <CategoryHeader />
 
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <Search size={20} style={{ marginRight: 8, color: "#666" }} />
-                ),
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={3}></Grid>
-          <Grid item xs={12} md={3}></Grid>
-          <Grid item xs={12} md={2}>
-            <Chip
-              label={`${filteredCategories.length} categorys`}
-              color="primary"
-              variant="outlined"
-            />
-          </Grid>
-        </Grid>
-      </Paper>
+      <CategoryTable
+        categories={categorys}
+        loading={loading}
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        onEdit={handleEditCategory}
+        onDelete={handleDeleteCategory}
+      />
 
-      <Box sx={{ height: 600, width: "100%" }}>
-        <DataGrid
-          rows={filteredCategories}
-          columns={columns}
-          getRowId={(row) => row.id}
-          pageSize={25}
-          rowsPerPageOptions={[25, 50, 100]}
-          disableSelectionOnClick
-          loading={loading}
-          sx={{
-            "& .MuiDataGrid-cell:focus": {
-              outline: "none",
-            },
-          }}
-        />
-      </Box>
-      <Dialog
+      <CategoryForm
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        {" "}
-        <Paper sx={{ p: 3, mb: 4 }}>
-          <FormikProvider value={formik}>
-            <Form onSubmit={handleSubmit}>
-              <DialogTitle>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Package size={24} style={{ marginRight: 8 }} />
-                  {selectedCategory ? "Edit Category" : "Create New Cateogry"}
-                </Box>
-              </DialogTitle>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    label="Name English"
-                    fullWidth
-                    {...getFieldProps("name")}
-                    error={touched.name && Boolean(errors.name)}
-                    helperText={touched.name && errors.name}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    label="Name Khmer"
-                    fullWidth
-                    {...getFieldProps("nameKh")}
-                    error={touched.nameKh && Boolean(errors.nameKh)}
-                    helperText={touched.nameKh && errors.nameKh}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    label="Slug"
-                    fullWidth
-                    {...getFieldProps("slug")}
-                    error={touched.slug && Boolean(errors.slug)}
-                    helperText={touched.slug && errors.slug}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    label="Description"
-                    fullWidth
-                    multiline
-                    rows={3}
-                    {...getFieldProps("description")}
-                    error={touched.description && Boolean(errors.description)}
-                    helperText={touched.description && errors.description}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    label="Image URL"
-                    fullWidth
-                    {...getFieldProps("image")}
-                    error={touched.image && Boolean(errors.image)}
-                    helperText={touched.image && errors.image}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <FormControl fullWidth required>
-                    <Select
-                      fullWidth
-                      select
-                      SelectProps={{ native: true }}
-                      {...getFieldProps("active")}
-                      error={touched.active && Boolean(errors.active)}
-                      helperText={touched.active && errors.active}
-                    >
-                      <MenuItem value="">Select status</MenuItem>
-                      <MenuItem value="true">Active</MenuItem>
-                      <MenuItem value="false">Inactive</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Stack direction="row" spacing={2} justifyContent={"end"}>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setDialogOpen(false)}
-                    >
-                      Cencel
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={isSubmitting}
-                    >
-                      Save Category
-                    </Button>
-                  </Stack>
-                </Grid>
-              </Grid>
-            </Form>
-          </FormikProvider>
-        </Paper>
-      </Dialog>
+        onClose={handleCloseDialog}
+        selectedCategory={selectedCategory}
+        formik={formik}
+      />
     </Box>
   );
 };

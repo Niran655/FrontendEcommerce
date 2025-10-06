@@ -15,8 +15,8 @@ import React, { useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useParams } from "next/navigation";
 import {
-  GET_PRODUCTS,
-  GET_PURCHASE_ORDERS,
+  GET_PRODUCT_FOR_SHOP,
+  GET_PURCHASE_ORDERS_FOR_SHOP,
   GET_SUPPLIERS_FOR_SHOP,
 } from "../../../../../../../graphql/queries";
 import { DELETE_SUPPLIER_FOR_SHOP } from "../../../../../../../graphql/mutation";
@@ -47,10 +47,18 @@ const Suppliers = () => {
     data: poData,
     loading: poLoading,
     refetch: refetchPOs,
-  } = useQuery(GET_PURCHASE_ORDERS);
+  } = useQuery(GET_PURCHASE_ORDERS_FOR_SHOP,{
+    variables:{
+      shopId:id
+    }
+  });
 
   const { data: productsData, loading: productsLoading } =
-    useQuery(GET_PRODUCTS);
+    useQuery(GET_PRODUCT_FOR_SHOP,{
+      variables:{
+        shopId:id
+      }
+    });
 
   const [deleteSupplierForShop] = useMutation(DELETE_SUPPLIER_FOR_SHOP, {
     onCompleted: ({ deleteSupplierForShop }) => {
@@ -67,8 +75,8 @@ const Suppliers = () => {
   });
 
   const suppliers = suppliersData?.getSuppliersForShop || [];
-  const purchaseOrders = poData?.purchaseOrders || [];
-  const products = productsData?.products || [];
+  const purchaseOrders = poData?.getPurchaseOrderForShop || [];
+  const products = productsData?.getProductsForShop || [];
 
   const handleCreateSupplier = () => {
     setEditingSupplier(null);
@@ -168,6 +176,7 @@ const Suppliers = () => {
           purchaseOrders={purchaseOrders}
           refetchPOs={refetchPOs}
           t={t}
+          id={id}
         />
       )}
 

@@ -354,7 +354,7 @@ const POS = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <label>{t(`shop_category`)}</label>
+                <label>{t(`main_category`)}</label>
                 <FormControl fullWidth>
                   <Select
                     value={selectedCategory}
@@ -370,7 +370,7 @@ const POS = () => {
                 </FormControl>
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
-                <label>{t(`main_category`)}</label>
+                <label>{t(`shop_category`)}</label>
                 <Autocomplete
                   options={childCategoryNames}
                   value={selectedChildCategory}

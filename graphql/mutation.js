@@ -310,8 +310,8 @@ export const CREATE_PURCHASE_ORDER = gql`
 
 
 export const CREATE_PURCHASE_ORDER_FOR_SHOP =gql`
-mutation CreateProductForShop($input: ProductForShopInput!) {
-  createProductForShop(input: $input) {
+mutation CreatePurchaseOrderForShop($input: PurchaseOrderInput, $shopId: ID) {
+  createPurchaseOrderForShop(input: $input, shopId: $shopId) {
     isSuccess
     message {
       messageEn
@@ -333,6 +333,18 @@ export const RECEIVE_PURCHASE_ORDER = gql`
     }
   }
 `;
+
+export const RECEIVE_PURCHASE_ORDER_FOR_SHOP = gql`
+mutation ReceivePurchaseOrderForShop($shopId: ID, $receivePurchaseOrderForShopId: ID) {
+  receivePurchaseOrderForShop(shopId: $shopId, id: $receivePurchaseOrderForShopId) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`
 //=====================================START USER MUTATION ============================================================
 export const CREATE_USER = gql`
   mutation CreateUser($input: UserInput!) {

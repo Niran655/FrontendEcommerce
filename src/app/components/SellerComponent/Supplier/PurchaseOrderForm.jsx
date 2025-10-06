@@ -7,7 +7,6 @@ import {
   DialogActions,
   Grid,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Button,
@@ -24,8 +23,8 @@ import {
 import { useFormik } from "formik";
 import { FileText, Plus, Trash2 } from "lucide-react";
 import * as yup from "yup";
-
 import { CREATE_PURCHASE_ORDER_FOR_SHOP } from "../../../../../graphql/mutation";
+import { useAuth } from "@/app/context/AuthContext";
 
 const poValidationSchema = yup.object({
   supplier: yup.string().required("Supplier is required"),
@@ -54,22 +53,27 @@ const initialPOForm = {
   notes: "",
 };
 
-const PurchaseOrderForm = ({ 
-  open, 
-  onClose, 
-  suppliers, 
-  products, 
-  shopId, 
+const PurchaseOrderForm = ({
+  open,
+  onClose,
+  suppliers,
+  products,
+  shopId,
   refetchPOs,
-  t
+  t,
 }) => {
+  const { setAlert } = useAuth();
   const [createPurchaseOrderForShop] = useMutation(
     CREATE_PURCHASE_ORDER_FOR_SHOP,
     {
-      onCompleted: () => {
-        onClose();
-        poFormik.resetForm();
-        refetchPOs();
+      onCompleted: ({ createPurchaseOrderForShop }) => {
+        if (createPurchaseOrderForShop?.isSuccess) {
+          onClose();
+          setAlert(true, "success", createPurchaseOrderForShop?.message);
+
+          poFormik.resetForm();
+          refetchPOs();
+        }
       },
       onError: (error) => alert(`Error: ${error.message}`),
     }
@@ -101,11 +105,11 @@ const PurchaseOrderForm = ({
         notes: values.notes,
       };
 
-      createPurchaseOrderForShop({ 
-        variables: { 
+      createPurchaseOrderForShop({
+        variables: {
           shopId: shopId,
-          input 
-        } 
+          input,
+        },
       });
     },
   });
@@ -114,6 +118,7 @@ const PurchaseOrderForm = ({
     const newItems = [...poFormik.values.items];
     newItems.push({
       product: "",
+      name: "",
       quantity: "",
       unitCost: "",
       total: 0,
@@ -127,6 +132,7 @@ const PurchaseOrderForm = ({
     if (field === "product") {
       const product = products.find((p) => p.id === value);
       if (product) {
+        items[index].product = product.id;
         items[index].name = product.name;
         items[index].unitCost = product.cost;
         items[index].total =
@@ -162,25 +168,25 @@ const PurchaseOrderForm = ({
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Typography>{t(`supplier`)}</Typography>
             <Grid size={{ xs: 12 }}>
+              <Typography sx={{ mb: 1 }}>{t(`supplier`)}</Typography>
               <FormControl
                 fullWidth
                 required
-                placeholder={t(`supplier`)}
                 error={
-                  poFormik.touched.supplier &&
-                  Boolean(poFormik.errors.supplier)
+                  poFormik.touched.supplier && Boolean(poFormik.errors.supplier)
                 }
               >
                 <Select
                   name="supplier"
-                  placeholder={t(`supplier`)}
                   value={poFormik.values.supplier}
                   onChange={poFormik.handleChange}
                   onBlur={poFormik.handleBlur}
+                  displayEmpty
                 >
-      
+                  <MenuItem value="">
+                   {t(`select_supplier`)}
+                  </MenuItem>
                   {suppliers.map((supplier) => (
                     <MenuItem key={supplier.id} value={supplier.id}>
                       {supplier.name}
@@ -224,21 +230,20 @@ const PurchaseOrderForm = ({
                           fullWidth
                           options={products}
                           getOptionLabel={(option) =>
-                            `${option.name} - ${option.sku}`
+                            `${option.name}`
                           }
                           value={
-                            products.find((p) => p.id === item.product) ||
-                            null
+                            products.find((p) => p.id === item.product) || null
                           }
-                          onChange={(event, value) => {
+                          onChange={(event, value) =>
                             handlePOItemChange(
                               index,
                               "product",
                               value?.id || ""
-                            );
-                          }}
+                            )
+                          }
                           isOptionEqualToValue={(option, value) =>
-                            option.id === value?.id
+                            option.id === value.id
                           }
                           renderInput={(params) => (
                             <TextField
@@ -248,9 +253,7 @@ const PurchaseOrderForm = ({
                               error={
                                 poFormik.touched.items &&
                                 poFormik.touched.items[index]?.product &&
-                                Boolean(
-                                  poFormik.errors.items?.[index]?.product
-                                )
+                                Boolean(poFormik.errors.items?.[index]?.product)
                               }
                               helperText={
                                 poFormik.touched.items &&
@@ -275,16 +278,6 @@ const PurchaseOrderForm = ({
                             )
                           }
                           inputProps={{ min: 1 }}
-                          error={
-                            poFormik.touched.items &&
-                            poFormik.touched.items[index]?.quantity &&
-                            Boolean(poFormik.errors.items?.[index]?.quantity)
-                          }
-                          helperText={
-                            poFormik.touched.items &&
-                            poFormik.touched.items[index]?.quantity &&
-                            poFormik.errors.items?.[index]?.quantity
-                          }
                         />
                       </Grid>
                       <Grid size={{ xs: 6, md: 2 }}>
@@ -301,16 +294,6 @@ const PurchaseOrderForm = ({
                             )
                           }
                           inputProps={{ min: 0, step: 0.01 }}
-                          error={
-                            poFormik.touched.items &&
-                            poFormik.touched.items[index]?.unitCost &&
-                            Boolean(poFormik.errors.items?.[index]?.unitCost)
-                          }
-                          helperText={
-                            poFormik.touched.items &&
-                            poFormik.touched.items[index]?.unitCost &&
-                            poFormik.errors.items?.[index]?.unitCost
-                          }
                         />
                       </Grid>
                       <Grid size={{ xs: 6, md: 2 }}>
@@ -333,6 +316,7 @@ const PurchaseOrderForm = ({
                   </CardContent>
                 </Card>
               ))}
+
               {poFormik.touched.items &&
                 poFormik.errors.items &&
                 typeof poFormik.errors.items === "string" && (
@@ -401,10 +385,9 @@ const PurchaseOrderForm = ({
             )}
 
             <Grid size={{ xs: 12 }}>
-              <Typography>{t(`remark`)}</Typography>
+              <Typography sx={{ mb: 1 }}>{t(`remark`)}</Typography>
               <TextField
                 fullWidth
-         
                 multiline
                 rows={2}
                 name="notes"
@@ -425,7 +408,7 @@ const PurchaseOrderForm = ({
               !poFormik.values.supplier || poFormik.values.items.length === 0
             }
           >
-            Create Purchase Order
+            {t(`create_purchase`)}
           </Button>
         </DialogActions>
       </form>

@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import {
   BarChart3,
-  Laptop,
   LayoutDashboard,
   Package,
   Settings,
@@ -23,9 +22,7 @@ import {
   Users,
   Warehouse,
   PackageSearch,
-  Smartphone,
   ChartNoAxesGantt,
-  ChartBarStacked,
 } from "lucide-react";
 import React, { useRef, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -109,28 +106,27 @@ const Sidebar = ({ open, onClose }) => {
 
   const { data, loading } = useQuery(GET_ADMIN_CATEGORY);
 
- 
   const handleNavigation = (path) => {
-    
     if (drawerRef.current) {
-      sessionStorage.setItem('sidebarScroll', drawerRef.current.scrollTop.toString());
+      sessionStorage.setItem(
+        "sidebarScroll",
+        drawerRef.current.scrollTop.toString()
+      );
     }
-    
+
     router.push(path);
     onClose && onClose();
   };
 
-
   useEffect(() => {
-    const savedScroll = sessionStorage.getItem('sidebarScroll');
+    const savedScroll = sessionStorage.getItem("sidebarScroll");
     if (savedScroll && drawerRef.current) {
       const scrollPosition = parseInt(savedScroll);
       drawerRef.current.scrollTop = scrollPosition;
- 
-      sessionStorage.removeItem('sidebarScroll');
+
+      sessionStorage.removeItem("sidebarScroll");
     }
   }, [pathname]);
-
 
   const visibleMenuItems = staticMenu.filter((item) =>
     hasPermission(item.roles)
@@ -139,13 +135,13 @@ const Sidebar = ({ open, onClose }) => {
   const DrawerContent = () => (
     <>
       <Toolbar />
-      <Box 
+      <Box
         ref={drawerRef}
-        sx={{ 
-          overflow: "auto", 
-          mt: 1, 
-          height: 'calc(100vh - 64px)',
-          overscrollBehavior: 'contain'
+        sx={{
+          overflow: "auto",
+          mt: 1,
+          height: "calc(100vh - 64px)",
+          overscrollBehavior: "contain",
         }}
       >
         <List>
@@ -176,10 +172,10 @@ const Sidebar = ({ open, onClose }) => {
                   >
                     <IconComponent size={20} />
                   </ListItemIcon>
-                  <ListItemText 
-                    primary={t(item.label)}  
+                  <ListItemText
+                    primary={t(item.label)}
                     primaryTypographyProps={{
-                      variant: 'body2',
+                      variant: "body2",
                     }}
                   />
                 </ListItemButton>
@@ -188,7 +184,6 @@ const Sidebar = ({ open, onClose }) => {
           })}
         </List>
 
-        {/* Divider for categories */}
         <Divider sx={{ my: 1 }} />
         <Typography alignItems={"center"} variant="body1" sx={{ px: 2, mt: 1 }}>
           Categories
@@ -227,11 +222,11 @@ const Sidebar = ({ open, onClose }) => {
                     >
                       <PackageSearch size={20} />
                     </ListItemIcon>
-                    <ListItemText 
-                      primary={cat.name}  
+                    <ListItemText
+                      primary={cat.name}
                       primaryTypographyProps={{
-                        variant: 'body2',
-                      }} 
+                        variant: "body2",
+                      }}
                     />
                   </ListItemButton>
                 </ListItem>
@@ -245,7 +240,6 @@ const Sidebar = ({ open, onClose }) => {
 
   return (
     <>
-      {/* Mobile Drawer */}
       <Drawer
         variant="temporary"
         open={open}
@@ -262,7 +256,6 @@ const Sidebar = ({ open, onClose }) => {
         <DrawerContent />
       </Drawer>
 
-      {/* Desktop Drawer */}
       <Drawer
         variant="permanent"
         sx={{

@@ -17,6 +17,7 @@ import {
   GET_LOW_STOCK_PRODUCTS_FOR_SHOP,
   GET_PRODUCT_FOR_SHOP_WITH_PAGNATION,
 } from "../../../../../../../graphql/queries";
+
 import { ADJUST_STOCK } from "../../../../../../../graphql/mutation";
 import StockMovementTable from "../../../../../components/SellerComponent/Stock/StockMovementTable";
 import LowStockAlerts from "../../../../../components/SellerComponent/Stock/LowStockAlerts";
@@ -173,6 +174,7 @@ const StockManagement = () => {
       <StockAdjustmentDialog
         open={adjustDialogOpen}
         onClose={handleCloseDialog}
+        t={t}
         selectedProduct={selectedProduct}
         onAdjustStock={handleSubmitAdjustment}
       />

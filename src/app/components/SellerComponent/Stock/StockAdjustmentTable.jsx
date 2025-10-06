@@ -17,29 +17,38 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { Settings, Search, SquarePlus, ListX, Package } from "lucide-react";
+import {
+  Settings,
+  Search,
+  SquarePlus,
+  ListX,
+  Package,
+  PackagePlus,
+} from "lucide-react";
+import DoneIcon from '@mui/icons-material/Done';
 import FooterPagination from "@/app/include/FooterPagination";
-const StockAdjustmentTable = ({ 
-  products, 
-  keyword, 
-  onKeywordChange, 
-  onAdjustStock, 
-  paginator, 
-  page, 
-  limit, 
-  onPageChange, 
+import "../../../../../style/StockStyle.scss";
+const StockAdjustmentTable = ({
+  products,
+  keyword,
+  onKeywordChange,
+  onAdjustStock,
+  paginator,
+  page,
+  limit,
+  onPageChange,
   onLimitChange,
-  t 
+  t,
 }) => {
   return (
-    <Card>
+    <Card >
       <CardContent>
         <Typography
           variant="h6"
           gutterBottom
           sx={{ display: "flex", alignItems: "center", mb: 3 }}
         >
-          <Settings size={24} style={{ marginRight: 8 }} />
+          <Settings color="#F54927" size={24} style={{ marginRight: 8 }} />
           {t(`stock_adjust`)}
         </Typography>
         <Stack direction={"row"}>
@@ -52,10 +61,7 @@ const StockAdjustmentTable = ({
               onChange={onKeywordChange}
               InputProps={{
                 startAdornment: (
-                  <Search
-                    size={20}
-                    style={{ marginRight: 8, color: "#666" }}
-                  />
+                  <Search size={20} style={{ marginRight: 8, color: "#666" }} />
                 ),
               }}
               sx={{ mb: 3 }}
@@ -94,13 +100,13 @@ const StockAdjustmentTable = ({
                     <Chip
                       label={product.category}
                       size="small"
+                      color="error" deleteIcon={<DoneIcon />}
+                      
                       variant="outlined"
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography fontWeight="medium">
-                      {product.stock}
-                    </Typography>
+                    <Typography fontWeight="medium">{product.stock}</Typography>
                   </TableCell>
                   <TableCell>{product.minStock}</TableCell>
                   <TableCell>
@@ -116,12 +122,11 @@ const StockAdjustmentTable = ({
                       <Tooltip title="Add Stock">
                         <IconButton
                           size="small"
-                          color="success"
                           onClick={() => {
                             onAdjustStock(product);
                           }}
                         >
-                          <SquarePlus size={20} />
+                          <PackagePlus className="add-icon" size={25} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Remove Stock">
@@ -132,7 +137,7 @@ const StockAdjustmentTable = ({
                             onAdjustStock(product);
                           }}
                         >
-                          <ListX size={20} />
+                          <ListX size={25} className="sub-icon" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Custom Adjustment">
@@ -141,7 +146,7 @@ const StockAdjustmentTable = ({
                           color="primary"
                           onClick={() => onAdjustStock(product)}
                         >
-                          <Settings size={20} />
+                          <Settings className="setting-icon" size={25} />
                         </IconButton>
                       </Tooltip>
                     </Stack>

@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import "../../../../../style/User.css";
-const roles = ["Admin", "Manager", "Cashier", "StockKeeper", "User", "Shop"];
+const roles = ["Admin", "Manager", "Cashier", "StockKeeper", "Shop"];
 
 const UserStatistics = ({ users, shopLength }) => {
   const getRoleColor = (role) => {
@@ -35,8 +35,6 @@ const UserStatistics = ({ users, shopLength }) => {
         return <UserStar size={36} color="white" />;
       case "StockKeeper":
         return <UserRoundPen size={36} color="white" />;
-      case "User":
-        return <User size={36} color="white" />;
       case "Shop":
         return <Store size={36} color="white" />;
       default:

@@ -262,5 +262,14 @@
   "shop_name_local":"Shop Name (Local)",
   "shop_name_english":"Shop Name (English)",
   "shop_type":"Shop Type",
-  "code":"Code"
+  "code":"Code",
+  "min_stock":"Min Stock",
+  "enter_positive_number":"Enter positive number to add, negative to remove",
+  "use_positive_number":"Use positive numbers to increase stock, negative numbers to decrease",
+  "example_stock_count":"e.g., Stock count correction, Damaged goods, etc.",
+  "please_provide":"Please provide a detailed reason for this adjustmen",
+  "adjust_qty":"Adjust Quanlitity",
+  "reason_for_adjustment":"Reason For Adjustment",
+  "select_supplier":"Select Supplier",
+  "adjust_stock ":"Adjust Stock"
 }

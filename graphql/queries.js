@@ -292,6 +292,10 @@ export const GET_PRODUCT_FOR_SHOP_WITH_PAGNATION = gql`
           minStock
           lowStock
         }
+        shopCategory {
+        id
+        name
+      }
 
         minStock
         name
@@ -306,16 +310,11 @@ export const GET_PRODUCT_FOR_SHOP_WITH_PAGNATION = gql`
         }
       }
       paginator {
-        slNo
-        prev
-        next
-        perPage
-        totalPosts
-        totalPages
-        currentPage
-        hasPrevPage
-        hasNextPage
-        totalDocs
+         next
+      hasPrevPage
+      hasNextPage
+      totalDocs
+      totalPages
       }
     }
   }
@@ -446,6 +445,7 @@ export const GET_ADMIN_CATEGORY = gql`
     getParentCategoryForAdmin {
       id
       name
+      nameKh
       slug
       description
       image
@@ -668,6 +668,50 @@ export const GET_PURCHASE_ORDERS = gql`
     }
   }
 `;
+export const GET_PURCHASE_ORDERS_FOR_SHOP= gql`
+query GetPurchaseOrderForShop($shopId: ID) {
+  getPurchaseOrderForShop(shopId: $shopId) {
+         id
+      poNumber
+      supplier {
+        id
+        name
+        contactPerson
+        email
+        phone
+        address
+        active
+        createdAt
+        updatedAt
+      }
+      items {
+        name
+        quantity
+        unitCost
+        total
+      }
+      subtotal
+      tax
+      total
+      status
+      orderedBy {
+        id
+        name
+        email
+        role
+        active
+        lastLogin
+        createdAt
+        updatedAt
+      }
+      orderDate
+      receivedDate
+      notes
+      createdAt
+      updatedAt
+  }
+}
+`
 // ============================START GET STOCK MMOVEMENT==============================
 export const GET_STOCK_MOVEMENTS = gql`
   query StockMovements($productId: ID) {

@@ -19,19 +19,14 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import {
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  FileText,
-} from "lucide-react";
+import { CheckCircle, AlertCircle, Clock, FileText } from "lucide-react";
 
 import {
   RECEIVE_PURCHASE_ORDER,
   UPDATE_PURCHASE_ORDER_STATUS,
 } from "../../../../../graphql/mutation";
 
-const PurchaseOrderTable = ({ purchaseOrders, refetchPOs,t }) => {
+const PurchaseOrderTable = ({ purchaseOrders, refetchPOs, t }) => {
   const [receivePurchaseOrder] = useMutation(RECEIVE_PURCHASE_ORDER, {
     onCompleted: () => {
       refetchPOs();
@@ -54,6 +49,7 @@ const PurchaseOrderTable = ({ purchaseOrders, refetchPOs,t }) => {
       alert("Purchase order updated successfully!");
     } catch (err) {
       console.error("Update failed:", err);
+      
       alert("Something went wrong.");
     }
   };
@@ -122,7 +118,7 @@ const PurchaseOrderTable = ({ purchaseOrders, refetchPOs,t }) => {
                       {po.poNumber}
                     </Typography>
                   </TableCell>
-                  <TableCell>{po.supplier.name}</TableCell>
+                  <TableCell>{po.supplier?.name}</TableCell>
                   <TableCell>
                     {new Date(po.orderDate).toLocaleDateString()}
                   </TableCell>
@@ -171,9 +167,7 @@ const PurchaseOrderTable = ({ purchaseOrders, refetchPOs,t }) => {
                         </Button>
                       )}
                       <Box key={po.id} sx={{ mb: 2 }}>
-                        <Typography variant="subtitle1">
-                          {po.name}
-                        </Typography>
+                        <Typography variant="subtitle1">{po.name}</Typography>
                         <FormControl size="small" fullWidth>
                           <InputLabel id={`status-label-${po.id}`}>
                             Status
@@ -188,7 +182,7 @@ const PurchaseOrderTable = ({ purchaseOrders, refetchPOs,t }) => {
                           >
                             <MenuItem value="pending">Pending</MenuItem>
                             <MenuItem value="ordered">Ordered</MenuItem>
-                            <MenuItem value="received">Received</MenuItem>
+                            <MenuItem disabled value="received">Received</MenuItem>
                             <MenuItem value="cancelled">Cancelled</MenuItem>
                           </Select>
                         </FormControl>

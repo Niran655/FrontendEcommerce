@@ -153,7 +153,7 @@ function NotificationAccordions({ orders = [] }) {
                   {productItemsWithTotal.map((items, i) => (
                     <Grid container mt={1} key={i}>
                       <Grid item size={{ xs: 4 }}>
-                        {items.product.name}
+                        {items.product?.name}
                       </Grid>
                       <Grid size={{ xs: 2 }}>{items.quantity}</Grid>
                       <Grid size={{ xs: 3 }}>{items.price}</Grid>

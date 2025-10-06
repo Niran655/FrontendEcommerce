@@ -17,7 +17,7 @@ const ProductCard = ({ product, onEdit, onDelete, getShopCategoryName }) => {
         <Avatar
           src={product.image}
           variant="square"
-          sx={{ width: "100%", height: 120, borderRadius: 0 }}
+          sx={{ width: "100%", height: "100%", borderRadius: 0 }}
         ></Avatar>
         <Box
           sx={{

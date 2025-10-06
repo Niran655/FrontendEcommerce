@@ -19,7 +19,8 @@ import {
   TrendingDown,
   Settings,
   Package,
-  FileText
+  FileText,
+  PackageOpen 
 } from 'lucide-react';
 const StockMovementTable = ({ stockMovements, t }) => {
   const getMovementTypeIcon = (type) => {
@@ -56,7 +57,7 @@ const StockMovementTable = ({ stockMovements, t }) => {
           gutterBottom
           sx={{ display: "flex", alignItems: "center", mb: 3 }}
         >
-          <FileText size={24} style={{ marginRight: 8 }} />
+          <PackageOpen size={24} style={{ marginRight: 8,color:'#2984D1' }} />
           {t(`recent_stock`)}
         </Typography>
 
@@ -64,7 +65,7 @@ const StockMovementTable = ({ stockMovements, t }) => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>{t(`data_time`)}</TableCell>
+                <TableCell>{t(`date_time`)}</TableCell>
                 <TableCell>{t(`product`)}</TableCell>
                 <TableCell>{t(`type`)}</TableCell>
                 <TableCell>{t(`qty`)}</TableCell>

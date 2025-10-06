@@ -29,11 +29,12 @@ const adjustmentSchema = Yup.object().shape({
     .max(200, "Reason must be less than 200 characters"),
 });
 
-const StockAdjustmentDialog = ({ 
-  open, 
-  onClose, 
-  selectedProduct, 
-  onAdjustStock 
+const StockAdjustmentDialog = ({
+  open,
+  onClose,
+  selectedProduct,
+  onAdjustStock,
+  t,
 }) => {
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
@@ -66,57 +67,53 @@ const StockAdjustmentDialog = ({
             <DialogTitle>
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Settings size={24} style={{ marginRight: 8 }} />
-                Adjust Stock - {selectedProduct?.name}
+                {t(`adjust_stock`)} - {selectedProduct?.name}
               </Box>
             </DialogTitle>
             <DialogContent>
               {selectedProduct && (
-                <Box
-                  sx={{ mb: 3, p: 2, bgcolor: "grey.50", borderRadius: 1 }}
-                >
+                <Box sx={{ mb: 3, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Current Stock: <strong>{selectedProduct.stock}</strong>{" "}
-                    units
+                    {t(`current_stock`)}:{" "}
+                    <strong>{selectedProduct.stock}</strong> {t(`unit`)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Minimum Stock: <strong>{selectedProduct.minStock}</strong>{" "}
-                    units
+                    {t(`min_stock`)}:{" "}
+                    <strong>{selectedProduct.minStock}</strong> {t(`unit`)}
                   </Typography>
                 </Box>
               )}
-
+              <Typography>{t(`adjust_qty`)}</Typography>
               <Field name="quantity">
                 {({ field, meta }) => (
                   <TextField
                     {...field}
                     fullWidth
-                    label="Adjustment Quantity"
                     type="number"
-                    placeholder="Enter positive number to add, negative to remove"
+                    placeholder={t(`enter_positive_number`)}
                     sx={{ mb: 3 }}
                     helperText={
                       meta.touched && meta.error
                         ? meta.error
-                        : "Use positive numbers to increase stock, negative numbers to decrease"
+                        : t(`use_positive_number`)
                     }
                     error={meta.touched && Boolean(meta.error)}
                   />
                 )}
               </Field>
-
+              <Typography>{t(`reason_for_adjustment`)}</Typography>
               <Field name="reason">
                 {({ field, meta }) => (
                   <TextField
                     {...field}
                     fullWidth
-                    label="Reason for Adjustment"
-                    placeholder="e.g., Stock count correction, Damaged goods, etc."
+                    placeholder={t(`example_stock_count`)}
                     multiline
                     rows={3}
                     helperText={
                       meta.touched && meta.error
                         ? meta.error
-                        : "Please provide a detailed reason for this adjustment"
+                        : t(`please_provide`)
                     }
                     error={meta.touched && Boolean(meta.error)}
                   />
@@ -124,14 +121,8 @@ const StockAdjustmentDialog = ({
               </Field>
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
-              <Button onClick={onClose}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isSubmitting}
-              >
+              <Button onClick={onClose}>Cancel</Button>
+              <Button type="submit" variant="contained" disabled={isSubmitting}>
                 {isSubmitting ? "Processing..." : "Apply Adjustment"}
               </Button>
             </DialogActions>

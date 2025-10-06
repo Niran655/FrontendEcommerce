@@ -66,7 +66,7 @@ export default function FooterPagination({
             },
           }}
         >
-          <MenuItem value={5}>5 / Page</MenuItem>
+          <MenuItem value={6}>6 / Page</MenuItem>
           <MenuItem value={8}>8 / Page</MenuItem>
           <MenuItem value={10}>10 / Page</MenuItem>
           <MenuItem value={totalDocs}>All</MenuItem>

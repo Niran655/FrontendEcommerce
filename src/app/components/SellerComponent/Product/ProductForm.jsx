@@ -22,9 +22,9 @@ import {
 } from "@mui/material";
 import { useFormik } from "formik";
 import { Package } from "lucide-react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as Yup from "yup";
-
+import ImageUploadWithCropModal from "../../ImageUploadWithCropModal";
 import { useAuth } from "@/app/context/AuthContext";
 import {
   CREATE_PRODUCT_FOR_SHOP,
@@ -34,7 +34,7 @@ import {
 const productSchema = Yup.object().shape({
   name: Yup.string().required("required"),
   description: Yup.string(),
-  category: Yup.string().required("required"),
+  category: Yup.string(),
   shopCategoryId: Yup.string().required("required"),
   price: Yup.number().min(0, "Price must be positive").required("required"),
   cost: Yup.number().min(0, "Cost must be positive").required("required"),
@@ -47,7 +47,7 @@ const productSchema = Yup.object().shape({
     .integer("Minimum stock must be an integer")
     .min(0, "Minimum stock must be positive")
     .required("required"),
-  image: Yup.string().url("Must be a valid URL"),
+  image: Yup.string(),
   subImage: Yup.array().of(
     Yup.object().shape({
       url: Yup.string().url("Must be a valid URL"),
@@ -94,7 +94,8 @@ const ProductForm = ({
   t,
 }) => {
   const { setAlert } = useAuth();
-
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  const [imageUploadKey, setImageUploadKey] = useState(0);
   const [createProductForShop] = useMutation(CREATE_PRODUCT_FOR_SHOP, {
     onCompleted: ({ createProductForShop }) => {
       if (createProductForShop.isSuccess) {
@@ -127,6 +128,7 @@ const ProductForm = ({
     initialValues: initialFormData,
     validationSchema: productSchema,
     onSubmit: async (values) => {
+      const finalImageUrl = uploadedImageUrl || values.image;
       const productData = {
         name: values.name,
         description: values.description,
@@ -137,7 +139,7 @@ const ProductForm = ({
         sku: values.sku,
         stock: parseInt(values.stock),
         minStock: parseInt(values.minStock),
-        image: values.image,
+        image: finalImageUrl,
         subImage: values.subImage,
         discount: values.discount.map((d) => ({
           defaultPrice: parseFloat(d.defaultPrice),
@@ -267,6 +269,17 @@ const ProductForm = ({
     [setFieldValue, values.discount]
   );
 
+  const handleImageUploadSuccess = (imageData) => {
+    const imageUrl = imageData.imageUrl;
+    setUploadedImageUrl(imageUrl);
+    setFieldValue("image", imageUrl);
+    setAlert(true, "success", "successfully!");
+  };
+  const handleImageUploadError = (error) => {
+    console.error("Image upload error:", error);
+    setAlert(true, "error", `Image upload failed: ${error.message || error}`);
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <form onSubmit={formik.handleSubmit}>
@@ -279,10 +292,9 @@ const ProductForm = ({
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 12, md: 6 }}>
-                <Typography>{t(`product_name`)}</Typography>
+              <Typography>{t(`product_name`)}</Typography>
               <TextField
                 fullWidth
-           
                 name="name"
                 value={values.name}
                 onChange={handleChange}
@@ -292,10 +304,9 @@ const ProductForm = ({
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-                <Typography>{t(`sku`)}</Typography>
+              <Typography>{t(`sku`)}</Typography>
               <TextField
                 fullWidth
-          
                 name="sku"
                 value={values.sku}
                 onChange={handleChange}
@@ -306,7 +317,7 @@ const ProductForm = ({
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-            <Typography>{t(`category`)}</Typography>
+              <Typography>{t(`category`)}</Typography>
               <Autocomplete
                 fullWidth
                 options={categories.map((cat) => cat.name)}
@@ -323,7 +334,6 @@ const ProductForm = ({
                   <TextField
                     {...params}
                     name="category"
-                    label="Category"
                     required
                     error={touched.category && Boolean(errors.category)}
                     helperText={touched.category && errors.category}
@@ -332,13 +342,11 @@ const ProductForm = ({
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-                <Typography>{t(`shop_category`)}</Typography>
+              <Typography>{t(`shop_category`)}</Typography>
               <FormControl fullWidth>
-              
                 <Select
                   name="shopCategoryId"
                   value={values.shopCategoryId}
-                  label="Shop Category *"
                   onChange={handleChange}
                   error={
                     touched.shopCategoryId && Boolean(errors.shopCategoryId)
@@ -359,10 +367,9 @@ const ProductForm = ({
               </FormControl>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-                <Typography>{t(`price`)}</Typography>
+              <Typography>{t(`price`)}</Typography>
               <TextField
                 fullWidth
-            
                 name="price"
                 type="number"
                 value={values.price}
@@ -374,10 +381,9 @@ const ProductForm = ({
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-                <Typography>{t(`cost`)}</Typography>
+              <Typography>{t(`cost`)}</Typography>
               <TextField
                 fullWidth
-          
                 name="cost"
                 type="number"
                 value={values.cost}
@@ -389,10 +395,9 @@ const ProductForm = ({
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-                <Typography>{t(`stock`)}</Typography>
+              <Typography>{t(`stock`)}</Typography>
               <TextField
                 fullWidth
-              
                 name="stock"
                 type="number"
                 value={values.stock}
@@ -404,10 +409,9 @@ const ProductForm = ({
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-                <Typography>{t(`min_stock`)}</Typography>
+              <Typography>{t(`min_stock`)}</Typography>
               <TextField
                 fullWidth
-                
                 name="minStock"
                 type="number"
                 value={values.minStock}
@@ -419,10 +423,9 @@ const ProductForm = ({
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
-             <Typography>{t(`discription`)}</Typography>
+              <Typography>{t(`discription`)}</Typography>
               <TextField
                 fullWidth
-                
                 name="description"
                 multiline
                 rows={2}
@@ -432,18 +435,41 @@ const ProductForm = ({
                 helperText={touched.description && errors.description}
               />
             </Grid>
-            <Grid size={{ xs: 12 }}>
-                <Typography>{t(`image`)}</Typography>
-              <TextField
-                fullWidth
-                
-                name="image"
-                value={values.image}
-                onChange={handleChange}
-                error={touched.image && Boolean(errors.image)}
-                helperText={touched.image && errors.image}
-                placeholder="https://example.com/image.jpg"
-              />
+            <Grid item xs={12}>
+              <Typography>{t(`image`)}</Typography>
+
+              <Stack direction="row" spacing={2}  >
+                <ImageUploadWithCropModal
+                  key={imageUploadKey}
+                  onUploadSuccess={handleImageUploadSuccess}
+                  onUploadError={handleImageUploadError}
+                  aspectRatio={4 / 3}
+                  existingImageUrl={uploadedImageUrl || values.image}
+                />
+
+                {(uploadedImageUrl || values.image) && (
+                  <Box sx={{ ml: 2 }}>
+          
+                    <img
+                      src={uploadedImageUrl || values.image}
+                      alt="Product Preview"
+                      style={{
+                        width: 180,
+                        height: 180,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #ccc",
+                      }}
+                    />
+                  </Box>
+                )}
+              </Stack>
+
+              {touched.image && errors.image && (
+                <Typography variant="caption" color="error">
+                  {errors.image}
+                </Typography>
+              )}
             </Grid>
 
             <Grid size={{ xs: 12 }}>

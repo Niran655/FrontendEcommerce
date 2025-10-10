@@ -38,6 +38,8 @@ import ProductActions from "../../../../../components/SellerComponent/Product/Pr
 import BannerActions from "../../../../../components/SellerComponent/Product/BannerAction";
 import ProductCard from "../../../../../components/SellerComponent/Product//ProductCard";
 import FooterPagination from "@/app/include/FooterPagination";
+import CircularIndeterminate from "@/app/function/loading/Loading";
+import EmptyData from "@/app/function/EmptyData/EmptyData";
 
 const Products = () => {
   const { id } = useParams();
@@ -64,7 +66,7 @@ const Products = () => {
         page,
         limit,
         pagination: true,
-        keyword: "",
+        keyword,
       },
     }
   );
@@ -85,23 +87,6 @@ const Products = () => {
   const paginator = data?.getProductForShopWithPagination?.paginator;
   const categoryNames = categorys.map((cat) => cat.name);
   const categoryNamesForShop = categorysForShop.map((cat) => cat.name);
-
-  const filteredProducts = products.filter((product) => {
-    const name = product.name?.toLowerCase() || "";
-    const sku = product.sku?.toLowerCase() || "";
-    const category = product.category || "";
-    const shopCategory = product.shopCategoryId || "";
-    const matchesSearch =
-      name.includes(searchTerm.toLowerCase()) ||
-      sku.includes(searchTerm.toLowerCase());
-
-    const matchesCategory =
-      selectedCategory === "All" || category === selectedCategory;
-    const matchesShopCategory =
-      selectedCategoryForShop == "All" ||
-      shopCategory == selectedCategoryForShop;
-    return matchesSearch && matchesCategory && matchesShopCategory;
-  });
 
   const handleCreateProduct = () => {
     setEditingProduct(null);
@@ -146,11 +131,11 @@ const Products = () => {
     return product.shopCategory?.name || "—";
   };
 
-  if (loading || bannerLoading) return <Typography>Loading...</Typography>;
-  if (error)
-    return (
-      <Alert severity="error">Error loading products: {error.message}</Alert>
-    );
+  // if (loading || bannerLoading) return <Typography>Loading...</Typography>;
+  // if (error)
+  //   return (
+  //     <Alert severity="error">Error loading products: {error.message}</Alert>
+  //   );
 
   return (
     <Box>
@@ -185,9 +170,9 @@ const Products = () => {
             <TextField
               fullWidth
               size="small"
-              placeholder={t(`search`)}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search..."
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <Search size={20} style={{ marginRight: 8, color: "#666" }} />
@@ -269,7 +254,7 @@ const Products = () => {
               label={
                 viewMode === "banner"
                   ? `${banners.length} banners`
-                  : `${filteredProducts.length} products`
+                  : `${products.length} products`
               }
               color="primary"
               variant="outlined"
@@ -278,19 +263,21 @@ const Products = () => {
         </Grid>
       </Paper>
 
-      {/* Products Display */}
       {viewMode === "grid" ? (
-        <Grid container spacing={3}>
-          {filteredProducts.map((product) => (
-            <Grid size={{ xs: 12, sx: 6, md: 6, lg: 3 }} key={product.id}>
-              <ProductCard
-                product={product}
-                onEdit={handleEditProduct}
-                getShopCategoryName={getShopCategoryName}
-              />
-            </Grid>
-          ))}
-        </Grid>
+    <Grid container spacing={3}>
+    {(loading ? Array.from(new Array(4)) : products).map((product, index) => (
+      <Grid  size={{xs:12,sm:6,md:6,lg:3}} key={product?.id || index}>
+        <ProductCard
+          product={product}
+          products={products}
+          onEdit={handleEditProduct}
+          loading={loading}
+          getShopCategoryName={getShopCategoryName}
+        />
+      </Grid>
+    ))}
+  </Grid>
+
       ) : viewMode == "table" ? (
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 650 }} aria-label="products table">
@@ -316,21 +303,14 @@ const Products = () => {
                 </TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={10} align="center" sx={{ py: 3 }}>
-                    <Typography>Loading products...</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : filteredProducts.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={10} align="center" sx={{ py: 3 }}>
-                    <Typography>No products found</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredProducts.map((product) => (
+
+            {loading ? (
+              <CircularIndeterminate />
+            ) : products.length === 0 ? (
+              <EmptyData />
+            ) : (
+              products.map((product) => (
+                <TableBody>
                   <TableRow
                     key={product.id}
                     sx={{
@@ -398,9 +378,9 @@ const Products = () => {
                       />
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
+                </TableBody>
+              ))
+            )}
           </Table>
           <Stack
             direction="row"
@@ -436,49 +416,37 @@ const Products = () => {
             </Button>
           </Stack>
 
-          {banners.length === 0 ? (
-            <Paper sx={{ p: 4, textAlign: "center" }}>
-              <Typography variant="h6" color="textSecondary" gutterBottom>
-                No banners found
-              </Typography>
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                Create your first banner to display on the website
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<Plus size={20} />}
-                onClick={handleCreateBanner}
-              >
-                Create Banner
-              </Button>
-            </Paper>
-          ) : (
-            <TableContainer component={Paper}>
-              <Table sx={{ minWidth: 650 }} aria-label="banners table">
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "action.hover" }}>
-                    <TableCell sx={{ fontWeight: "bold", width: 100 }}>
-                      {t(`image`)}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      {t(`category`)}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      {t(`title`)}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      {t(`discription`)}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      {t(`status`)}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", width: 150 }}>
-                      {t(`action`)}
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {banners.map((banner) => (
+          <TableContainer component={Paper}>
+            <Table sx={{ minWidth: 650 }} aria-label="banners table">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "action.hover" }}>
+                  <TableCell sx={{ fontWeight: "bold", width: 100 }}>
+                    {t(`image`)}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {t(`category`)}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {t(`title`)}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {t(`discription`)}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {t(`status`)}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold", width: 150 }}>
+                    {t(`action`)}
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              {bannerLoading ? (
+                <CircularIndeterminate />
+              ) : banners?.length == 0 ? (
+                <EmptyData/>
+              ) : (
+                banners.map((banner) => (
+                  <TableBody>
                     <TableRow
                       key={banner.id}
                       sx={{
@@ -524,11 +492,11 @@ const Products = () => {
                         />
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+                  </TableBody>
+                ))
+              )}
+            </Table>
+          </TableContainer>
         </Box>
       )}
 

@@ -47,6 +47,8 @@ import { CREATE_SALE } from "../../../../../../graphql/mutation";
 import { GET_PRODUCT_FOR_SHOP } from "../../../../../../graphql/queries";
 import { GET_SHOP_BY_SHOP_ID } from "../../../../../../graphql/queries";
 import Checkout from "@/app/components/resturants/Checkout/CheckoutForm";
+import { useAuth } from "@/app/context/AuthContext";
+import { translateLauguage } from "@/app/function/translate";
 
 const InShopPage = () => {
   const [cart, setCart] = useState([]);
@@ -57,7 +59,8 @@ const InShopPage = () => {
   const [amountPaid, setAmountPaid] = useState("");
   const [discount, setDiscount] = useState(0);
   const { id } = useParams();
-
+  const {language}  = useAuth()
+  const {t} = translateLauguage(language)
   const [openProductView, setOpenProductView] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -525,7 +528,7 @@ const InShopPage = () => {
                   <ShoppingCart size={24} />
                 </Badge>
                 <Typography variant="h6" sx={{ ml: 2, flexGrow: 1 }}>
-                  Current Order
+                  {t(`current_order`)}
                 </Typography>
                 {cart.length > 0 && (
                   <IconButton onClick={clearCart} color="error">
@@ -618,7 +621,7 @@ const InShopPage = () => {
                         mb: 1,
                       }}
                     >
-                      <Typography variant="body2">Subtotal:</Typography>
+                      <Typography variant="body2">{t(`sub_total`)}:</Typography>
                       <Typography variant="body2">
                         ${subtotal.toFixed(2)}
                       </Typography>
@@ -632,7 +635,7 @@ const InShopPage = () => {
                         }}
                       >
                         <Typography variant="body2" color="success.main">
-                          Discount ({discount}%):
+                          {t(`discount`)} ({discount}%):
                         </Typography>
                         <Typography variant="body2" color="success.main">
                           -${discountAmount.toFixed(2)}
@@ -646,7 +649,7 @@ const InShopPage = () => {
                         mb: 1,
                       }}
                     >
-                      <Typography variant="body2">Tax (10%):</Typography>
+                      <Typography variant="body2">{t(`tax`)} (10%):</Typography>
                       <Typography variant="body2">${tax.toFixed(2)}</Typography>
                     </Box>
                     <Divider sx={{ my: 1 }} />
@@ -654,7 +657,7 @@ const InShopPage = () => {
                       sx={{ display: "flex", justifyContent: "space-between" }}
                     >
                       <Typography variant="h6" fontWeight="bold">
-                        Total:
+                        {t(`total`)}:
                       </Typography>
                       <Typography
                         variant="h6"
@@ -673,8 +676,8 @@ const InShopPage = () => {
                     startIcon={<Receipt />}
                     onClick={handleCheckout}
                     sx={{ py: 1.5 }}
-                  >
-                    Checkout
+                  > 
+                  {t(`checkout`)}
                   </Button>
                 </>
               )}

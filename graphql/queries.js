@@ -413,6 +413,7 @@ export const GET_CATEGORYS = gql`
     categorys {
       id
       name
+      nameKh
       slug
       description
       image
@@ -440,6 +441,38 @@ export const GET_CATEGORY_FOR_SHOP = gql`
     }
   }
 `;
+
+export const GET_CATEGORY_FOR_SHOP_WITH_PAGINATION = gql`
+query GetCategoriesForShopWithPagination($shopId: ID, $page: Int, $limit: Int, $pagination: Boolean, $keyword: String) {
+  getCategoriesForShopWithPagination(shopId: $shopId, page: $page, limit: $limit, pagination: $pagination, keyword: $keyword) {
+    data {
+      id
+      name
+      updatedAt
+      image 
+      slug
+      description
+      createdAt
+      active
+      parent {
+        name
+      }
+    }
+    paginator {
+      slNo
+      prev
+      next
+      perPage
+      totalPosts
+      totalPages
+      currentPage
+      hasPrevPage
+      hasNextPage
+      totalDocs
+    }
+  }
+}
+`
 export const GET_ADMIN_CATEGORY = gql`
   query GetParentCategoryForAdmin {
     getParentCategoryForAdmin {
@@ -493,6 +526,11 @@ export const GET_MY_SHOPS = gql`
         createdAt
         updatedAt
       }
+       type {
+      id
+      name
+      nameKh
+    }
       shopName
       description
       createdAt
@@ -712,6 +750,63 @@ query GetPurchaseOrderForShop($shopId: ID) {
   }
 }
 `
+export const GET_PURCHASE_ORDERS_FOR_SHOP_WITH_PAGINATION = gql`
+query GetPurchaseOrderForShopWithPagination($shopId: ID, $page: Int, $limit: Int, $pagination: Boolean, $keyword: String) {
+  getPurchaseOrderForShopWithPagination(shopId: $shopId, page: $page, limit: $limit, pagination: $pagination, keyword: $keyword) {
+    data {
+      id
+      poNumber
+      supplier {
+        name
+        contactPerson
+        email
+        phone
+        address
+        active
+        createdAt
+        updatedAt
+      }
+      items {
+        name
+        quantity
+        unitCost
+        total
+      }
+      subtotal
+      tax
+      total
+      status
+      orderedBy {
+        
+        name
+        email
+        role
+        active
+        lastLogin
+        createdAt
+        updatedAt
+      }
+      orderDate
+      receivedDate
+      notes
+      createdAt
+      updatedAt
+    }
+    paginator {
+      slNo
+      prev
+      next
+      perPage
+      totalPosts
+      totalPages
+      currentPage
+      hasPrevPage
+      hasNextPage
+      totalDocs
+    }
+  }
+}
+`
 // ============================START GET STOCK MMOVEMENT==============================
 export const GET_STOCK_MOVEMENTS = gql`
   query StockMovements($productId: ID) {
@@ -764,6 +859,42 @@ export const GET_STOCK_MOVEMENTS_FOR_SHOP = gql`
     }
   }
 `;
+export const GET_STOCK_MOVEMENTS_FOR_SHOP_WITH_PAGINATON = gql`
+query GetStockMovementsByshopWithPagination($productId: ID, $shopId: ID, $page: Int, $limit: Int, $pagination: Boolean, $keyword: String) {
+  getStockMovementsByshopWithPagination(productId: $productId, shopId: $shopId, page: $page, limit: $limit, pagination: $pagination, keyword: $keyword) {
+    data {
+      id
+      product {
+        name
+        sku
+      }
+      type
+      quantity
+      reason
+      reference
+      user {
+        
+        name
+      }
+      previousStock
+      newStock
+      createdAt
+    }
+    paginator {
+      slNo
+      prev
+      next
+      perPage
+      totalPosts
+      totalPages
+      currentPage
+      hasPrevPage
+      hasNextPage
+      totalDocs
+    }
+  }
+}
+`
 // ============================START GET STOCK MMOVEMENT==============================
 export const GET_DASHBOARD_STATS = gql`
   query GetDashboardStats {
@@ -796,6 +927,46 @@ export const GET_DASHBOARD_STATS = gql`
     }
   }
 `;
+export const GET_DASHBOARD_STATS_FOR_ADMIN = gql`
+query DashboardStatsForAdmin {
+  dashboardStatsForAdmin {
+    totalProduct
+    totalNewUser
+    totalNewOrder
+    totalSold
+     topProducts {
+        quantitySold
+        revenue
+        product {
+          name
+          category
+          cost
+          minStock
+          price
+          sku
+          stock
+          image
+          description
+          active
+          }
+      quantitySold
+      revenue
+    }
+        hourlySales {
+      transactions
+      sales
+      hour
+    }
+    topCategories {
+      totalRevenue
+      totalProduct
+      product {
+        category
+      }
+    }
+  }
+}
+`
 
 export const GET_DASHBOARD_STATS_FOR_SHOP = gql`
   query DashboardStatsForShop($shopId: ID) {
@@ -904,6 +1075,7 @@ export const GET_SHOPS = gql`
     }
   }
 `;
+
  export const  GET_ORDER_FOR_SHOP = gql`
  query GetOrderForShop($shopId: ID) {
   getOrderForShop(shopId: $shopId) {

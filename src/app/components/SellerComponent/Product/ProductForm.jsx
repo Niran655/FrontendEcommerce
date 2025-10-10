@@ -296,6 +296,7 @@ const ProductForm = ({
               <TextField
                 fullWidth
                 name="name"
+                placeholder={t(`product_name`)}
                 value={values.name}
                 onChange={handleChange}
                 error={touched.name && Boolean(errors.name)}
@@ -308,6 +309,7 @@ const ProductForm = ({
               <TextField
                 fullWidth
                 name="sku"
+                placeholder={t(`sku`)}
                 value={values.sku}
                 onChange={handleChange}
                 error={touched.sku && Boolean(errors.sku)}
@@ -320,6 +322,7 @@ const ProductForm = ({
               <Typography>{t(`category`)}</Typography>
               <Autocomplete
                 fullWidth
+                placeholder={t(`category`)}
                 options={categories.map((cat) => cat.name)}
                 value={values.category}
                 onChange={(event, newValue) => {
@@ -371,6 +374,7 @@ const ProductForm = ({
               <TextField
                 fullWidth
                 name="price"
+                placeholder={t(`price`)}
                 type="number"
                 value={values.price}
                 onChange={handleChange}
@@ -385,6 +389,7 @@ const ProductForm = ({
               <TextField
                 fullWidth
                 name="cost"
+                placeholder={t(`cost`)}
                 type="number"
                 value={values.cost}
                 onChange={handleChange}
@@ -399,6 +404,7 @@ const ProductForm = ({
               <TextField
                 fullWidth
                 name="stock"
+                placeholder={t(`stock`)}
                 type="number"
                 value={values.stock}
                 onChange={handleChange}
@@ -413,6 +419,7 @@ const ProductForm = ({
               <TextField
                 fullWidth
                 name="minStock"
+                placeholder={t(`min_stock`)}
                 type="number"
                 value={values.minStock}
                 onChange={handleChange}
@@ -427,6 +434,7 @@ const ProductForm = ({
               <TextField
                 fullWidth
                 name="description"
+                placeholder={t(`discription`)}
                 multiline
                 rows={2}
                 value={values.description}

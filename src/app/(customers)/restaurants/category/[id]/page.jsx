@@ -72,13 +72,6 @@ const number = shopCount.length;
                     <Typography variant="body2" color="text.secondary">
                       🆔 Code: {shop.code}
                     </Typography>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      sx={{ mt: 1, backgroundColor: "#0984e3" }}
-                    >
-                      មើលព័ត៌មានលម្អិត
-                    </Button>
                   </CardContent>
                 </Card>
               </Link>

@@ -14,11 +14,19 @@ import {
   Box,
   FormHelperText,
   Typography,
+  Autocomplete,
 } from "@mui/material";
 import { Building } from "lucide-react";
 import { Form, FormikProvider } from "formik";
 
-const ShopFormDialog = ({ open, onClose, shopFormik, users, t }) => {
+const ShopFormDialog = ({
+  open,
+  onClose,
+  shopFormik,
+  users,
+  t,
+  categories,
+}) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <FormikProvider value={shopFormik}>
@@ -49,24 +57,7 @@ const ShopFormDialog = ({ open, onClose, shopFormik, users, t }) => {
                   required
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography>{t(`shop_name_english`)}</Typography>
-                <TextField
-                  fullWidth
-                  name="enName"
-                  value={shopFormik.values.enName}
-                  onChange={shopFormik.handleChange}
-                  onBlur={shopFormik.handleBlur}
-                  error={
-                    shopFormik.touched.enName &&
-                    Boolean(shopFormik.errors.enName)
-                  }
-                  helperText={
-                    shopFormik.touched.enName && shopFormik.errors.enName
-                  }
-                  required
-                />
-              </Grid>
+
               <Grid size={{ xs: 12 }}>
                 <Typography>{t(`discription`)}</Typography>
                 <TextField
@@ -105,8 +96,10 @@ const ShopFormDialog = ({ open, onClose, shopFormik, users, t }) => {
                   required
                 />
               </Grid>
+
               <Grid size={{ xs: 12, md: 6 }}>
-                <Typography>{t(`shop_type`)}</Typography>
+                <Typography>{t("shop_type")}</Typography>
+
                 <FormControl
                   fullWidth
                   required
@@ -115,21 +108,35 @@ const ShopFormDialog = ({ open, onClose, shopFormik, users, t }) => {
                     Boolean(shopFormik.errors.typeId)
                   }
                 >
-                  <Select
-                    name="typeId"
-                    value={shopFormik.values.typeId}
-                    onChange={shopFormik.handleChange}
+                  <Autocomplete
+                    options={categories || []}
+                    getOptionLabel={(option) => option.name}
+                    value={
+                      categories?.find(
+                        (cat) => cat.id === shopFormik.values.typeId
+                      ) || null
+                    }
+                    onChange={(event, newValue) => {
+                      shopFormik.setFieldValue("typeId", newValue?.id || "");
+                    }}
                     onBlur={shopFormik.handleBlur}
-                  >
-                    <MenuItem value="68dccb157cb2b26b129eef06">
-                      Restaurant
-                    </MenuItem>
-                    <MenuItem value="68dccb157cb2b26b129eef07">Cafe</MenuItem>
-                    <MenuItem value="68dccb157cb2b26b129eef08">Retail</MenuItem>
-                  </Select>
-                  {shopFormik.touched.typeId && shopFormik.errors.typeId && (
-                    <FormHelperText>{shopFormik.errors.typeId}</FormHelperText>
-                  )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        name="typeId"
+                        required
+                        error={
+                          shopFormik.touched.typeId &&
+                          Boolean(shopFormik.errors.typeId)
+                        }
+                        helperText={
+                          shopFormik.touched.typeId && shopFormik.errors.typeId
+                            ? shopFormik.errors.typeId
+                            : ""
+                        }
+                      />
+                    )}
+                  />
                 </FormControl>
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
@@ -148,10 +155,7 @@ const ShopFormDialog = ({ open, onClose, shopFormik, users, t }) => {
                     onBlur={shopFormik.handleBlur}
                   >
                     {users
-                      .filter(
-                        (user) =>
-                          user.role === "Admin" || user.role === "Manager"
-                      )
+                      .filter((user) => user.role === "Seller")
                       .map((user) => (
                         <MenuItem key={user.id} value={user.id}>
                           {user.name} ({user.email})
@@ -163,27 +167,6 @@ const ShopFormDialog = ({ open, onClose, shopFormik, users, t }) => {
                   )}
                 </FormControl>
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography>{t(`slug`)}</Typography>
-                <TextField
-                  fullWidth
-                  name="slug"
-                  value={shopFormik.values.slug || ""}
-                  onChange={shopFormik.handleChange}
-                  onBlur={shopFormik.handleBlur}
-                  helperText="Leave empty for auto-generation"
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography>{t(`code`)}</Typography>
-                <TextField
-                  fullWidth
-                  name="code"
-                  value={shopFormik.values.code || ""}
-                  onChange={shopFormik.handleChange}
-                  onBlur={shopFormik.handleBlur}
-                />
-              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
@@ -193,7 +176,7 @@ const ShopFormDialog = ({ open, onClose, shopFormik, users, t }) => {
             <Button
               type="submit"
               variant="contained"
-              disabled={shopFormik.isSubmitting || !shopFormik.isValid}
+              // disabled={shopFormik.isSubmitting || !shopFormik.isValid}
             >
               {shopFormik.isSubmitting ? "Creating..." : "Create Shop"}
             </Button>

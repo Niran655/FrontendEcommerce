@@ -186,7 +186,7 @@ const UserTable = ({
         >
           <MenuItem onClick={handleCreateShop}>
             <Store size={16} style={{ marginRight: 8 }} />
-            Create Shop for {selectedUser?.name}
+            Assign Staff
           </MenuItem>
           <MenuItem onClick={handleMenuClose}>
             <MapPin size={16} style={{ marginRight: 8 }} />

@@ -17,10 +17,10 @@ import {
 import { GET_USERS, GET_SHOPS } from "../../../../../../../graphql/queries";
 
 import UserStatistics from "../../../../../components/SellerComponent/User/UserStatistics";
-import SearchAndFilter from "../../../../../components/Admin/User/SearchAndFilter";
-import UserTable from "../../../../../components/Admin/User/UserTable";
-import UserFormDialog from "../../../../../components/Admin/User/UserFormDialog";
-import ShopFormDialog from "../../../../../components/Admin/User/ShopFormDialog";
+import SearchAndFilter from "../../../../../components/SellerComponent/User/SearchAndFilter";
+import UserTable from "../../../../../components/SellerComponent/User/UserTable";
+import UserFormDialog from "../../../../../components/SellerComponent/User/UserFormDialog";
+import ShopFormDialog from "../../../../../components/SellerComponent/User/ShopFormDialog";
 
 const roles = [
   "Admin",

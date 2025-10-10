@@ -12,9 +12,10 @@ import {
   CREATE_USER,
   DELETE_USER,
   UPDATE_USER,
-  CREATE_SHOP,
+  DELETE_SHOP,
+  CREATE_SHOP_FOR_SELLER,
 } from "../../../../graphql/mutation";
-import { GET_USERS, GET_SHOPS } from "../../../../graphql/queries";
+import { GET_USERS, GET_SHOPS,GET_ADMIN_CATEGORY } from "../../../../graphql/queries";
 
 import UserStatistics from "../../components/Admin/User/UserStatistics";
 import SearchAndFilter from "../../components/Admin/User/SearchAndFilter";
@@ -22,7 +23,15 @@ import UserTable from "../../components/Admin/User/UserTable";
 import UserFormDialog from "../../components/Admin/User/UserFormDialog";
 import ShopFormDialog from "../../components/Admin/User/ShopFormDialog";
 
-const roles = ["Admin", "Manager", "Cashier", "StockKeeper","Seller", "User", "Shop"];
+const roles = [
+  "Admin",
+  "Manager",
+  "Cashier",
+  "StockKeeper",
+  "Seller",
+  "User",
+  "Shop",
+];
 
 const UserManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,28 +40,45 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [showPassword, setShowPassword] = useState(false);
-
+  const { setAlert } = useAuth();
   const { language } = useAuth();
   const { t } = translateLauguage(language);
   const { data, loading, error, refetch } = useQuery(GET_USERS);
-  const { data: shopData, loading: shopLoading } = useQuery(GET_SHOPS);
+  const {data:categoriesData} = useQuery(GET_ADMIN_CATEGORY)
+  const {
+    data: shopData,
+    loading: shopLoading,
+    refetch: ShopRefetch,
+  } = useQuery(GET_SHOPS);
+  
 
   const [createUser] = useMutation(CREATE_USER, {
-    onCompleted: () => {
-      setDialogOpen(false);
-      formik.resetForm();
-      setEditingUser(null);
-      refetch();
+    onCompleted: ({ createUser }) => {
+      if (createUser?.isSuccess) {
+         setDialogOpen(false);
+        formik.resetForm();
+        setEditingUser(null);
+        setAlert(true, "success", createUser?.message);
+       
+        refetch();
+      } else {
+        setAlert(true, "error", createUser?.message);
+      }
     },
     onError: (error) => alert(`Error: ${error.message}`),
   });
 
   const [updateUser] = useMutation(UPDATE_USER, {
-    onCompleted: () => {
-      setDialogOpen(false);
-      formik.resetForm();
-      setEditingUser(null);
-      refetch();
+    onCompleted: ({ updateUser }) => {
+      if (updateUser?.isSuccess) {
+        setAlert(true, "success", updateUser?.message);
+        setDialogOpen(false);
+        formik.resetForm();
+        setEditingUser(null);
+        refetch();
+      } else {
+        setAlert(true, "error", updateUser?.message);
+      }
     },
     onError: (error) => alert(`Error: ${error.message}`),
   });
@@ -62,12 +88,34 @@ const UserManagement = () => {
     onError: (error) => alert(`Error: ${error.message}`),
   });
 
-  const [createShop] = useMutation(CREATE_SHOP, {
-    onCompleted: () => {
-      setShopDialogOpen(false);
-      shopFormik.resetForm();
+  const [createShopForSeller] = useMutation(CREATE_SHOP_FOR_SELLER, {
+    onCompleted: ({ createShopForSeller }) => {
+      if (createShopForSeller?.isSuccess) {
+        setAlert(true, "success", createShopForSeller?.message);
+        setShopDialogOpen(false);
+        shopFormik.resetForm();
+        ShopRefetch();
+      } else {
+        setAlert(true, "error", createShopForSeller?.message);
+      }
     },
     onError: (error) => alert(`Error creating shop: ${error.message}`),
+  });
+
+  const [deleteShop] = useMutation(DELETE_SHOP, {
+    onCompleted: ({ deleteShop }) => {
+      if (deleteShop?.isSuccess) {
+        setAlert(true, "success", deleteShop?.message);
+        ShopRefetch();
+        setShopDialogOpen(false);
+        shopFormik.resetForm();
+      } else {
+        setAlert(true, "error", deleteShop?.message);
+      }
+    },
+    onError: ({ error }) => {
+      console.log("Error", error);
+    },
   });
 
   const validationSchema = Yup.object().shape({
@@ -135,20 +183,14 @@ const UserManagement = () => {
     enableReinitialize: true,
   });
 
-  // Shop Validation Schema
   const shopValidationSchema = Yup.object().shape({
     shopName: Yup.string()
       .required("Shop name is required")
       .min(2, "Shop name must be at least 2 characters"),
-    enName: Yup.string()
-      .required("English name is required")
-      .min(2, "English name must be at least 2 characters"),
     description: Yup.string()
       .required("Description is required")
       .min(10, "Description must be at least 10 characters"),
-    image: Yup.string()
-      .url("Must be a valid URL")
-      .required("Image URL is required"),
+    image: Yup.string(),
     typeId: Yup.string().required("Shop type is required"),
     owner: Yup.string().required("Owner is required"),
   });
@@ -157,7 +199,6 @@ const UserManagement = () => {
   const shopFormik = useFormik({
     initialValues: {
       shopName: "",
-      enName: "",
       description: "",
       image: "",
       typeId: "",
@@ -168,11 +209,10 @@ const UserManagement = () => {
     validationSchema: shopValidationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        await createShop({
+        await createShopForSeller({
           variables: {
             input: {
               shopName: values.shopName,
-              enName: values.enName,
               description: values.description,
               image: values.image,
               typeId: values.typeId,
@@ -193,6 +233,7 @@ const UserManagement = () => {
   const users = data?.users || [];
   const shops = shopData?.getShops || [];
   const shopLength = shops?.length;
+  const categories = categoriesData?.getParentCategoryForAdmin || []
 
   // Filter users
   const filteredUsers = users.filter((user) => {
@@ -247,6 +288,13 @@ const UserManagement = () => {
     }
   };
 
+  const handleDeleteShop = async (shopId) => {
+    console.log("shopId=========", shopId);
+    if (window.confirm("Are you sure you want to delete this shop?")) {
+      await deleteShop({ variables: { shopId: shopId } });
+    }
+  };
+
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
   const handleRoleFilterChange = (e) => setRoleFilter(e.target.value);
   const handleTogglePassword = () => setShowPassword((show) => !show);
@@ -287,6 +335,7 @@ const UserManagement = () => {
         onEditUser={handleEditUser}
         onDeleteUser={handleDeleteUser}
         onCreateShopForUser={handleCreateShopForUser}
+        onDeleteShop={handleDeleteShop}
         t={t}
       />
 
@@ -306,6 +355,8 @@ const UserManagement = () => {
         onClose={handleCloseShopDialog}
         shopFormik={shopFormik}
         users={users}
+        categories={categories}
+        setAlert={setAlert}
         t={t}
       />
     </Box>

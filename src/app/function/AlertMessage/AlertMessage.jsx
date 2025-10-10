@@ -24,6 +24,7 @@ export default function AlertMessage() {
       autoHideDuration={3000}
       onClose={handleCloseAlert}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
+  
     >
       {alertStatus && (
         <Alert

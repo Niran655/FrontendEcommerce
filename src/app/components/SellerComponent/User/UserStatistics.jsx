@@ -41,7 +41,6 @@ const UserStatistics = ({ users, shopLength }) => {
         return <Users size={36} color="white" />;
     }
   };
-
   return (
     <Grid container spacing={3} sx={{ mb: 4 }}>
       {roles.map((role) => {

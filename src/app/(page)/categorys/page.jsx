@@ -15,16 +15,17 @@ import {
 import { GET_ADMIN_CATEGORY } from "../../../../graphql/queries";
 import CategoryTable from "../../components/Admin/Category/CategoryTable";
 import CategoryForm from "../../components/Admin/Category/CategoryForm";
+import { translateLauguage } from "@/app/function/translate";
 
 const Category = () => {
   const { data, loading, refetch } = useQuery(GET_ADMIN_CATEGORY);
   const categorys = data?.getParentCategoryForAdmin || [];
   const { setAlert } = useAuth();
-
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-
+  const {language}  = useAuth()
+  const {t} = translateLauguage(language)
 
   const [createCategory] = useMutation(CREATE_CATEGORY, {
     onCompleted: ({ createCategory }) => {
@@ -73,7 +74,6 @@ const Category = () => {
     },
   });
 
-  // Validation Schema
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required").min(2),
     nameKh: Yup.string(),
@@ -161,7 +161,7 @@ const Category = () => {
     setSearchTerm(e.target.value);
   };
 
-  // Inline Header Component
+
   const CategoryHeader = () => (
     <Box
       sx={{
@@ -172,7 +172,7 @@ const Category = () => {
       }}
     >
       <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-        Category Management
+        {t(`category_management`)}
       </Typography>
       <Button
         variant="contained"
@@ -199,6 +199,7 @@ const Category = () => {
         onSearchChange={handleSearchChange}
         onEdit={handleEditCategory}
         onDelete={handleDeleteCategory}
+        t={t}
       />
 
       <CategoryForm

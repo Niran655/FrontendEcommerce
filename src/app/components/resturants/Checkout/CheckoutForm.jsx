@@ -13,9 +13,10 @@ import {
   Grid,
   IconButton,
   Slide,
+  Stack,
   TextField,
   Toolbar,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useFormik } from "formik";
 import React from "react";
@@ -50,8 +51,13 @@ const validationSchema = Yup.object({
   remark: Yup.string().max(500, "Note must be less than 500 characters"),
 });
 
-export default function Checkout({ open, onClose, cartItems = [], shop, shopId }) {
-
+export default function Checkout({
+  open,
+  onClose,
+  cartItems = [],
+  shop,
+  shopId,
+}) {
   const { setAlert } = useAuth();
 
   const [createCustomerOrderProduct, { loading }] = useMutation(
@@ -59,13 +65,11 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
     {
       onCompleted: ({ createCustomerOrderProduct }) => {
         if (createCustomerOrderProduct?.isSuccess) {
-          setAlert(true, "Success", createCustomerOrderProduct?.message);
+          setAlert(true, "success", createCustomerOrderProduct?.message);
         }
       },
     }
   );
-
-
 
   const calculateTotals = () => {
     const subtotal = cartItems.reduce(
@@ -80,7 +84,8 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
     return { subtotal, taxAmount, deliveryFee, discount, grandTotal };
   };
 
-  const { subtotal, taxAmount, deliveryFee, discount, grandTotal } = calculateTotals();
+  const { subtotal, taxAmount, deliveryFee, discount, grandTotal } =
+    calculateTotals();
 
   const formik = useFormik({
     initialValues: {
@@ -130,30 +135,32 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
     },
   });
 
-
   const handleLocationSelect = (locationData) => {
     formik.setFieldValue("deliveryAddress", locationData);
   };
 
-
-
   return (
-    <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
+    <Dialog
+      fullScreen
+      open={open}
+      onClose={onClose}
+      TransitionComponent={Transition}
+    >
       <AppBar
         sx={{
           position: "relative",
-          backgroundColor: "#fff",
-          color: "#000",
+          backgroundColor: "#1D293D",
+          color: "#ffffffff",
           boxShadow: 1,
         }}
       >
         <Toolbar>
-          <IconButton edge="start" color="inherit" onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
           <Typography sx={{ ml: 2, flex: 1 }} variant="h6" fontWeight={600}>
             Checkout
           </Typography>
+             <IconButton edge="end" color="inherit" onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
 
@@ -174,13 +181,13 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
 
           <form onSubmit={formik.handleSubmit}>
             <Grid container spacing={3}>
-              <Grid size={{xs:12,md:7}}>
+              <Grid size={{ xs: 12, md: 7 }}>
                 <Card sx={{ p: 3, mb: 3, borderRadius: 3, boxShadow: 3 }}>
                   <Typography variant="h6" mb={2}>
                     Delivery Address
                   </Typography>
                   <Box mb={2}>
-                    <AddressPicker onLocationSelect={handleLocationSelect} />  {/* ✅ Live update */}
+                    <AddressPicker onLocationSelect={handleLocationSelect} />
                     {formik.touched.deliveryAddress?.formatted &&
                     formik.errors.deliveryAddress?.formatted ? (
                       <Typography color="error" variant="caption">
@@ -213,7 +220,9 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
                     value={formik.values.remark}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={formik.touched.remark && Boolean(formik.errors.remark)}
+                    error={
+                      formik.touched.remark && Boolean(formik.errors.remark)
+                    }
                     helperText={formik.touched.remark && formik.errors.remark}
                     fullWidth
                     multiline
@@ -221,102 +230,9 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
                     sx={{ mb: 2 }}
                   />
                 </Card>
-
-                <Card sx={{ p: 3, borderRadius: 3, boxShadow: 3 }}>
-                  <Typography variant="h6" mb={2}>
-                    Personal Details
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid size={{xs:12}}>
-                      <TextField
-                        label="Email"
-                        name="customer.email"
-                        type="email"
-                        value={formik.values.customer.email}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.customer?.email &&
-                          Boolean(formik.errors.customer?.email)
-                        }
-                        helperText={
-                          formik.touched.customer?.email &&
-                          formik.errors.customer?.email
-                        }
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid size={{xs:12,md:6}}>
-                      <TextField
-                        label="First Name"
-                        name="customer.firstName"
-                        value={formik.values.customer.firstName}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.customer?.firstName &&
-                          Boolean(formik.errors.customer?.firstName)
-                        }
-                        helperText={
-                          formik.touched.customer?.firstName &&
-                          formik.errors.customer?.firstName
-                        }
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid size={{xs:12,md:6}}>
-                      <TextField
-                        label="Last Name"
-                        name="customer.lastName"
-                        value={formik.values.customer.lastName}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.customer?.lastName &&
-                          Boolean(formik.errors.customer?.lastName)
-                        }
-                        helperText={
-                          formik.touched.customer?.lastName &&
-                          formik.errors.customer?.lastName
-                        }
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid size={{xs:12}}>
-                      <TextField
-                        label="Phone Number"
-                        name="customer.phone"
-                        value={formik.values.customer.phone}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                          formik.touched.customer?.phone &&
-                          Boolean(formik.errors.customer?.phone)
-                        }
-                        helperText={
-                          formik.touched.customer?.phone &&
-                          formik.errors.customer?.phone
-                        }
-                        fullWidth
-                      />
-                    </Grid>
-                  </Grid>
-                </Card>
-
-                <Button
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  type="submit"
-                  disabled={loading || !formik.isValid}
-                  sx={{ mt: 3, py: 1.5, fontWeight: 600, fontSize: 16 }}
-                >
-                  {loading ? <CircularProgress size={24} /> : "Place Order"}
-                </Button>
               </Grid>
 
-              {/* Right Column - Order Summary */}
-              <Grid size={{xs:12,md:5}}>
+              <Grid size={{ xs: 12, md: 5 }}>
                 <Card sx={{ p: 3, borderRadius: 3, boxShadow: 3 }}>
                   <Typography variant="h6">Your order from</Typography>
                   <Typography mb={2} color="primary" fontWeight={600}>
@@ -324,7 +240,12 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
                   </Typography>
 
                   {cartItems.map((item, index) => (
-                    <Box key={index} display="flex" justifyContent="space-between" mb={1}>
+                    <Box
+                      key={index}
+                      display="flex"
+                      justifyContent="space-between"
+                      mb={1}
+                    >
                       <Typography variant="body2">
                         {item.name} x {item.quantity}
                       </Typography>
@@ -348,18 +269,115 @@ export default function Checkout({ open, onClose, cartItems = [], shop, shopId }
                     <Typography>${taxAmount.toFixed(2)}</Typography>
                   </Box>
                   <Divider sx={{ my: 2 }} />
-                  <Box display="flex" justifyContent="space-between" fontWeight={600}>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    fontWeight={600}
+                  >
                     <Typography variant="h6">Total</Typography>
-                    <Typography variant="h6">${grandTotal.toFixed(2)}</Typography>
+                    <Typography variant="h6">
+                      ${grandTotal.toFixed(2)}
+                    </Typography>
                   </Box>
                 </Card>
+
+                <Stack mt={2}>
+                  <Card sx={{ p: 3, borderRadius: 3, boxShadow: 3 }}>
+                    <Typography variant="h6" mb={2}>
+                      Personal Details
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12 }}>
+                        <TextField
+                          label="Email"
+                          name="customer.email"
+                          type="email"
+                          value={formik.values.customer.email}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={
+                            formik.touched.customer?.email &&
+                            Boolean(formik.errors.customer?.email)
+                          }
+                          helperText={
+                            formik.touched.customer?.email &&
+                            formik.errors.customer?.email
+                          }
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                          label="First Name"
+                          name="customer.firstName"
+                          value={formik.values.customer.firstName}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={
+                            formik.touched.customer?.firstName &&
+                            Boolean(formik.errors.customer?.firstName)
+                          }
+                          helperText={
+                            formik.touched.customer?.firstName &&
+                            formik.errors.customer?.firstName
+                          }
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                          label="Last Name"
+                          name="customer.lastName"
+                          value={formik.values.customer.lastName}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={
+                            formik.touched.customer?.lastName &&
+                            Boolean(formik.errors.customer?.lastName)
+                          }
+                          helperText={
+                            formik.touched.customer?.lastName &&
+                            formik.errors.customer?.lastName
+                          }
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12 }}>
+                        <TextField
+                          label="Phone Number"
+                          name="customer.phone"
+                          value={formik.values.customer.phone}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={
+                            formik.touched.customer?.phone &&
+                            Boolean(formik.errors.customer?.phone)
+                          }
+                          helperText={
+                            formik.touched.customer?.phone &&
+                            formik.errors.customer?.phone
+                          }
+                          fullWidth
+                        />
+                      </Grid>
+                    </Grid>
+                  </Card>
+                </Stack>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                  disabled={loading || !formik.isValid}
+                  sx={{ mt: 3, py: 1.5, fontWeight: 600, fontSize: 16 }}
+                >
+                  {loading ? <CircularProgress size={24} /> : "Place Order"}
+                </Button>
               </Grid>
             </Grid>
           </form>
         </Box>
       </Box>
-
-     
     </Dialog>
   );
 }

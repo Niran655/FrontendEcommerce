@@ -36,7 +36,7 @@ const drawerWidth = 240;
 
 const staticMenu = [
   {
-    label: "Home",
+    label: "home",
     icon: LayoutDashboard,
     path: "/restaurants",
     roles: ["Admin", "Manager", "Cashier", "StockKeeper", "Seller"],
@@ -184,7 +184,9 @@ const Sidebar = ({ open, onClose }) => {
                       <PackageSearch size={20} />
                     </ListItemIcon>
                     <ListItemText
-                      primary={cat.name}
+                      primary={
+                        language == "en" ? `${t(cat.name)}` : `${t(cat.nameKh)}`
+                      }
                       primaryTypographyProps={{
                         variant: "body2",
                       }}

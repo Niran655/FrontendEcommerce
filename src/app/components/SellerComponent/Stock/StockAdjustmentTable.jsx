@@ -25,9 +25,11 @@ import {
   Package,
   PackagePlus,
 } from "lucide-react";
-import DoneIcon from '@mui/icons-material/Done';
+import DoneIcon from "@mui/icons-material/Done";
 import FooterPagination from "@/app/include/FooterPagination";
 import "../../../../../style/StockStyle.scss";
+import CircularIndeterminate from "@/app/function/loading/Loading";
+import EmptyData from "@/app/function/EmptyData/EmptyData";
 const StockAdjustmentTable = ({
   products,
   keyword,
@@ -38,10 +40,11 @@ const StockAdjustmentTable = ({
   limit,
   onPageChange,
   onLimitChange,
+  productsLoading,
   t,
 }) => {
   return (
-    <Card >
+    <Card>
       <CardContent>
         <Typography
           variant="h6"
@@ -81,8 +84,15 @@ const StockAdjustmentTable = ({
                 <TableCell>{t(`action`)}</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {products?.map((product) => (
+            {
+              productsLoading? (
+                <CircularIndeterminate/>
+              ):products.length == 0?(
+                <EmptyData/>
+              ):(
+                
+              products?.map((product) => (
+                   <TableBody>
                 <TableRow key={product.id}>
                   <TableCell>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -100,8 +110,8 @@ const StockAdjustmentTable = ({
                     <Chip
                       label={product.category}
                       size="small"
-                      color="error" deleteIcon={<DoneIcon />}
-                      
+                      color="error"
+                      deleteIcon={<DoneIcon />}
                       variant="outlined"
                     />
                   </TableCell>
@@ -152,8 +162,12 @@ const StockAdjustmentTable = ({
                     </Stack>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
+                 </TableBody>
+              ))
+           
+              )
+            }
+         
           </Table>
         </TableContainer>
       </CardContent>

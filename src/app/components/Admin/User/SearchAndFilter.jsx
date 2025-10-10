@@ -67,13 +67,7 @@ const SearchAndFilter = ({
             color="primary"
             variant="outlined"
           />
-          <Button
-            variant="outlined"
-            startIcon={<Building size={20} />}
-            onClick={onCreateShop}
-          >
-            Create Shop
-          </Button>
+         
           <Button
             variant="contained"
             startIcon={<DiamondPlus size={20} />}

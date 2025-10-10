@@ -1,6 +1,9 @@
 import { MenuItem, Pagination, Select, Stack, Typography } from "@mui/material";
 import React from "react";
 
+import { useAuth } from "../context/AuthContext";
+import { translateLauguage } from "../function/translate";
+
 export default function FooterPagination({
   totalPages,
   totalDocs,
@@ -13,6 +16,8 @@ export default function FooterPagination({
   const handlePageNum = (event, pageNum) => {
     setPage(parseInt(pageNum));
   };
+  const {language} = useAuth()
+  const {t} = translateLauguage(language)
 
   return (
     <Stack
@@ -30,15 +35,15 @@ export default function FooterPagination({
       }}
     >
       <Typography variant="body2" sx={{ color: "black" }}>
-        Showing page {page} of {totalPages} ({totalDocs} items)
+        {t(`showing_page`)} {page} {t(`of`)} {totalPages} ({totalDocs} {t(`items`)})
       </Typography>
 
       <Stack direction="row" spacing={2} alignItems="center">
         <Pagination
           page={page}
           count={totalPages}
-          color="primary"
-          variant="outlined"
+          color="info"
+          // variant="outlined"
           shape="rounded"
           onChange={handlePageNum}
           showFirstButton
@@ -46,7 +51,7 @@ export default function FooterPagination({
           sx={{
             "& .MuiPaginationItem-root": {
               color: "black",
-              borderColor: "black",
+              borderColor: "gray",
             },
           }}
         />
@@ -66,10 +71,10 @@ export default function FooterPagination({
             },
           }}
         >
-          <MenuItem value={6}>6 / Page</MenuItem>
-          <MenuItem value={8}>8 / Page</MenuItem>
-          <MenuItem value={10}>10 / Page</MenuItem>
-          <MenuItem value={totalDocs}>All</MenuItem>
+          <MenuItem value={6}>6 / {t(`page`)}</MenuItem>
+          <MenuItem value={8}>8 / {t(`page`)}</MenuItem>
+          <MenuItem value={10}>10 / {t(`page`)}</MenuItem>
+          <MenuItem value={totalDocs}>{t(`All`)}</MenuItem>
         </Select>
       </Stack>
     </Stack>

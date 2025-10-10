@@ -46,6 +46,8 @@ import {
 } from 'lucide-react';
 import { GET_STOCK_MOVEMENTS, GET_LOW_STOCK_PRODUCTS, GET_PRODUCTS } from '../../../../graphql/queries';
 import { ADJUST_STOCK } from '../../../../graphql/mutation';
+import { useAuth } from '@/app/context/AuthContext';
+import { translateLauguage } from '@/app/function/translate';
 
 // Validation Schema using Yup :cite[5]:cite[10]
 const adjustmentSchema = Yup.object().shape({
@@ -69,7 +71,8 @@ const StockManagement = () => {
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const {language} = useAuth()
+  const {t} = translateLauguage(language)
   const { data: stockData, loading: stockLoading, refetch: refetchStock } = useQuery(GET_STOCK_MOVEMENTS);
 
   const { data: lowStockData, loading: lowStockLoading, refetch: refetchLowStock } = useQuery(GET_LOW_STOCK_PRODUCTS);
@@ -141,13 +144,13 @@ const StockManagement = () => {
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4, fontWeight: 600 }}>
-        Stock Management
+        {t(`stock_management`)}
       </Typography>
 
       <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
-        <Tab label="Stock Movements" />
-        <Tab label="Low Stock Alert" />
-        <Tab label="Stock Adjustment" />
+        <Tab label={t(`stock_momvements`)} />
+        <Tab label={t(`low_stock_alert`)} />
+        <Tab label={t(`stock_adjust`)} />
       </Tabs>
 
       {activeTab === 0 && (
@@ -155,21 +158,21 @@ const StockManagement = () => {
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <FileText size={24} style={{ marginRight: 8 }} />
-              Recent Stock Movements
+              {t(`recent_stock`)}
             </Typography>
             
             <TableContainer>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Date/Time</TableCell>
-                    <TableCell>Product</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Quantity</TableCell>
-                    <TableCell>Reason</TableCell>
-                    <TableCell>Reference</TableCell>
-                    <TableCell>User</TableCell>
-                    <TableCell>Stock Change</TableCell>
+                    <TableCell>{t(`date_time`)}</TableCell>
+                    <TableCell>{t(`product`)}</TableCell>
+                    <TableCell>{t(`type`)}</TableCell>
+                    <TableCell>{t(`qty`)}</TableCell>
+                    <TableCell>{t(`reason`)}</TableCell>
+                    <TableCell>{t(`reference`)}</TableCell>
+                    <TableCell>{t(`user`)}</TableCell>
+                    <TableCell>{t(`stock_change`)}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>

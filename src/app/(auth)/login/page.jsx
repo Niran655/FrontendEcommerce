@@ -21,6 +21,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 import { LOGIN_MUTATION } from "../../../../graphql/mutation";
 import { useAuth } from "../../context/AuthContext";
+import { signIn } from "next-auth/react";
 
 const testAccounts = [
   { email: "admin@coffee.com", password: "admin123", role: "Admin" },
@@ -177,6 +178,19 @@ const Login = () => {
             </Button>
           </form>
 
+          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => {
+                const next = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('next');
+                const callbackUrl = `/api/auth/google${next ? `?next=${encodeURIComponent(next)}` : ''}`;
+                signIn("google", { callbackUrl });
+              }}
+            >
+              Continue with Google
+            </Button>
+          </Stack>
         </CardContent>
       </Card>
     </Box>

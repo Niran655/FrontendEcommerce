@@ -22,18 +22,37 @@ import {
 import { CheckCircle, AlertCircle, Clock, FileText } from "lucide-react";
 
 import {
-  RECEIVE_PURCHASE_ORDER,
+  RECEIVE_PURCHASE_ORDER_FOR_SHOP,
   UPDATE_PURCHASE_ORDER_STATUS,
 } from "../../../../../graphql/mutation";
+import { useAuth } from "@/app/context/AuthContext";
+import FooterPagination from "@/app/include/FooterPagination";
+import CircularIndeterminate from "@/app/function/loading/Loading";
+import EmptyData from "@/app/function/EmptyData/EmptyData";
 
-const PurchaseOrderTable = ({ purchaseOrders, refetchPOs, t }) => {
-  const [receivePurchaseOrder] = useMutation(RECEIVE_PURCHASE_ORDER, {
-    onCompleted: () => {
-      refetchPOs();
-      alert("Purchase order received successfully!");
-    },
-    onError: (error) => alert(`Error: ${error.message}`),
-  });
+const PurchaseOrderTable = ({
+  purchaseOrders,
+  refetchPOs,
+  t,
+  id,
+  paginator,
+  page,
+  limit,
+  poLoading,
+  onPageChange,
+  onLimitChange,
+}) => {
+  const { setAlert } = useAuth();
+  const [receivePurchaseOrderForShop] = useMutation(
+    RECEIVE_PURCHASE_ORDER_FOR_SHOP,
+    {
+      onCompleted: () => {
+        refetchPOs();
+        alert("Purchase order received successfully!");
+      },
+      onError: (error) => alert(`Error: ${error.message}`),
+    }
+  );
 
   const [updatePurchaseOrderStatus] = useMutation(UPDATE_PURCHASE_ORDER_STATUS);
 
@@ -46,21 +65,19 @@ const PurchaseOrderTable = ({ purchaseOrders, refetchPOs, t }) => {
         },
       });
       refetchPOs();
-      alert("Purchase order updated successfully!");
+      alert(t(`purchase_success`));
     } catch (err) {
       console.error("Update failed:", err);
-      
-      alert("Something went wrong.");
+
+      alert(t(`something_wrong`));
     }
   };
 
   const handleReceivePO = async (poId) => {
-    if (
-      window.confirm(
-        "Mark this purchase order as received? This will update stock levels."
-      )
-    ) {
-      await receivePurchaseOrder({ variables: { id: poId } });
+    if (window.confirm(`${t(`make_purchas_order_received`)}`)) {
+      await receivePurchaseOrderForShop({
+        variables: { receivePurchaseOrderForShopId: poId, shopId: id },
+      });
     }
   };
 
@@ -110,8 +127,16 @@ const PurchaseOrderTable = ({ purchaseOrders, refetchPOs, t }) => {
                 <TableCell>{t(`action`)}</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {purchaseOrders.map((po) => (
+            {
+              poLoading?(
+                <CircularIndeterminate/>
+              ): purchaseOrders?.length == 0 ?
+              (
+                <EmptyData/>
+              ):(
+               
+              purchaseOrders.map((po) => (
+                 <TableBody>
                 <TableRow key={po.id}>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium">
@@ -182,7 +207,9 @@ const PurchaseOrderTable = ({ purchaseOrders, refetchPOs, t }) => {
                           >
                             <MenuItem value="pending">Pending</MenuItem>
                             <MenuItem value="ordered">Ordered</MenuItem>
-                            <MenuItem disabled value="received">Received</MenuItem>
+                            <MenuItem disabled value="received">
+                              Received
+                            </MenuItem>
                             <MenuItem value="cancelled">Cancelled</MenuItem>
                           </Select>
                         </FormControl>
@@ -190,9 +217,29 @@ const PurchaseOrderTable = ({ purchaseOrders, refetchPOs, t }) => {
                     </Stack>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
+                  </TableBody>
+              ))
+          
+              )
+            }
+            
           </Table>
+
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            sx={{ padding: 2 }}
+          >
+            <FooterPagination
+              page={page}
+              limit={limit}
+              setPage={onPageChange}
+              handleLimit={onLimitChange}
+              totalDocs={paginator?.totalDocs}
+              totalPages={paginator?.totalPages}
+            />
+          </Stack>
         </TableContainer>
       </CardContent>
     </Card>

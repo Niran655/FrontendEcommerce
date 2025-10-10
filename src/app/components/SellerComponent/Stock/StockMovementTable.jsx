@@ -1,4 +1,7 @@
 "use client";
+import EmptyData from "@/app/function/EmptyData/EmptyData";
+import CircularIndeterminate from "@/app/function/loading/Loading";
+import FooterPagination from "@/app/include/FooterPagination";
 import {
   Card,
   CardContent,
@@ -12,6 +15,7 @@ import {
   Box,
   Avatar,
   Chip,
+  Stack,
 } from "@mui/material";
 
 import {
@@ -20,9 +24,20 @@ import {
   Settings,
   Package,
   FileText,
-  PackageOpen 
-} from 'lucide-react';
-const StockMovementTable = ({ stockMovements, t }) => {
+  PackageOpen,
+} from "lucide-react";
+const StockMovementTable = ({
+  stockMovements,
+  t,
+  paginator,
+  keyword,
+  onKeywordChange,
+  page,
+  limit,
+  onPageChange,
+  onLimitChange,
+  stockLoading,
+}) => {
   const getMovementTypeIcon = (type) => {
     switch (type) {
       case "in":
@@ -57,7 +72,7 @@ const StockMovementTable = ({ stockMovements, t }) => {
           gutterBottom
           sx={{ display: "flex", alignItems: "center", mb: 3 }}
         >
-          <PackageOpen size={24} style={{ marginRight: 8,color:'#2984D1' }} />
+          <PackageOpen size={24} style={{ marginRight: 8, color: "#2984D1" }} />
           {t(`recent_stock`)}
         </Typography>
 
@@ -75,65 +90,85 @@ const StockMovementTable = ({ stockMovements, t }) => {
                 <TableCell>{t(`stock_change`)}</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {stockMovements.slice(0, 20).map((movement) => (
-                <TableRow key={movement.id}>
-                  <TableCell>
-                    {new Date(movement.createdAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Avatar sx={{ width: 32, height: 32, mr: 2 }}>
-                        <Package size={16} />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" fontWeight="medium">
-              
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                        >
-                       
-                        </Typography>
+            {stockLoading ? (
+              <CircularIndeterminate />
+            ) : stockMovements?.length == 0 ? (
+              <EmptyData />
+            ) : (
+              stockMovements.slice(0, 20).map((movement) => (
+                <TableBody>
+                  <TableRow key={movement.id}>
+                    <TableCell>
+                      {new Date(movement.createdAt).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Avatar sx={{ width: 32, height: 32, mr: 2 }}>
+                          <Package size={16} />
+                        </Avatar>
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            fontWeight="medium"
+                          ></Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                          ></Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      icon={getMovementTypeIcon(movement.type)}
-                      label={movement.type.toUpperCase()}
-                      color={getMovementTypeColor(movement.type)}
-                      variant="outlined"
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="medium">
-                      {movement.type === "out" ? "-" : "+"}
-                      {movement.quantity}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{movement.reason}</TableCell>
-                  <TableCell>
-                    {movement.reference && (
+                    </TableCell>
+                    <TableCell>
                       <Chip
-                        label={movement.reference}
-                        size="small"
+                        icon={getMovementTypeIcon(movement.type)}
+                        label={movement.type.toUpperCase()}
+                        color={getMovementTypeColor(movement.type)}
                         variant="outlined"
+                        size="small"
                       />
-                    )}
-                  </TableCell>
-                  <TableCell>{movement.user.name}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {movement.previousStock} → {movement.newStock}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="medium">
+                        {movement.type === "out" ? "-" : "+"}
+                        {movement.quantity}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{movement.reason}</TableCell>
+                    <TableCell>
+                      {movement.reference && (
+                        <Chip
+                          label={movement.reference}
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>{movement.user.name}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {movement.previousStock} → {movement.newStock}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              ))
+            )}
           </Table>
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            sx={{ padding: 2 }}
+          >
+            <FooterPagination
+              page={page}
+              limit={limit}
+              setPage={onPageChange}
+              handleLimit={onLimitChange}
+              totalDocs={paginator?.totalDocs}
+              totalPages={paginator?.totalPages}
+            />
+          </Stack>
         </TableContainer>
       </CardContent>
     </Card>

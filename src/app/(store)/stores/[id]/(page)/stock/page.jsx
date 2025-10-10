@@ -1,24 +1,19 @@
 "use client";
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
-import {
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-} from "@mui/material";
+import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { useParams } from "next/navigation";
 
 import { useAuth } from "@/app/context/AuthContext";
 import { translateLauguage } from "@/app/function/translate";
 import FooterPagination from "@/app/include/FooterPagination";
 import {
-  GET_STOCK_MOVEMENTS_FOR_SHOP,
+  GET_STOCK_MOVEMENTS_FOR_SHOP_WITH_PAGINATON,
   GET_LOW_STOCK_PRODUCTS_FOR_SHOP,
   GET_PRODUCT_FOR_SHOP_WITH_PAGNATION,
 } from "../../../../../../../graphql/queries";
 
-import { ADJUST_STOCK } from "../../../../../../../graphql/mutation";
+import { ADJUST_STOCK_FOR_SHOP } from "../../../../../../../graphql/mutation";
 import StockMovementTable from "../../../../../components/SellerComponent/Stock/StockMovementTable";
 import LowStockAlerts from "../../../../../components/SellerComponent/Stock/LowStockAlerts";
 import StockAdjustmentTable from "../../../../../components/SellerComponent/Stock/StockAdjustmentTable";
@@ -26,9 +21,14 @@ import StockAdjustmentDialog from "../../../../../components/SellerComponent/Sto
 
 const StockManagement = () => {
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(5);
+  const [limit, setLimit] = useState(6);
   const [keyword, setKeyword] = useState("");
   const [activeTab, setActiveTab] = useState(0);
+
+  const [stockPage, setStockPage] = useState(1)
+  const [stockLimit, setStockLimit] = useState(6)
+  const [stockKeyword,setStockKeyword] = useState("")
+
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const { language } = useAuth();
@@ -39,8 +39,15 @@ const StockManagement = () => {
     data: stockData,
     loading: stockLoading,
     refetch: refetchStock,
-  } = useQuery(GET_STOCK_MOVEMENTS_FOR_SHOP, {
-    variables: { shopId: id },
+  } = useQuery(GET_STOCK_MOVEMENTS_FOR_SHOP_WITH_PAGINATON, {
+    variables: {
+      shopId: id,
+      productId: null,
+      page: stockPage,
+      limit: stockLimit,
+      pagination: true,
+      keyword: stockKeyword,
+    },
   });
 
   const {
@@ -64,7 +71,7 @@ const StockManagement = () => {
     }
   );
 
-  const [adjustStock] = useMutation(ADJUST_STOCK, {
+  const [adjustStockForShop] = useMutation(ADJUST_STOCK_FOR_SHOP, {
     onCompleted: () => {
       setAdjustDialogOpen(false);
       setSelectedProduct(null);
@@ -81,7 +88,7 @@ const StockManagement = () => {
 
   const handleSubmitAdjustment = async (adjustmentData) => {
     try {
-      await adjustStock({
+      await adjustStockForShop({
         variables: adjustmentData,
       });
     } catch (error) {
@@ -94,7 +101,6 @@ const StockManagement = () => {
     setLimit(newLimit);
     setPage(1);
   };
-
   const handleKeywordChange = (e) => {
     setKeyword(e.target.value);
   };
@@ -102,6 +108,22 @@ const StockManagement = () => {
   const handlePageChange = (newPage) => {
     setPage(newPage);
   };
+
+  const handleStockLimit = (e) =>{
+    const newLimit = parseInt(e.target.value, 10);
+    setStockLimit(newLimit)
+    setStockPage(1)
+  }
+  
+  const handleStockKeyWordChange = (e)=>{
+    setStockKeyword(e.target.value)
+  }
+
+  const handleStockPageChange = (newPage) =>{
+    setStockPage(newPage)
+  }
+
+
 
   const handleCloseDialog = () => {
     setAdjustDialogOpen(false);
@@ -111,11 +133,10 @@ const StockManagement = () => {
   const paginator = productsData?.getProductForShopWithPagination?.paginator;
   const products = productsData?.getProductForShopWithPagination?.data ?? [];
   const lowStockProducts = lowStockData?.getLowStockProductByShop || [];
-  const stockMovements = stockData?.getStockMovementsByShop || [];
+  const stockMovements = stockData?.getStockMovementsByshopWithPagination?.data || [];
+  const stockPaginator = stockData?.getStockMovementsByshopWithPagination?.paginator  || []
 
-  if (stockLoading || lowStockLoading || productsLoading) {
-    return <Typography>Loading stock data...</Typography>;
-  }
+
 
   return (
     <Box>
@@ -143,16 +164,26 @@ const StockManagement = () => {
 
       {activeTab === 0 && (
         <StockMovementTable 
-          stockMovements={stockMovements} 
+          stockMovements={stockMovements}
           t={t} 
-        />
+           paginator={stockPaginator}
+           stockLoading={stockLoading}
+          keyword={stockKeyword}
+          onKeywordChange={handleStockKeyWordChange}
+          page={stockPage}
+          limit={stockLimit}
+          onPageChange={handleStockPageChange}
+          onLimitChange={handleStockLimit}
+         />
       )}
 
       {activeTab === 1 && (
-        <LowStockAlerts 
+        <LowStockAlerts
           lowStockProducts={lowStockProducts}
           onAdjustStock={handleAdjustStock}
           t={t}
+
+        
         />
       )}
 
@@ -165,6 +196,7 @@ const StockManagement = () => {
           paginator={paginator}
           page={page}
           limit={limit}
+          productsLoading={productsLoading}
           onPageChange={handlePageChange}
           onLimitChange={handleLimit}
           t={t}
@@ -175,6 +207,7 @@ const StockManagement = () => {
         open={adjustDialogOpen}
         onClose={handleCloseDialog}
         t={t}
+        id={id}
         selectedProduct={selectedProduct}
         onAdjustStock={handleSubmitAdjustment}
       />

@@ -15,28 +15,45 @@ import {
   TableRow,
   TextField,
   Typography,
+  Stack,
 } from "@mui/material";
 import { Plus, Search, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "../../../../../context/AuthContext";
 import {
-  GET_CATEGORY_FOR_SHOP,
+  GET_CATEGORY_FOR_SHOP_WITH_PAGINATION,
   GET_CATEGORYS,
 } from "../../../../../../../graphql/queries";
 import { translateLauguage } from "@/app/function/translate";
 import CategoryForm from "../../../../../components/SellerComponent/Category/CategoryForm";
 import CategoryActions from "../../../../../components/SellerComponent/Category/CategoryAction";
+import FooterPagination from "@/app/include/FooterPagination";
+import CircularIndeterminate from "@/app/function/loading/Loading";
+import EmptyData from "@/app/function/EmptyData/EmptyData";
 
 const Category = () => {
   const { id } = useParams();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(6);
+  const [keyword, setKeyword] = useState("");
   const { data: MainCategory, loading: mainCategoryLoading } =
     useQuery(GET_CATEGORYS);
-  const { data, loading, refetch } = useQuery(GET_CATEGORY_FOR_SHOP, {
-    variables: { shopId: id },
-  });
+  const { data, loading, refetch } = useQuery(
+    GET_CATEGORY_FOR_SHOP_WITH_PAGINATION,
+    {
+      variables: {
+        shopId: id,
+        page,
+        limit,
+        pagination: true,
+        keyword,
+      },
+    }
+  );
 
-  const categories = data?.getCategoriesForShop || [];
+  const categories = data?.getCategoriesForShopWithPagination?.data || [];
+  const paginator = data?.getCategoriesForShopWithPagination?.paginator || [];
   const mainCategories = MainCategory?.categorys || [];
   const { language } = useAuth();
   const { t } = translateLauguage(language);
@@ -45,9 +62,9 @@ const Category = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredCategories = categories.filter((category) =>
+  //   category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   const handleCreateCategory = () => {
     setSelectedCategory(null);
@@ -62,6 +79,19 @@ const Category = () => {
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setSelectedCategory(null);
+  };
+
+  const handleLimit = (e) => {
+    const newLimit = parseInt(e.target.value, 10);
+    setLimit(newLimit);
+    setPage(1);
+  };
+  const handleKeywordChange = (e) => {
+    setKeyword(e.target.value);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
   };
 
   return (
@@ -94,8 +124,8 @@ const Category = () => {
               fullWidth
               size="small"
               placeholder="Search categories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <Search size={20} style={{ marginRight: 8, color: "#666" }} />
@@ -105,7 +135,7 @@ const Category = () => {
           </Grid>
           <Grid size={{ xs: 12, md: 6 }} sx={{ textAlign: "right" }}>
             <Chip
-              label={`${filteredCategories.length} categories`}
+              label={`${categories.length} categories`}
               color="primary"
               variant="outlined"
             />
@@ -136,25 +166,15 @@ const Category = () => {
               </TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
+         
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
-                  <Typography>Loading categories...</Typography>
-                </TableCell>
-              </TableRow>
-            ) : filteredCategories.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
-                  <Typography>
-                    {searchTerm
-                      ? "No categories found matching your search"
-                      : "No categories found"}
-                  </Typography>
-                </TableCell>
-              </TableRow>
+          
+                 <CircularIndeterminate/>
+            ) : categories.length === 0 ? (
+             <EmptyData/>
             ) : (
-              filteredCategories.map((category) => (
+              categories.map((category) => (
+                 <TableBody>
                 <TableRow
                   key={category.id}
                   sx={{
@@ -229,14 +249,31 @@ const Category = () => {
                     />
                   </TableCell>
                 </TableRow>
+              </TableBody>
               ))
             )}
-          </TableBody>
+     
         </Table>
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          alignItems="center"
+          sx={{ padding: 2 }}
+        >
+          <FooterPagination
+            page={page}
+            limit={limit}
+            setPage={handlePageChange}
+            handleLimit={handleLimit}
+            totalDocs={paginator?.totalDocs}
+            totalPages={paginator?.totalPages}
+          />
+        </Stack>
       </TableContainer>
 
       <CategoryForm
         open={dialogOpen}
+        language={language}
         onClose={handleCloseDialog}
         selectedCategory={selectedCategory}
         mainCategories={mainCategories}

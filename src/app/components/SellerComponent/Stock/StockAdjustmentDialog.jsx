@@ -35,6 +35,7 @@ const StockAdjustmentDialog = ({
   selectedProduct,
   onAdjustStock,
   t,
+  id
 }) => {
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
@@ -42,6 +43,7 @@ const StockAdjustmentDialog = ({
         productId: selectedProduct.id,
         quantity: parseInt(values.quantity),
         reason: values.reason,
+        shopId:id
       });
       resetForm();
       onClose();

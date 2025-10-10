@@ -19,6 +19,24 @@ export const LOGIN_MUTATION = gql`
   }
 `;
 
+export const LOGIN_WITH_GOOGLE = gql`
+  mutation LoginWithGoogle($email: String!, $name: String) {
+    loginWithGoogle(email: $email, name: $name) {
+      token
+      user {
+        id
+        name
+        email
+        role
+        active
+        lastLogin
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
 // =========================PRODUCT============================================================
 export const CREATE_PRODUCT = gql`
   mutation CreateProduct($input: ProductInput!) {
@@ -159,6 +177,18 @@ export const DELETE_STORE = gql`
   }
 `;
 
+export const DELETE_SHOP = gql`
+mutation DeleteShop($shopId: ID) {
+  deleteShop(shopId: $shopId) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`
+
 // ================================END STORE MUTATION==================================================================
 
 export const ADJUST_STOCK = gql`
@@ -171,6 +201,18 @@ export const ADJUST_STOCK = gql`
     }
   }
 `;
+
+export const ADJUST_STOCK_FOR_SHOP = gql`
+mutation AdjustStockForShop($productId: ID!, $shopId: ID!, $quantity: Int!, $reason: String!) {
+  adjustStockForShop(productId: $productId, shopId: $shopId, quantity: $quantity, reason: $reason) {
+    isSuccess
+    message {
+      messageEn
+      messageKh
+    }
+  }
+}
+`
 
 export const CREATE_SALE = gql`
   mutation CreateSale($input: SaleInput!) {
@@ -443,6 +485,18 @@ mutation CreateShopForSeller($input: ShopInput) {
   }
 }
 `
+export const CREATE_SHOP_FOR_SELLER = gql`
+  mutation CreateShopForSeller($input: ShopInput) {
+    createShopForSeller(input: $input) {
+      isSuccess
+      message {
+        messageEn
+        messageKh
+      }
+    }
+  }
+`;
+
 
 export const CREATE_ORDER_BY_CUSTOMER=gql`
 mutation CreateCustomerOrderProduct($input: OrderInput) {

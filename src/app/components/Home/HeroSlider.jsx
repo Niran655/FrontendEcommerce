@@ -6,26 +6,20 @@ import { useState,useEffect } from 'react';
 
 const slides = [
   {
-    title: 'Max Book',
-    description: 'Best for Play Game',
+    title: 'Khmer Food Store',
+    description: 'ដឹកឥតគិតថ្លៃ',
     buttonText: 'Buy Now',
     buttonUrl: '#',
-    image: 'https://i0.wp.com/9to5mac.com/wp-content/uploads/sites/6/2023/06/macos-macbook-wallpaper.jpg?resize=1200%2C628&quality=82&strip=all&ssl=1 ',
+    image: 'https://graphicsfamily.com/wp-content/uploads/edd/2023/05/Website-Food-Banner-Design-scaled.jpg',
   },
   {
-    title: 'ASUS',
-    description: 'Best for Play Game',
+    title: 'Khmer Food Store',
+    description: 'ដឹកឥតគិតថ្លៃ',
     buttonText: 'Buy Now',
     buttonUrl: '#',
-    image: 'https://i.blogs.es/189204/apertura-macbook-pro-m2/1366_2000.jpeg',
+    image: 'https://graphicsfamily.com/wp-content/uploads/edd/2020/11/Tasty-Food-Web-Banner-Design-scaled.jpg',
   },
-  {
-    title: 'ACSER',
-    description: 'Best for Play Game',
-    buttonText: 'Buy Now',
-    buttonUrl: '#',
-    image: 'https://s.zst.com.br/cms-assets/2021/08/macbook-air-m1-tela.jpg',
-  },
+
 ];
 
 export default function HeroSlider() {
@@ -58,8 +52,8 @@ export default function HeroSlider() {
     <Box
       sx={{
         position: 'relative',
-        height: '30vh',
-        minHeight: 400,
+        height: '10vh',
+        minHeight: 200,
         borderRadius:2,
         overflow: 'hidden',
         '&:hover': { autoplay: false },

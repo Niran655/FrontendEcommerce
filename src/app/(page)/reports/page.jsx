@@ -67,6 +67,8 @@ import {
   GET_SALES,
   GET_SALES_REPORT,
 } from "../../../../graphql/queries";
+import { useAuth } from "@/app/context/AuthContext";
+import { translateLauguage } from "@/app/function/translate";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
@@ -74,7 +76,8 @@ const Reports = () => {
   const [reportType, setReportType] = useState("sales");
   const [startDate, setStartDate] = useState(dayjs().subtract(7, "day"));
   const [endDate, setEndDate] = useState(dayjs());
-
+  const {language} = useAuth()
+  const {t} = translateLauguage(language)
   const {
     data: reportData,
     loading: reportLoading,
@@ -127,7 +130,7 @@ const Reports = () => {
               >
                 <Box>
                   <Typography color="text.secondary" gutterBottom>
-                    Total Sales
+                    {t(`total_sale`)}
                   </Typography>
                   <Typography variant="h4" color="success.main">
                     ${report.totalSales.toFixed(2)}
@@ -518,7 +521,7 @@ const Reports = () => {
       <Box>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-            Reports & Analytics
+            {t(`reports_analytics`)}
           </Typography>
           <Button variant="outlined" startIcon={<Download size={20} />} onClick={exportReport}>
             Export Report

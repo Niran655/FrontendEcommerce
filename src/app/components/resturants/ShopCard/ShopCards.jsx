@@ -37,9 +37,9 @@ const ShopCard = () => {
                 sx={{
                   borderRadius: 3,
                   overflow: "hidden",
-                  boxShadow: 3,
+                  // boxShadow: 3,
                   position: "relative",
-                  height: "400px",
+                  height: "300px",
                   transition: "transform 0.3s ease-in-out",
                   "&:hover": {
                     // transform: "translateY(-6px)",
@@ -65,7 +65,6 @@ const ShopCard = () => {
                   }}
                 />
 
-                {/* Shop Image */}
                 <Box sx={{ overflow: "hidden" }}>
                   <CardMedia
                     component="img"
@@ -81,7 +80,6 @@ const ShopCard = () => {
                   />
                 </Box>
 
-                {/* Shop Info */}
                 <CardContent sx={{ textAlign: "center" }}>
                   <Typography
                     variant="h6"
@@ -90,13 +88,7 @@ const ShopCard = () => {
                   >
                     {shop.shopName}
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    {shop.description}
-                  </Typography>
+
                   <Typography variant="caption" color="text.secondary">
                     Created: {new Date(shop.createdAt).toLocaleDateString()}
                   </Typography>

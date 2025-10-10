@@ -5,12 +5,8 @@ import {
   AppBar,
   Button,
   Dialog,
-  Divider,
   Grid,
   IconButton,
-  List,
-  ListItemButton,
-  ListItemText,
   Slide,
   Stack,
   Box,
@@ -20,17 +16,10 @@ import {
 import * as React from "react";
 import {
   Card,
-  CardHeader,
-  CardMedia,
   CardContent,
   CardActions,
 } from "@mui/material";
 import { GET_MY_SHOPS } from "../../../../../../../graphql/queries";
-import {
-  CREATE_STORE,
-  DELETE_STORE,
-  UPDATE_STORE,
-} from "../../../../../../../graphql/mutation";
 import AddIcon from "@mui/icons-material/Add";
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -100,9 +89,9 @@ export default function StorePage({ open, onClose }) {
                       </CardContent>
                     </Stack>
                     {/* <CardHeader
-            title={shop.name}
-            subheader={shop.owner?.email || "មិនមានអ៊ីមែល"}
-          /> */}
+                    title={shop.name}
+                    subheader={shop.owner?.email || "មិនមានអ៊ីមែល"}
+                  /> */}
 
                     <CardActions>
                       <Button

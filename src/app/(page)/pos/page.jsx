@@ -55,7 +55,7 @@ const POS = () => {
   const [amountPaid, setAmountPaid] = useState("");
   const [discount, setDiscount] = useState(0);
   const {id} = useParams()
-  // Product details dialog state
+
   const [openProductView, setOpenProductView] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 

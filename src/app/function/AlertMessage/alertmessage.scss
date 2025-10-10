@@ -3,10 +3,10 @@
     .snackbar-alert {
         margin-top: 10px;
         border-radius: 20px;
-
+        background-color: #FF6F91;
         .alert-success {
             border-radius: 20px;
-            background-color: #00C9A7;
+            background-color: #00C9A7!important;
             color: #fff;
             user-select: text !important;
    
@@ -23,7 +23,6 @@
         .alert-warning {
             border-radius: 20px;
             background-color: orange;
-
             color: #fff;
         }
     }

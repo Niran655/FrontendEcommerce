@@ -25,6 +25,7 @@ const CategoryTable = ({
   onSearchChange,
   onEdit,
   onDelete,
+  t
 }) => {
   const filteredCategories = useMemo(() => {
     if (!categories) return [];
@@ -45,7 +46,7 @@ const CategoryTable = ({
             <TextField
               fullWidth
               size="small"
-              placeholder="Search categories..."
+              placeholder={t(`search`)}
               value={searchTerm}
               onChange={onSearchChange}
               InputProps={{
@@ -71,13 +72,13 @@ const CategoryTable = ({
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>Image</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Name Khmer</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Slug</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="center">Actions</TableCell>
+                <TableCell>{t(`image`)}</TableCell>
+                <TableCell>{t(`name`)}</TableCell>
+                <TableCell>{t(`khmer_name`)}</TableCell>
+                <TableCell>{t(`discription`)}</TableCell>
+                <TableCell>{t(`slug`)}</TableCell>
+                <TableCell>{t(`status`)}</TableCell>
+                <TableCell align="center">{t(`action`)}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

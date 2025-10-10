@@ -1,14 +1,6 @@
 "use client";
-import { useQuery,useMutation } from "@apollo/client/react";
-import {
-  Box,
-  Button,
-  Stack,
-  Typography,
-  Tabs,
-  Tab,
-  Grid,
-} from "@mui/material";
+import { useQuery, useMutation } from "@apollo/client/react";
+import { Box, Button, Stack, Typography, Tabs, Tab, Grid } from "@mui/material";
 import { Plus, Truck } from "lucide-react";
 import React, { useState } from "react";
 
@@ -16,7 +8,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useParams } from "next/navigation";
 import {
   GET_PRODUCT_FOR_SHOP,
-  GET_PURCHASE_ORDERS_FOR_SHOP,
+  GET_PURCHASE_ORDERS_FOR_SHOP_WITH_PAGINATION,
   GET_SUPPLIERS_FOR_SHOP,
 } from "../../../../../../../graphql/queries";
 import { DELETE_SUPPLIER_FOR_SHOP } from "../../../../../../../graphql/mutation";
@@ -31,10 +23,13 @@ const Suppliers = () => {
   const [supplierDialogOpen, setSupplierDialogOpen] = useState(false);
   const [poDialogOpen, setPODialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(6)
+  const [keyword, setKeyword] = useState("")
   const { setAlert } = useAuth();
   const { id } = useParams();
-  const {language} = useAuth()
-  const {t} = translateLauguage(language)
+  const { language } = useAuth();
+  const { t } = translateLauguage(language);
   const {
     data: suppliersData,
     loading: suppliersLoading,
@@ -47,18 +42,24 @@ const Suppliers = () => {
     data: poData,
     loading: poLoading,
     refetch: refetchPOs,
-  } = useQuery(GET_PURCHASE_ORDERS_FOR_SHOP,{
-    variables:{
-      shopId:id
-    }
+  } = useQuery(GET_PURCHASE_ORDERS_FOR_SHOP_WITH_PAGINATION, {
+    variables: {
+      shopId: id,
+      page,
+      limit,
+      pagination: true,
+      keyword,
+    },
   });
 
-  const { data: productsData, loading: productsLoading } =
-    useQuery(GET_PRODUCT_FOR_SHOP,{
-      variables:{
-        shopId:id
-      }
-    });
+  const { data: productsData, loading: productsLoading } = useQuery(
+    GET_PRODUCT_FOR_SHOP,
+    {
+      variables: {
+        shopId: id,
+      },
+    }
+  );
 
   const [deleteSupplierForShop] = useMutation(DELETE_SUPPLIER_FOR_SHOP, {
     onCompleted: ({ deleteSupplierForShop }) => {
@@ -74,8 +75,22 @@ const Suppliers = () => {
     },
   });
 
+  const handleLimit = (e) => {
+    const newLimit = parseInt(e.target.value, 10);
+    setLimit(newLimit);
+    setPage(1);
+  };
+  const handleKeywordChange = (e) => {
+    setKeyword(e.target.value);
+  };
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+
   const suppliers = suppliersData?.getSuppliersForShop || [];
-  const purchaseOrders = poData?.getPurchaseOrderForShop || [];
+  const purchaseOrders = poData?.getPurchaseOrderForShopWithPagination?.data || [];
+  const paginator = poData?.getPurchaseOrderForShopWithPagination?.paginator || [];
   const products = productsData?.getProductsForShop || [];
 
   const handleCreateSupplier = () => {
@@ -91,8 +106,8 @@ const Suppliers = () => {
   const handleDeleteSupplier = async (supplierId) => {
     if (confirm("Are you sure you want to delete this supplier?")) {
       try {
-        await deleteSupplierForShop({ 
-          variables: { deleteSupplierForShopId: supplierId } 
+        await deleteSupplierForShop({
+          variables: { deleteSupplierForShopId: supplierId },
         });
       } catch (err) {
         console.error("Delete error:", err);
@@ -113,9 +128,6 @@ const Suppliers = () => {
     setPODialogOpen(false);
   };
 
-  if (suppliersLoading || poLoading || productsLoading) {
-    return <Typography>Loading suppliers data...</Typography>;
-  }
 
   return (
     <Box>
@@ -156,15 +168,16 @@ const Suppliers = () => {
         <Tab label={`${t(`supplier`)} (${suppliers.length})`} />
         <Tab label={`${t(`purchase_order`)} (${purchaseOrders.length})`} />
       </Tabs>
-
+      
       {activeTab === 0 && (
         <Grid container spacing={3}>
           {suppliers.map((supplier) => (
             <Grid size={{ xs: 12, md: 6, lg: 4 }} key={supplier.id}>
-              <SupplierCard 
+              <SupplierCard
                 supplier={supplier}
                 onEdit={handleEditSupplier}
                 onDelete={handleDeleteSupplier}
+               
               />
             </Grid>
           ))}
@@ -172,11 +185,19 @@ const Suppliers = () => {
       )}
 
       {activeTab === 1 && (
-        <PurchaseOrderTable 
+        <PurchaseOrderTable
           purchaseOrders={purchaseOrders}
           refetchPOs={refetchPOs}
           t={t}
           id={id}
+          poLoading={poLoading}
+          keyword={keyword}
+          onKeywordChange={handleKeywordChange}
+          paginator={paginator}
+          page={page}
+          limit={limit}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimit}
         />
       )}
 
@@ -188,6 +209,7 @@ const Suppliers = () => {
         shopId={id}
         t={t}
         refetchSuppliers={refetchSuppliers}
+        suppliersLoading={suppliersLoading}
       />
 
       <PurchaseOrderForm

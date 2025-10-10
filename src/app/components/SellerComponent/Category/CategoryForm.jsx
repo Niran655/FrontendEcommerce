@@ -16,7 +16,7 @@ import {
   Autocomplete,
   Avatar
 } from "@mui/material";
-import { ImageIcon, Package, X } from "lucide-react";
+import { ImageIcon, Languages, Package, X } from "lucide-react";
 import { Form, FormikProvider, useFormik } from "formik";
 import { useEffect, useState } from "react";
 import * as Yup from "yup";
@@ -34,6 +34,7 @@ const CategoryForm = ({
   mainCategories,
   shopId,
   refetch,
+  language,
   t,
 }) => {
   const { setAlert } = useAuth();
@@ -262,7 +263,6 @@ const CategoryForm = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-           
                       placeholder="Select a parent category"
                       error={touched.parent && Boolean(errors.parent)}
                       helperText={touched.parent && errors.parent}
@@ -270,7 +270,7 @@ const CategoryForm = ({
                   )}
                   renderOption={(props, option) => (
                     <li {...props} key={option.id}>
-                      {option.name}
+                      {t(language == "en" ? option.name: option?.nameKh )}
                     </li>
                   )}
                 />
@@ -285,10 +285,10 @@ const CategoryForm = ({
                     error={touched.active && Boolean(errors.active)}
                   >
                     <MenuItem value="">
-                      <em>{t(`select_status`)}</em>
+                      {t(`select_status`)}
                     </MenuItem>
-                    <MenuItem value="true">Active</MenuItem>
-                    <MenuItem value="false">Inactive</MenuItem>
+                    <MenuItem value="true">{t(`active`)}</MenuItem>
+                    <MenuItem value="false">{t(`inactive`)}</MenuItem>
                   </Select>
                   {touched.active && errors.active && (
                     <Typography
